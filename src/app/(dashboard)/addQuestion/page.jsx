@@ -1,4 +1,4 @@
-'use client'
+'use client';
 import config from '@/config';
 import React, { useContext, useEffect, useState } from 'react';
 import { FaFileExcel } from 'react-icons/fa';
@@ -12,6 +12,8 @@ import DeleteConfirmModal from '../../components/DeleteConfirmModal';
 import AOS from 'aos';
 import 'aos/dist/aos.css';
 import Select from 'react-select';
+import { FiEye, FiX } from "react-icons/fi";
+
 
 export default function AddQuestion() {
     const { loginData } = useContext(AuthContext);
@@ -20,33 +22,42 @@ export default function AddQuestion() {
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState(null);
     const [searchQuery, setSearchQuery] = useState('');
-    const [isEdit, setIsEdit] = useState(false); 
-    const [editId, setEditId] = useState(null); 
+    const [isEdit, setIsEdit] = useState(false);
+    const [editId, setEditId] = useState(null);
     const [showModal, setShowModal] = useState(false);
     const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
     const [selectedId, setSelectedId] = useState(null);
+    const [selectedSubject, setSelectedSubject] = useState(null);
     const [deleteSuccessMsg, setDeleteSuccessMsg] = useState("");
     const [subjectData, setSubjectData] = useState([]);
+    const [isViewModalOpen, setIsViewModalOpen] = useState(false);
+    const [viewData, setViewData] = useState(null); 
+    const [selectedQuestion, setSelectedQuestion] = useState(null);
+    const [options, setOptions] = useState([]);
+    const [isModalOpen, setIsModalOpen] = useState(false);
     useEffect(() => {
         AOS.init({ duration: 800, once: true });
     }, []);
 
     // Unified formData keys
-        const [formData, setFormData] = useState({
+    const [formData, setFormData] = useState({
         id: 0,
         subId: 0,
-        qnTypeId: "",       
+        qnTypeId: "",
         name: "",
         mark: 0,
         remarks: "",
-        sketch: null,       
-        options: [{ optionText: "", isCorrect: false }], 
-        });
+        sketch: null,
+        options: [{ optionText: "", isCorrect: false }],
+    });
 
-        
+
     const handleOpenModal = () => {
-    setShowModal(true);
-    //Reset New Form
+        setShowModal(true);
+        setIsEdit(false);
+        setEditId(null);
+
+        // Reset New Form
         setFormData({
             id: 0,
             subId: 0,
@@ -60,8 +71,9 @@ export default function AddQuestion() {
     };
 
 
- // Updated handleChange to handle text, number, and select inputs
- 
+
+    // Updated handleChange to handle text, number, and select inputs
+
     const handleChange = (e) => {
         const { name, value, type } = e.target;
 
@@ -69,173 +81,177 @@ export default function AddQuestion() {
             ...prev,
             [name]: type === "number" ? (value === "" ? 0 : parseFloat(value)) : value,
         }));
-        };
+    };
 
-        const handleFileChange = (e) => {
+    const handleFileChange = (e) => {
         setFormData((prev) => ({
             ...prev,
             sketch: e.target.files[0] || null,
         }));
-        };
-
-        const handleOptionChange = (index, field, value) => {
-            setFormData(prev => {
-                const updated = [...prev.options];
-                updated[index][field] = value;
-                return { ...prev, options: updated };
-            });
-        };
-            const addOption = () => {
-            setFormData((prev) => ({
-                ...prev,
-                options: [...prev.options, { optionText: "", isCorrect: false }],
-            }));
-            };
-
-            const removeOption = (index) => {
-            setFormData((prev) => ({
-                ...prev,
-                options: prev.options.filter((_, i) => i !== index),
-            }));
-        };
-
-const handleSubmit = async (e) => {
-    e.preventDefault();
-    setLoading(true);
-
-    try {
-        console.log("Form Data before validation:", formData);
-
-        if (!formData.subId) throw new Error("Please select a subject.");
-        if (!formData.qnTypeId) throw new Error("Please select a question type.");
-        if (!formData.name.trim()) throw new Error("Question text cannot be empty.");
-        if (formData.qnTypeId === "2" && formData.options.length < 2)
-            throw new Error("MCQ must have at least 2 options.");
-
-        const payload = {
-        SubId: Number(formData.subId),
-        Name: formData.name.trim(),
-        QnType: formData.qnTypeId === "1" ? "Descriptive" : "MCQ",
-        Mark: formData.mark ?? 0,
-        Remarks: formData.remarks ?? "",
-        Sketch: formData.sketch ? formData.sketch.name : null,
-        Options:
-        formData.qnTypeId === "2"
-            ? formData.options
-                .filter(opt => opt.optionText && opt.optionText.trim() !== "") 
-                .map(opt => ({
-                    OptionText: opt.optionText.trim(),
-                    Answer: opt.isCorrect ?? false
-                }))
-            : null
     };
 
+    const handleOptionChange = (index, field, value) => {
+        setFormData(prev => {
+            const updated = [...prev.options];
+            updated[index][field] = value;
+            return { ...prev, options: updated };
+        });
+    };
+    const addOption = () => {
+        setFormData((prev) => ({
+            ...prev,
+            options: [...prev.options, { optionText: "", isCorrect: false }],
+        }));
+    };
 
-        console.log("Payload to API:", payload);
-        const response = await fetch(`${config.API_BASE_URL}api/Question/Add`, {
-            method: "POST",
-            headers: {
+    const removeOption = (index) => {
+        setFormData((prev) => ({
+            ...prev,
+            options: prev.options.filter((_, i) => i !== index),
+        }));
+    };
+
+    const handleSubmit = async (e) => {
+        e.preventDefault();
+        setLoading(true);
+
+        try {
+            console.log("Form Data before validation:", formData);
+
+            if (!formData.subId) throw new Error("Please select a subject.");
+            if (!formData.qnTypeId) throw new Error("Please select a question type.");
+            if (!formData.name.trim()) throw new Error("Question text cannot be empty.");
+            if (formData.qnTypeId === "2" && formData.options.length < 2)
+                throw new Error("MCQ must have at least 2 options.");
+
+            const payload = {
+                SubId: Number(formData.subId),
+                Name: formData.name.trim(),
+                QnType: formData.qnTypeId === "1" ? "Descriptive" : "MCQ",
+                Mark: formData.mark ?? 0,
+                Remarks: formData.remarks ?? "",
+                Sketch: formData.sketch ? formData.sketch.name : null,
+                Options:
+                    formData.qnTypeId === "2"
+                        ? formData.options
+                            .filter(opt => opt.optionText && opt.optionText.trim() !== "")
+                            .map(opt => ({
+                                OptionText: opt.optionText.trim(),
+                                Answer: opt.isCorrect ?? false
+                            }))
+                        : null
+            };
+
+
+            console.log("Payload to API:", payload);
+            const response = await fetch(`${config.API_BASE_URL}api/Question/Add`, {
+                method: "POST",
+                headers: {
                     TenantId: loginData.tenantId,
                     'Content-Type': 'application/json',
                 },
-            body: JSON.stringify(payload),
-           
-        });
-        console.log("Raw response object:", response);
+                body: JSON.stringify(payload),
 
-        const result = await response.json();
-        console.log("Response JSON:", result);
-        if (!response.ok) throw new Error(result?.error || "Insert failed");
+            });
+            console.log("Raw response object:", response);
 
-        toast.success("Question added successfully");
-        setFormData({
-            id: 0,
-            subId: 0,
-            qnTypeId: "",
-            name: "",
-            mark: 0,
-            remarks: "",
-            sketch: null,
-            options: [{ optionText: "", isCorrect: false }],
-        });
-        fetchQuestionData();
-    } catch (err) {
-        console.error(err);
-        toast.error(err.message);
-    } finally {
-        setLoading(false);
-        setShowModal(false);
-    }
-};
+            const result = await response.json();
+            console.log("Response JSON:", result);
+            if (!response.ok) throw new Error(result?.error || "Insert failed");
 
-const handleQnTypeChange = (e) => {
-  const type = e.target.value;
-  setFormData((prev) => ({
-    ...prev,
-    qnTypeId: type,
-    options: type === "2" ? prev.options.length ? prev.options : [{ optionText: "", isCorrect: false }] : [],
-    sketch: type === "1" ? prev.sketch : null
-  }));
-};
-
-  // Fetch subjects
-useEffect(() => {
-    if (!loginData?.tenantId) return;
-    fetchSubjectData();
-    fetchQuestionData();
-}, [loginData?.tenantId]);
-
-const fetchSubjectData = async () => {
-    try {
-        const response = await fetch(`${config.API_BASE_URL}api/Procedure/GetData`, {
-            method: 'POST',
-            headers: { TenantId: loginData.tenantId, 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                operation: '',
-                procedureName: 'SP_ExamManage',
-                parameters: { QueryChecker: 2 },
-            }),
-        });
-        const data = await response.json();
-        setSubjectData(data);
-
-        // Automatically select first subject
-        if (data.length > 0) setFormData(prev => ({ ...prev, subId: data[0].Id }));
-    } catch (error) {
-        toast.error('Failed to load subjects');
-    }
-};
-
-const fetchQuestionData = async () => {
-   
-    try {
-        const response = await fetch(`${config.API_BASE_URL}api/Procedure/GetData`, {
-            method: 'POST',
-            headers: { TenantId: loginData.tenantId, 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                operation: '',
-                procedureName: 'SP_ExamManage',
-                parameters: { QueryChecker: 5 },
-            }),
-        });
-        const data = await response.json();
-        setQuestionData(data);
-    } catch (error) {
-        toast.error('Failed to load question data');
-    }
-};
-
-
-    //  Filter subjects
-    useEffect(() => {
-        let filteredData = questionData;
-        if (searchQuery.trim() !== '') {
-            filteredData = filteredData.filter(question =>
-                question.Question.toLowerCase().includes(searchQuery.toLowerCase())
-            );
+            toast.success("Question added successfully");
+            setFormData({
+                id: 0,
+                subId: 0,
+                qnTypeId: "",
+                name: "",
+                mark: 0,
+                remarks: "",
+                sketch: null,
+                options: [{ optionText: "", isCorrect: false }],
+            });
+            fetchQuestionData();
+        } catch (err) {
+            console.error(err);
+            toast.error(err.message);
+        } finally {
+            setLoading(false);
+            setShowModal(false);
         }
-        setFilteredQuestion(filteredData);
+    };
+
+    const handleQnTypeChange = (e) => {
+        const type = e.target.value;
+        setFormData((prev) => ({
+            ...prev,
+            qnTypeId: type,
+            options: type === "2" ? prev.options.length ? prev.options : [{ optionText: "", isCorrect: false }] : [],
+            sketch: type === "1" ? prev.sketch : null
+        }));
+    };
+
+    // Fetch subjects
+    useEffect(() => {
+        if (!loginData?.tenantId) return;
+        fetchSubjectData();
+        fetchQuestionData();
+    }, [loginData?.tenantId]);
+
+    const fetchSubjectData = async () => {
+        try {
+            const response = await fetch(`${config.API_BASE_URL}api/Procedure/GetData`, {
+                method: 'POST',
+                headers: { TenantId: loginData.tenantId, 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    operation: '',
+                    procedureName: 'SP_ExamManage',
+                    parameters: { QueryChecker: 2 },
+                }),
+            });
+            const data = await response.json();
+            setSubjectData(data);
+
+            // Automatically select first subject
+            if (data.length > 0) setFormData(prev => ({ ...prev, subId: data[0].Id }));
+        } catch (error) {
+            toast.error('Failed to load subjects');
+        }
+    };
+
+
+    const fetchQuestionData = async () => {
+
+        try {
+            const response = await fetch(`${config.API_BASE_URL}api/Procedure/GetData`, {
+                method: 'POST',
+                headers: { TenantId: loginData.tenantId, 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    operation: '',
+                    procedureName: 'SP_ExamManage',
+                    parameters: { QueryChecker: 5 },
+                }),
+            });
+            const data = await response.json();
+            setQuestionData(data);
+        } catch (error) {
+            toast.error('Failed to load question data');
+        }
+    };
+
+
+    useEffect(() => {
+        const lowerSearch = searchQuery.toLowerCase();
+        const filtered = questionData.filter(q => {
+            const matchesQuestion = q?.Name?.toLowerCase().includes(lowerSearch);
+            const matchesType = q?.QnType?.toLowerCase().includes(lowerSearch);
+            const matchesSubject = q?.SubjectName?.toLowerCase().includes(lowerSearch);
+            return matchesQuestion || matchesType || matchesSubject;
+        });
+
+        setFilteredQuestion(filtered);
     }, [searchQuery, questionData]);
+
+
 
     const handleDownloadExcel = () => {
         if (filteredQuestion.length === 0) return alert('No data available to export!');
@@ -245,106 +261,229 @@ const fetchQuestionData = async () => {
         XLSX.writeFile(workbook, 'Subjects_Report.xlsx');
     };
 
-    //  Open edit modal
-    const openEditModal = (question) => {
-    setIsEdit(true);
-    setEditId(question.Id);
 
-    setFormData({
-        
-        id: question.Id,
-        subId: question.SubId || 0,
-        qnTypeId: question.QnType === "Descriptive" ? "1" : "2",
-        name: question.Name || '',
-        mark: question.Mark || 0,
-        remarks: question.Remarks || '',
-        sketch: question.Sketch || null,
-        options:
-            question.QnType === "MCQ" && question.Options
-                ? question.Options.map(opt => ({
-                    optionText: opt.OptionText || "",
-                    isCorrect: opt.Answer || false
-                }))
-                : [{ optionText: "", isCorrect: false }],
-    });
+    const openEditModal = async (question) => {
+        // Use QuestionId
+        const questionId = question?.QuestionId;
 
-    setShowModal(true);
-};
+        if (!questionId) {
+            console.error("Cannot edit: questionId is undefined", question);
+            return;
+        }
+
+        setIsEdit(true);
+        setEditId(questionId);
+
+        // Default options (non-MCQ or fallback)
+        let options = [{ optionText: "", isCorrect: false }];
+
+        if (question.QnType === "MCQ") {
+            try {
+                const res = await fetch(
+                    `${config.API_BASE_URL}api/Question/GetByQuestion/${questionId}`,
+                    {
+                        headers: {
+                            TenantId: loginData.tenantId,
+                            "Content-Type": "application/json",
+                        },
+                    }
+                );
+
+                if (res.ok) {
+                    const apiOptions = await res.json();
+
+                    options = apiOptions.map((opt) => ({
+                        optionText: opt.OptionText || "",
+                        isCorrect: opt.Answer ?? false,
+                    }));
+
+                    if (options.length < 2) {
+                        options.push({ optionText: "", isCorrect: false });
+                    }
+                } else {
+                    console.error(
+                        `Failed to load MCQ options for questionId ${questionId}:`,
+                        await res.text()
+                    );
+                }
+            } catch (err) {
+                console.error(
+                    `Error fetching MCQ options for questionId ${questionId}:`,
+                    err
+                );
+            }
+        }
+
+        console.log("Edit Data:", options);
+
+        setFormData({
+            id: questionId,
+            subId: question.SubjectId || 0,
+            qnTypeId: question.QnType === "Descriptive" ? "1" : "2",
+            name: question.Name || "",
+            mark: question.Mark ?? 0,
+            remarks: question.Remarks || "",
+            sketch: question.Sketch || null,
+            options: options,
+        });
+
+        setShowModal(true);
+    };
+
 
 
 
     // Update subject
     const handleUpdateSubmit = async (e) => {
-    // e.preventDefault();
-    // try {
-    //     const response = await fetch(`${config.API_BASE_URL}api/Procedure/GetData`, {
-    //         method: 'POST',
-    //         headers: {
-    //             TenantId: loginData.tenantId,
-    //             'Content-Type': 'application/json',
-    //         },
-    //         body: JSON.stringify({
-    //             operation: '',
-    //             procedureName: 'SP_ExamManage', 
-    //             parameters: {
-    //                 QueryChecker: 6,     
-    //                 Id: editId,
-    //                 SubId: formData.subId, 
-    //                 Name: formData.name,
-    //                 Mark: formData.mark,
-    //                 Remarks: formData.remarks,
-    //                 UpdateBy: loginData.UserId,
-    //             },
-    //         }),
-    //     });
+        e.preventDefault();
+        setLoading(true);
 
-    //     if (!response.ok) throw new Error(`Update failed!`);
-    //     toast.success(`Question updated successfully`);
-        
-    //     // Refresh question list
-    //     await fetchQuestionData();
+        try {
+            const payload = {
+                Id: formData.id,
+                SubId: Number(formData.subId),
+                Name: formData.name.trim(),
+                QnType: formData.qnTypeId === "1" ? "Descriptive" : "MCQ",
+                Mark: formData.mark ?? 0,
+                Remarks: formData.remarks ?? "",
+                Sketch: formData.sketch ? formData.sketch.name : null,
+                Options:
+                    formData.qnTypeId === "2"
+                        ? formData.options
+                            .filter(opt => opt.optionText && opt.optionText.trim() !== "")
+                            .map(opt => ({
+                                Id: opt.id || 0,
+                                OptionText: opt.optionText.trim(),
+                                Answer: opt.isCorrect ?? false
+                            }))
+                        : null
+            };
 
-    //     // Reset form
-    //     setFormData({ subId: '', name: '', mark: '', remarks: '' });
+            const res = await fetch(`${config.API_BASE_URL}api/Question/Update`, {
+                method: "POST",
+                headers: {
+                    TenantId: loginData.tenantId,
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(payload)
+            });
 
-    // } catch (err) {
-    //     toast.error(err.message);
-    // } finally {
-    //     setShowModal(false);
-    //     setIsEdit(false);
-    //     setEditId(null);
-    // }
+            const result = await res.json();
+
+            if (!res.ok) throw new Error(result?.error || "Update failed");
+
+            toast.success("Question updated successfully");
+            setShowModal(false);
+            fetchQuestionData(); // Refresh table
+        } catch (err) {
+            console.error(err);
+            toast.error(err.message);
+        } finally {
+            setLoading(false);
+        }
     };
 
-    const openDeleteModal = (id) => {
-        setSelectedId(id);
+    const openDeleteModal = (question) => {
+        if (!question?.QuestionId) return;
+        setSelectedId(question.QuestionId);
         setDeleteSuccessMsg("");
         setIsDeleteModalOpen(true);
     };
 
+
     const handleConfirmDelete = async () => {
-        // try {
-        //     const response = await fetch(`${config.API_BASE_URL}api/Procedure/GetData`, {
-        //         method: 'POST',
-        //         headers: {
-        //             TenantId: loginData.tenantId,
-        //             'Content-Type': 'application/json',
-        //         },
-        //         body: JSON.stringify({
-        //             operation: '',
-        //             procedureName: 'SP_ExamManage',
-        //             parameters: { QueryChecker: 8, Id: selectedId },
-        //         }),
-        //     });
-        //     if (!response.ok) throw new Error('Failed to delete');
-        //     setDeleteSuccessMsg("Item deleted successfully."); 
-        //     setTimeout(() => setIsDeleteModalOpen(false), 2000);
-        //     fetchQuestionData();
-        // } catch (error) {
-        //     toast.error("Delete failed. Please try again.");
-        //     setIsDeleteModalOpen(false);
-        // }
+        if (!selectedId) return;
+
+        try {
+            const response = await fetch(`${config.API_BASE_URL}api/Question/Delete/${selectedId}`, {
+                method: 'DELETE',
+                headers: {
+                    TenantId: loginData.tenantId,
+                },
+            });
+
+            if (!response.ok) {
+                const errorText = await response.text();
+                console.error("Delete failed:", errorText);
+                throw new Error('Failed to delete');
+            }
+
+            setDeleteSuccessMsg("Item deleted successfully.");
+            setTimeout(() => setIsDeleteModalOpen(false), 2000);
+
+            // Refresh the question list
+            fetchQuestionData();
+        } catch (error) {
+            console.error(error);
+            toast.error("Delete failed. Please try again.");
+            setIsDeleteModalOpen(false);
+        }
     };
+
+   const fetchQuestionById = async (questionId) => {
+    debugger;
+  try {
+    const response = await fetch(`${config.API_BASE_URL}api/Procedure/GetData`, {
+      method: 'POST',
+      headers: {
+        TenantId: loginData.tenantId,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        operation: '', 
+        procedureName: 'SP_ExamManage',
+        parameters: {
+          QueryChecker: 7, 
+          Id: questionId,  
+        },
+      }),
+    });
+
+    if (!response.ok) {
+      throw new Error(await response.text());
+    }
+
+    const data = await response.json();
+
+    // Group options for MCQ
+    const question = data.length
+      ? {
+          QuestionId: data[0].QuestionId,
+          Name: data[0].Name,
+          Mark: data[0].Mark,
+          QnType: data[0].QnType,
+          Remarks: data[0].Remarks,
+          SubjectId: data[0].SubjectId,
+          SubjectName: data[0].SubjectName,
+          Sketch: data[0].Sketch,
+          IsActive: data[0].IsActive,
+          Options: data.filter(d => d.OptionText).map(d => ({
+            optionText: d.OptionText,
+          })),
+        }
+      : null;
+
+    setSelectedQuestion(question);
+    setOptions(question?.Options || []);
+     setViewData(question);
+  } catch (err) {
+    console.error(`Error fetching question ${questionId}:`, err);
+    toast.error('Failed to load question data');
+    setSelectedQuestion(null);
+    setOptions([]);
+  }
+};
+
+
+const openViewModal = async (question) => {
+  if (!question?.QuestionId) return;
+  await fetchQuestionById(question.QuestionId); 
+  setIsViewModalOpen(true);
+};
+
+
+
+
 
     return (
         <div className="overflow-x-auto p-3">
@@ -459,6 +598,26 @@ const fetchQuestionData = async () => {
                                     </button>
                                 )}
                             </div>
+                            {/* Subject Dropdown */}
+                            <div className="w-full sm:w-auto min-w-[180px] max-w-[300px]">
+                                {subjectData.length > 0 && (
+                                    <Select
+                                        name="subId"
+                                        value={subjectData.find(s => s.Id === formData.subId) || null}
+                                        onChange={(selected) =>
+                                            setFormData(prev => ({ ...prev, subId: selected?.Id || "" }))
+                                        }
+                                        options={subjectData}
+                                        getOptionLabel={option => option.Name}
+                                        getOptionValue={option => option.Id}
+                                        placeholder="Select Subject"
+                                        className="w-full"
+                                        isClearable
+                                    />
+                                )}
+
+
+                            </div>
 
                         </div>
 
@@ -478,11 +637,12 @@ const fetchQuestionData = async () => {
                     <table className="min-w-full text-sm text-left text-gray-600">
                         <thead className="bg-gray-100 text-xs uppercase text-gray-700">
                             <tr className="border-b">
-                                  <th className="px-4 py-2 text-center w-[5%]">SL</th>                                 
-                                  <th className="px-4 py-2 text-center w-[50%]">Question</th>   
-                                  <th className="px-4 py-2 text-center w-[50%]">Type</th>             
-                                  <th className="px-4 py-2 text-center w-[10%]">Mark</th>
-                                  <th className="px-4 py-2 text-center w-[15%]">Actions</th>
+                                <th className="px-4 py-2 text-center">SL</th>
+                                <th className="px-4 py-2">Subject</th>
+                                <th className="px-4 py-2">Question</th>
+                                <th className="px-4 py-2">Type</th>
+                                <th className="px-4 py-2">Mark</th>
+                                <th className="px-4 py-2 text-center">Actions</th>
                             </tr>
                         </thead>
                         <tbody className="bg-white text-xs text-gray-700">
@@ -494,13 +654,29 @@ const fetchQuestionData = async () => {
                                 filteredQuestion.map((question, index) => (
                                     <tr key={index} className="border-b border-gray-300 hover:bg-gray-50">
                                         <td data-label="Reg Date" className="px-4 py-2 text-center"> {index + 1}</td>
-                                        <td data-label="Subject" className="px-4 py-2 text-center">{question.Name}</td>
-                                        <td data-label="Question" className="px-4 py-2 text-center">{question.QnType}</td>                                    
-                                        <td data-label="Mark" className="px-4 py-2 text-center">{question.Mark}</td>
+                                        <td data-label="Subject" className="px-4 py-2 ">{question.SubjectName}</td>
+                                        <td data-label="Subject" className="px-4 py-2 ">{question.Name}</td>
+                                        <td data-label="Question" className="px-4 py-2 ">{question.QnType}</td>
+                                        <td data-label="Mark" className="px-4 py-2 ">{question.Mark}</td>
                                         <td data-label="Actions" className="px-4 py-2 text-center">
                                             <div className="text-base flex items-end gap-3">
                                                 <button
-                                                    onClick={() => openEditModal(question)}
+                                                    onClick={() => {
+                                                        console.log("View clicked:", question);
+                                                        openViewModal(question);
+                                                    }}
+                                                    className="flex items-center gap-1 px-3 py-1.5 text-sm font-medium border border-blue-500 text-blue-500 rounded hover:bg-blue-500 hover:text-white transition-colors duration-200"
+                                                >
+                                                    <FiEye className="text-base" />
+                                                </button>
+
+
+
+                                                <button
+                                                    onClick={() => {
+                                                        console.log("Question clicked:", question);
+                                                        openEditModal(question);
+                                                    }}
                                                     title="Edit"
                                                     className="flex items-center gap-1 px-3 py-1.5 text-sm font-medium border border-[#00925a] text-[#00925a] rounded hover:bg-[#00925a] hover:text-white transition-colors duration-200"
                                                 >
@@ -508,7 +684,7 @@ const fetchQuestionData = async () => {
                                                 </button>
 
                                                 <button
-                                                    onClick={() => openDeleteModal(question.Id)}
+                                                    onClick={() => openDeleteModal(question)}
                                                     className="flex items-center gap-1 px-3 py-1.5 text-sm font-medium border border-red-500 text-red-500 rounded hover:bg-red-500 hover:text-white transition-colors duration-200"
                                                 >
                                                     <FiTrash2 className="text-base" />
@@ -537,224 +713,296 @@ const fetchQuestionData = async () => {
                 <div className="fixed inset-0 bg-black/20  bg-opacity-40 z-50 flex items-center justify-center">
                     <div data-aos="zoom-in" className="bg-white rounded-lg shadow-md p-6 w-full max-w-xl relative">
                         <form method="dialog">
-                        <button
-                            onClick={() => setShowModal(false)}
-                            className="btn btn-sm btn-circle btn-ghost absolute right-2 top-2"
-                        >
-                            ✕
-                        </button>
+                            <button
+                                onClick={() => setShowModal(false)}
+                                className="btn btn-sm btn-circle btn-ghost absolute right-2 top-2"
+                            >
+                                ✕
+                            </button>
                         </form>
 
                         {/* Modal Title */}
                         <div className="border-b border-gray-300 pb-2 mb-4">
-                        <h3 className="font-bold text-lg">Question Entry</h3>
+                            <h3 className="font-bold text-lg">Question Entry</h3>
                         </div>
 
                         <form
-                        onSubmit={isEdit ? handleUpdateSubmit : handleSubmit}
-                        className="space-y-4 text-sm"
+                            onSubmit={isEdit ? handleUpdateSubmit : handleSubmit}
+                            className="space-y-4 text-sm"
                         >
-                        {/* Subject */}
-                        <div className="flex items-center gap-2 mt-2">
-                            <label className="w-1/3 text-sm font-semibold text-gray-700">
-                            Subject Name
-                            </label>
-                            <Select
-                            name="subId"
-                            value={subjectData.find((s) => s.Id === formData.subId) || null}
-                            onChange={(selected) =>
-                                setFormData((prev) => ({ ...prev, subId: selected?.Id || "" }))
-                            }
-                            options={subjectData}
-                            getOptionLabel={(option) => option.Name}
-                            getOptionValue={(option) => option.Id}
-                            placeholder="Select Subject"
-                            className="w-full"
-                            isClearable
-                            />
-                        </div>
+                            {/* Subject */}
+                            <div className="flex items-center gap-2 mt-2">
+                                <label className="w-1/3 text-sm font-semibold text-gray-700">
+                                    Subject Name
+                                </label>
+                                <Select
+                                    name="subId"
+                                    value={subjectData.find((s) => s.Id === formData.subId) || null}
+                                    onChange={(selected) =>
+                                        setFormData((prev) => ({ ...prev, subId: selected?.Id || "" }))
+                                    }
+                                    options={subjectData}
+                                    getOptionLabel={(option) => option.Name}
+                                    getOptionValue={(option) => option.Id}
+                                    placeholder="Select Subject"
+                                    className="w-full"
+                                    isClearable
+                                />
+                            </div>
 
-                        {/* Question Type */}
-                        <div className="flex items-center gap-2 mt-2">
-                            <label className="w-1/3 text-sm font-semibold text-gray-700">
-                            Question Type
-                            </label>
-                            <select
-                                name="qnTypeId"
-                                value={formData.qnTypeId}
-                                onChange={handleQnTypeChange}
-                                className="w-full border rounded p-2"
+                            {/* Question Type */}
+                            <div className="flex items-center gap-2 mt-2">
+                                <label className="w-1/3 text-sm font-semibold text-gray-700">
+                                    Question Type
+                                </label>
+                                <select
+                                    name="qnTypeId"
+                                    value={formData.qnTypeId}
+                                    onChange={handleQnTypeChange}
+                                    className="w-full border rounded p-2"
                                 >
-                                <option value="">-- Select Question Type --</option>
-                                <option value="1">Descriptive</option>
-                                <option value="2">MCQ</option>
+                                    <option value="">-- Select Question Type --</option>
+                                    <option value="1">Descriptive</option>
+                                    <option value="2">MCQ</option>
                                 </select>
 
-                        </div>
-
-                        {/* Descriptive Fields */}
-                        {formData.qnTypeId === "1" && (
-                            <>
-                            {/* Question */}
-                            <div className="flex items-center gap-2 mt-2">
-                                <label className="w-1/3 text-sm font-semibold text-gray-700">
-                                Question
-                                </label>
-                                <textarea
-                                name="name"
-                                value={formData.name}
-                                onChange={handleChange}
-                                className="w-full border px-3 py-2 rounded"
-                                rows={3}
-                                required
-                                />
                             </div>
 
-                            {/* Mark */}
-                            <div className="flex items-center gap-2 mt-2">
-                                <label className="w-1/3 text-sm font-semibold text-gray-700">
-                                Mark
-                                </label>
-                                <input
-                                type="number"
-                                name="mark"
-                                value={formData.mark ?? ""}
-                                onChange={handleChange}
-                                className="w-full border px-3 py-2 rounded"
-                                required
-                                min="0"
-                                step="0.1"
-                                />
-                            </div>
-
-                            {/* Image Upload */}
-                            <div className="flex items-center gap-2 mt-2">
-                                <label className="w-1/3 text-sm font-semibold text-gray-700">
-                                Upload Image
-                                </label>
-                                <input
-                                type="file"
-                                name="sketch"
-                                onChange={handleFileChange}
-                                className="w-full border px-3 py-2 rounded"
-                                />
-                            </div>
-                            </>
-                        )}
-
-                        {/* MCQ Fields */}
-                        {formData.qnTypeId === "2" && (
-                            <>
-                            {/* Question */}
-                            <div className="flex items-center gap-2 mt-2">
-                                <label className="w-1/3 text-sm font-semibold text-gray-700">
-                                Question
-                                </label>
-                                <textarea
-                                name="name"
-                                value={formData.name}
-                                onChange={handleChange}
-                                className="w-full border px-3 py-2 rounded"
-                                rows={3}
-                                required
-                                />
-                            </div>
-
-                            {/* Mark */}
-                            <div className="flex items-center gap-2 mt-2">
-                                <label className="w-1/3 text-sm font-semibold text-gray-700">
-                                Mark
-                                </label>
-                                <input
-                                type="number"
-                                name="mark"
-                                value={formData.mark ?? ""}
-                                onChange={handleChange}
-                                className="w-full border px-3 py-2 rounded"
-                                required
-                                min="0"
-                                step="0.1"
-                                />
-                            </div>
-
-                            {/* MCQ Options */}
-                            <div className="mt-3">
-                                {/* Header Row */}
-                                <div className="flex gap-2 px-1 mb-1">
-                                    <span className="flex-1 text-sm font-semibold text-gray-700">Options</span>
-                                    <span className="w-21 text-sm font-semibold text-gray-700 text-center">Choose Ans</span>
-                                    <span className="w-8"></span> 
-                                </div>
-
-                                {/* Option Rows */}
-                                {formData.options.map((opt, index) => (
-                                    <div key={index} className="flex gap-2 mt-2 items-center">
-                                    {/* Option Text Input */}
-                                    <input
-                                        type="text"
-                                        value={opt.optionText}
-                                        onChange={(e) => handleOptionChange(index, "optionText", e.target.value)}
-                                        placeholder={`Option ${index + 1}`}
-                                        className="flex-1 min-w-0 border px-2 py-1 rounded"
-                                    />
-
-                                    {/* Checkbox */}
-                                    <div className="flex justify-center items-center w-16">
-                                        <input
-                                        type="checkbox"
-                                        checked={opt.isCorrect}
-                                        onChange={(e) => handleOptionChange(index, "isCorrect", e.target.checked)}
+                            {/* Descriptive Fields */}
+                            {formData.qnTypeId === "1" && (
+                                <>
+                                    {/* Question */}
+                                    <div className="flex items-center gap-2 mt-2">
+                                        <label className="w-1/3 text-sm font-semibold text-gray-700">
+                                            Question
+                                        </label>
+                                        <textarea
+                                            name="name"
+                                            value={formData.name}
+                                            onChange={handleChange}
+                                            className="w-full border px-3 py-2 rounded"
+                                            rows={3}
+                                            required
                                         />
                                     </div>
 
-                                    {/* Delete Button */}
-                                    <div className=" flex justify-center">
+                                    {/* Mark */}
+                                    <div className="flex items-center gap-2 mt-2">
+                                        <label className="w-1/3 text-sm font-semibold text-gray-700">
+                                            Mark
+                                        </label>
+                                        <input
+                                            type="number"
+                                            name="mark"
+                                            value={formData.mark ?? ""}
+                                            onChange={handleChange}
+                                            className="w-full border px-3 py-2 rounded"
+                                            required
+                                            min="0"
+                                            step="0.1"
+                                        />
+                                    </div>
+
+                                    {/* Image Upload */}
+                                    <div className="flex items-center gap-2 mt-2">
+                                        <label className="w-1/3 text-sm font-semibold text-gray-700">
+                                            Upload Image
+                                        </label>
+                                        <input
+                                            type="file"
+                                            name="sketch"
+                                            onChange={handleFileChange}
+                                            className="w-full border px-3 py-2 rounded"
+                                        />
+                                    </div>
+                                </>
+                            )}
+
+                            {/* MCQ Fields */}
+                            {formData.qnTypeId === "2" && (
+                                <>
+                                    {/* Question */}
+                                    <div className="flex items-center gap-2 mt-2">
+                                        <label className="w-1/3 text-sm font-semibold text-gray-700">
+                                            Question
+                                        </label>
+                                        <textarea
+                                            name="name"
+                                            value={formData.name}
+                                            onChange={handleChange}
+                                            className="w-full border px-3 py-2 rounded"
+                                            rows={3}
+                                            required
+                                        />
+                                    </div>
+
+                                    {/* Mark */}
+                                    <div className="flex items-center gap-2 mt-2">
+                                        <label className="w-1/3 text-sm font-semibold text-gray-700">
+                                            Mark
+                                        </label>
+                                        <input
+                                            type="number"
+                                            name="mark"
+                                            value={formData.mark ?? ""}
+                                            onChange={handleChange}
+                                            className="w-full border px-3 py-2 rounded"
+                                            required
+                                            min="0"
+                                            step="0.1"
+                                        />
+                                    </div>
+
+                                    {/* MCQ Options */}
+                                    <div className="mt-3">
+                                        {/* Header Row */}
+                                        <div className="flex gap-2 px-1 mb-1">
+                                            <span className="flex-1 text-sm font-semibold text-gray-700">Options</span>
+                                            <span className="w-21 text-sm font-semibold text-gray-700 text-center">Choose Ans</span>
+                                            <span className="w-8"></span>
+                                        </div>
+
+                                        {/* Option Rows */}
+                                        {formData.options.map((opt, index) => (
+                                            <div key={index} className="flex gap-2 mt-2 items-center">
+                                                {/* Option Text Input */}
+                                                <input
+                                                    type="text"
+                                                    value={opt.optionText}
+                                                    onChange={(e) => handleOptionChange(index, "optionText", e.target.value)}
+                                                    placeholder={`Option ${index + 1}`}
+                                                    className="flex-1 min-w-0 border px-2 py-1 rounded"
+                                                />
+
+                                                {/* Checkbox */}
+                                                <div className="flex justify-center items-center w-16">
+                                                    <input
+                                                        type="checkbox"
+                                                        checked={opt.isCorrect}
+                                                        onChange={(e) => handleOptionChange(index, "isCorrect", e.target.checked)}
+                                                    />
+                                                </div>
+
+                                                {/* Delete Button */}
+                                                <div className=" flex justify-center">
+                                                    <button
+                                                        type="button"
+                                                        className="px-2 bg-red-500 text-white rounded flex items-center justify-center"
+                                                        onClick={() => removeOption(index)}
+                                                    >
+                                                        <FiTrash2 className="text-base" />
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        ))}
+
+                                        {/* Add Option Button */}
                                         <button
-                                        type="button"
-                                        className="px-2 bg-red-500 text-white rounded flex items-center justify-center"
-                                        onClick={() => removeOption(index)}
+                                            type="button"
+                                            onClick={addOption}
+                                            className="mt-2 px-3 py-1 bg-green-500 text-white rounded"
                                         >
-                                        <FiTrash2 className="text-base" />
+                                            Add Option
                                         </button>
                                     </div>
-                                    </div>
-                                ))}
 
-                                {/* Add Option Button */}
-                                <button
-                                    type="button"
-                                    onClick={addOption}
-                                    className="mt-2 px-3 py-1 bg-green-500 text-white rounded"
-                                >
-                                    Add Option
-                                </button>
+                                </>
+                            )}
+
+                            {/* Buttons */}
+                            {formData.qnTypeId && (
+                                <div className="flex justify-end space-x-2 pt-4">
+                                    <button
+                                        type="button"
+                                        onClick={() => setShowModal(false)}
+                                        className="px-3 py-1 bg-gray-500 text-white rounded hover:bg-gray-600"
+                                    >
+                                        Cancel
+                                    </button>
+                                    <button
+                                        type="submit"
+                                        className="px-3 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+                                    >
+                                        {isEdit ? "Update" : "Save"}
+                                    </button>
                                 </div>
-
-                            </>
-                        )}
-
-                        {/* Buttons */}
-                        {formData.qnTypeId && ( 
-                            <div className="flex justify-end space-x-2 pt-4">
-                            <button
-                                type="button"
-                                onClick={() => setShowModal(false)}
-                                className="px-3 py-1 bg-gray-500 text-white rounded hover:bg-gray-600"
-                            >
-                                Cancel
-                            </button>
-                            <button
-                                type="submit"
-                                className="px-3 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
-                            >
-                                {isEdit ? "Update" : "Save"}
-                            </button>
-                            </div>
-                        )}
+                            )}
                         </form>
                     </div>
                 </div>
             )}
+
+
+            {isViewModalOpen && viewData && (
+                <div className="fixed inset-0 bg-black/20 z-50 flex items-center justify-center">
+                    <div data-aos="zoom-in" className="bg-white rounded-lg shadow-md p-6 w-full max-w-xl relative">
+                        <button
+                            onClick={() => setIsViewModalOpen(false)}
+                            className="btn btn-sm btn-circle btn-ghost absolute right-2 top-2"
+                        >
+                            ✕
+                        </button>
+
+                        <div className="border-b border-gray-300 pb-2 mb-4">
+                            <h3 className="font-bold text-lg">View Question</h3>
+                        </div>
+
+                        <div className="space-y-4 text-sm">
+
+                            <div className="flex items-center gap-2">
+                                <label className="w-1/3 font-semibold text-gray-700">Subject</label>
+                                <span>{subjectData.find(s => s.Id === viewData.SubjectId)?.Name || "-"}</span>
+                            </div>
+
+                            <div className="flex items-center gap-2">
+                                <label className="w-1/3 font-semibold text-gray-700">Question Type</label>
+                                <span>{viewData.QnType}</span>
+                            </div>
+
+                            <div className="flex items-start gap-2">
+                                <label className="w-1/3 font-semibold text-gray-700">Question</label>
+                                <p className="whitespace-pre-wrap">{viewData.Name}</p>
+                            </div>
+
+                            <div className="flex items-center gap-2">
+                                <label className="w-1/3 font-semibold text-gray-700">Mark</label>
+                                <span>{viewData.Mark}</span>
+                            </div>
+
+                            {viewData.qnType === "MCQ" && (
+                                <div className="mt-2">
+                                    <label className="w-full font-semibold text-gray-700">Options</label>
+                                    {viewData.options.map((opt, idx) => (
+                                        <div key={idx} className="flex items-center gap-2 mt-1">
+                                            <span className="flex-1">{opt.optionText}</span>
+                                            <input type="checkbox" checked={opt.isCorrect} disabled className="ml-2" />
+                                        </div>
+                                    ))}
+                                </div>
+                            )}
+
+                            {viewData.sketch && (
+                                <div className="flex items-center gap-2 mt-2">
+                                    <label className="w-1/3 font-semibold text-gray-700">Image</label>
+                                    <img src={viewData.sketch} alt="Sketch" className="max-w-[150px] max-h-[150px]" />
+                                </div>
+                            )}
+
+                            <div className="flex justify-end pt-4">
+                                <button
+                                    onClick={() => setIsViewModalOpen(false)}
+                                    className="px-3 py-1 bg-gray-500 text-white rounded hover:bg-gray-600"
+                                >
+                                    Close
+                                </button>
+                            </div>
+
+                        </div>
+                    </div>
+                </div>
+            )}
+
+
 
 
         </div>
