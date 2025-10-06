@@ -12,16 +12,13 @@ import DeleteConfirmModal from '../../components/DeleteConfirmModal';
 import AOS from 'aos';
 import 'aos/dist/aos.css';
 import Select from 'react-select';
-import { VscDebugPause } from 'react-icons/vsc';
 
 export default function AddQuestion() {
     const { loginData } = useContext(AuthContext);
 
-    // State declarations
     const [questionData, setQuestionData] = useState([]);
     const [filteredQuestion, setFilteredQuestion] = useState([]);
     const [loading, setLoading] = useState(false);
-    const [error, setError] = useState(null);
     const [searchQuery, setSearchQuery] = useState('');
     const [isEdit, setIsEdit] = useState(false);
     const [editId, setEditId] = useState(null);
@@ -34,11 +31,11 @@ export default function AddQuestion() {
     const [viewData, setViewData] = useState(null);
     const [questionImage, setQuestionImage] = useState(null);
     const [isUploading, setIsUploading] = useState(false);
+    const [existingImage, setExistingImage] = useState(null);
 
-    // Form data state
     const [formData, setFormData] = useState({
         id: 0,
-        subId: 0,
+        subId: "",
         qnTypeId: "",
         name: "",
         mark: 0,
@@ -46,22 +43,17 @@ export default function AddQuestion() {
         sketch: null,
         options: [{ optionText: "", isCorrect: false }],
     });
-    const [existingImage, setExistingImage] = useState(null);
 
-    // Initialize AOS animations
     useEffect(() => {
         AOS.init({ duration: 800, once: true });
     }, []);
 
-    // Fetch data on component mount
     useEffect(() => {
         if (!loginData?.tenantId) return;
         fetchSubjectData();
         fetchQuestionsBySubject();
-        // fetchQuestionData();
     }, [loginData?.tenantId]);
 
-    // Filter questions based on search query
     useEffect(() => {
         const lowerSearch = searchQuery.toLowerCase();
         const filtered = questionData.filter(q => {
@@ -73,69 +65,7 @@ export default function AddQuestion() {
         setFilteredQuestion(filtered);
     }, [searchQuery, questionData]);
 
-    // API calls
-    // const fetchSubjectData = async () => {
-    //     try {
-    //         const response = await fetch(`${config.API_BASE_URL}api/Procedure/GetData`, {
-    //             method: 'POST',
-    //             headers: { TenantId: loginData.tenantId, 'Content-Type': 'application/json' },
-    //             body: JSON.stringify({
-    //                 operation: '',
-    //                 procedureName: 'SP_ExamManage',
-    //                 parameters: { QueryChecker: 2 },
-    //             }),
-    //         });
-    //         const data = await response.json();
-    //         setSubjectData(data);
-    //         // Auto-select first subject
-    //         if (data.length > 0) setFormData(prev => ({ ...prev, subId: data[0].Id }));
-    //     } catch (error) {
-    //         toast.error('Failed to load subjects');
-    //     }
-    // };
-
-    // const fetchSubjectData = async () => {
-    //     try {
-    //         const response = await fetch(`${config.API_BASE_URL}api/Procedure/GetData`, {
-    //             method: 'POST',
-    //             headers: {
-    //                 TenantId: loginData.tenantId,
-    //                 'Content-Type': 'application/json'
-    //             },
-    //             body: JSON.stringify({
-    //                 operation: '',
-    //                 procedureName: 'SP_ExamManage',
-    //                 parameters: { QueryChecker: 2 },
-    //             }),
-    //         });
-
-    //         const data = await response.json();
-
-    //         if (Array.isArray(data)) {
-    //             //  Map subjects into react-select format
-    //             const formatted = data.map(sub => ({
-    //                 value: sub.Id,  // ID will be sent to API
-    //                 label: sub.Name // Name shown in dropdown
-    //             }));
-
-    //             setSubjectData(formatted);
-
-    //             //  Auto-select first subject if not editing
-    //             if (formatted.length > 0 && !formData.subId) {
-    //                 setFormData(prev => ({ ...prev, subId: formatted[0].value }));
-    //             }
-    //         } else {
-    //             toast.error("Invalid subject data format");
-    //         }
-
-    //     } catch (error) {
-    //         console.error(error);
-    //         toast.error('Failed to load subjects');
-    //     }
-    // };
-
-
-     const fetchSubjectData = async () => {
+    const fetchSubjectData = async () => {
         try {
             const response = await fetch(`${config.API_BASE_URL}api/Procedure/GetData`, {
                 method: "POST",
@@ -146,7 +76,7 @@ export default function AddQuestion() {
                 body: JSON.stringify({
                     operation: "",
                     procedureName: "SP_ExamManage",
-                    parameters: { QueryChecker: 2 } // subjects
+                    parameters: { QueryChecker: 2 }
                 })
             });
 
@@ -158,11 +88,6 @@ export default function AddQuestion() {
                     label: sub.Name
                 }));
                 setSubjectData(formatted);
-
-                // Auto-select first subject if none
-                if (formatted.length > 0 && !formData.subId) {
-                    setFormData(prev => ({ ...prev, subId: null })); // initially null => show all
-                }
             } else {
                 toast.error("Invalid subject data format");
             }
@@ -171,33 +96,42 @@ export default function AddQuestion() {
             toast.error("Failed to load subjects");
         }
     };
-    // const fetchQuestionData = async () => {
-    //     try {
-    //         const response = await fetch(`${config.API_BASE_URL}api/Procedure/GetData`, {
-    //             method: 'POST',
-    //             headers: { TenantId: loginData.tenantId, 'Content-Type': 'application/json' },
-    //             body: JSON.stringify({
-    //                 operation: '',
-    //                 procedureName: 'SP_ExamManage',
-    //                 parameters: { QueryChecker: 5 },
-    //             }),
-    //         });
-    //         const data = await response.json();
-    //         setQuestionData(data);
-    //     } catch (error) {
-    //         toast.error('Failed to load question data');
-    //     }
-    // };
 
-    // Modal handlers
+    const fetchQuestionsBySubject = async (subId = null) => {
+        try {
+            const response = await fetch(`${config.API_BASE_URL}api/Procedure/GetData`, {
+                method: "POST",
+                headers: {
+                    TenantId: loginData.tenantId,
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify({
+                    operation: "",
+                    procedureName: "SP_ExamManage",
+                    parameters: {
+                        QueryChecker: 6,
+                        SubId: subId || 0,
+                    },
+                }),
+            });
+
+            const data = await response.json();
+            const questions = Array.isArray(data) ? data : [];
+            setQuestionData(questions);
+            setFilteredQuestion(questions);
+        } catch (error) {
+            console.error(error);
+            toast.error("Failed to load questions");
+        }
+    };
+
     const handleOpenModal = () => {
         setShowModal(true);
         setIsEdit(false);
         setEditId(null);
-        // Reset form data
         setFormData({
             id: 0,
-            subId: 0,
+            subId: "",
             qnTypeId: "",
             name: "",
             mark: 0,
@@ -206,9 +140,9 @@ export default function AddQuestion() {
             options: [{ optionText: "", isCorrect: false }],
         });
         setQuestionImage(null);
+        setExistingImage(null);
     };
 
-    // Form handlers
     const handleChange = (e) => {
         const { name, value, type } = e.target;
         setFormData((prev) => ({
@@ -222,13 +156,11 @@ export default function AddQuestion() {
         if (!file) return;
 
         setIsUploading(true);
-        setError(null);
 
         try {
             const previewUrl = URL.createObjectURL(file);
             setQuestionImage(previewUrl);
 
-            // Upload image to server
             const formDataToSend = new FormData();
             formDataToSend.append('file', file);
 
@@ -240,26 +172,16 @@ export default function AddQuestion() {
             const data = await res.json();
             if (!res.ok) throw new Error(data.error || 'Upload failed');
 
-            // Save filename for backend - DIFFERENT FOR ADD VS EDIT
             if (isEdit) {
-                // For edit, we need to store both the file object and filename
-                setFormData(prev => ({
-                    ...prev,
-                    sketch: file // store file object for upload during update
-                }));
-                // Also store the uploaded filename separately
+                setFormData(prev => ({ ...prev, sketch: file }));
                 setExistingImage(data.filename);
             } else {
-                // For add, just store filename
-                setFormData(prev => ({
-                    ...prev,
-                    sketch: data.filename
-                }));
+                setFormData(prev => ({ ...prev, sketch: data.filename }));
             }
 
         } catch (err) {
             console.error('Upload error:', err);
-            setError(err.message);
+            toast.error(err.message);
             setQuestionImage(null);
             setFormData(prev => ({ ...prev, sketch: null }));
         } finally {
@@ -269,10 +191,10 @@ export default function AddQuestion() {
 
     const handleRemoveQuestionImage = () => {
         setQuestionImage(null);
+        setExistingImage(null);
         setFormData(prev => ({ ...prev, sketch: null }));
     };
 
-    // Option handlers for MCQ
     const handleOptionChange = (index, field, value) => {
         setFormData(prev => {
             const updated = [...prev.options];
@@ -305,217 +227,414 @@ export default function AddQuestion() {
         }));
     };
 
-    // Form submission
+    // const handleSubmit = async (e) => {
+    //     e.preventDefault();
+    //     setLoading(true);
+
+    //     try {
+    //         if (!formData.subId) throw new Error("Please select a subject.");
+    //         if (!formData.qnTypeId) throw new Error("Please select a question type.");
+    //         if (!formData.name.trim()) throw new Error("Question text cannot be empty.");
+    //         if (formData.qnTypeId === "2" && formData.options.length < 2)
+    //             throw new Error("MCQ must have at least 2 options.");
+
+    //         const payload = {
+    //             SubId: Number(formData.subId),
+    //             Name: formData.name.trim(),
+    //             QnType: formData.qnTypeId === "1" ? "Descriptive" : "MCQ",
+    //             Mark: formData.mark ?? 0,
+    //             Remarks: formData.remarks ?? "",
+    //             EntryBy: loginData?.UserId,
+    //             Sketch: formData.sketch ? `/images/questionImage/${formData.sketch}` : null,
+    //             Options: formData.qnTypeId === "2"
+    //                 ? formData.options
+    //                     .filter(opt => opt.optionText && opt.optionText.trim() !== "")
+    //                     .map(opt => ({
+    //                         OptionText: opt.optionText.trim(),
+    //                         Answer: opt.isCorrect ?? false
+    //                     }))
+    //                 : null
+    //         };
+
+    //         const response = await fetch(`${config.API_BASE_URL}api/Question/Add`, {
+    //             method: "POST",
+    //             headers: {
+    //                 'Content-Type': 'application/json',
+    //                 TenantId: loginData.tenantId,
+    //             },
+    //             body: JSON.stringify(payload),
+    //         });
+
+    //         const result = await response.json();
+    //         if (!response.ok) throw new Error(result?.error || "Insert failed");
+
+    //         toast.success("Question added successfully");
+    //         setFormData({
+    //             id: 0,
+    //             subId: "",
+    //             qnTypeId: "",
+    //             name: "",
+    //             mark: 0,
+    //             remarks: "",
+    //             sketch: null,
+    //             options: [{ optionText: "", isCorrect: false }],
+    //         });
+    //         setQuestionImage(null);
+    //         fetchQuestionsBySubject();
+
+    //     } catch (err) {
+    //         console.error(err);
+    //         toast.error(err.message);
+    //     } finally {
+    //         setLoading(false);
+    //         setShowModal(false);
+    //     }
+    // };
 
     const handleSubmit = async (e) => {
-        debugger;
-        e.preventDefault();
+    e.preventDefault();
+    setLoading(true);
 
-        setLoading(true);
+    try {
+        if (!formData.subId) throw new Error("Please select a subject.");
+        if (!formData.qnTypeId) throw new Error("Please select a question type.");
+        if (!formData.name.trim()) throw new Error("Question text cannot be empty.");
+        if (formData.qnTypeId === "2" && formData.options.length < 2)
+            throw new Error("MCQ must have at least 2 options.");
 
-        try {
-            // Validation
-            if (!formData.subId) throw new Error("Please select a subject.");
-            if (!formData.qnTypeId) throw new Error("Please select a question type.");
-            if (!formData.name.trim()) throw new Error("Question text cannot be empty.");
-            if (formData.qnTypeId === "2" && formData.options.length < 2)
-                throw new Error("MCQ must have at least 2 options.");
-
-            // Prepare payload
-            const payload = {
-                SubId: Number(formData.subId),
-                Name: formData.name.trim(),
-                QnType: formData.qnTypeId === "1" ? "Descriptive" : "MCQ",
-                Mark: formData.mark ?? 0,
-                Remarks: formData.remarks ?? "",
-                EntryBy: loginData?.UserId,
-                Sketch: formData.sketch ? `/images/questionImage/${formData.sketch}` : null,
-                Options: formData.qnTypeId === "2"
-                    ? formData.options
-                        .filter(opt => opt.optionText && opt.optionText.trim() !== "")
-                        .map(opt => ({
-                            OptionText: opt.optionText.trim(),
-                            Answer: opt.isCorrect ?? false
-                        }))
-                    : null
-            };
-
-            console.log("Add Payload:", payload);
-
-            const response = await fetch(`${config.API_BASE_URL}api/Question/Add`, {
-                method: "POST",
-                headers: {
-                    'Content-Type': 'application/json',
-                    TenantId: loginData.tenantId,
-                },
-                body: JSON.stringify(payload),
-            });
-
-            const result = await response.json();
-            if (!response.ok) throw new Error(result?.error || "Insert failed");
-
-            toast.success("Question added successfully");
-
-            // Reset form and refresh data
-            setFormData({
-                id: 0,
-                subId: 0,
-                qnTypeId: "",
-                name: "",
-                mark: 0,
-                remarks: "",
-                sketch: null,
-                options: [{ optionText: "", isCorrect: false }],
-            });
-            setQuestionImage(null);
-            // fetchQuestionData();
-            fetchQuestionsBySubject();
-
-        } catch (err) {
-            console.error(err);
-            toast.error(err.message);
-        } finally {
-            setLoading(false);
-            setShowModal(false);
-        }
-    };
-
-    // Edit functionality
-    const openEditModal = async (question) => {
-        if (!question?.QuestionId) return console.error("Invalid question ID");
-
-        setIsEdit(true);
-        setEditId(question.QuestionId);
-
-        let options = [{ optionText: "", isCorrect: false }];
-
-        if (question.QnType === "MCQ") {
-            try {
-                const res = await fetch(
-                    `${config.API_BASE_URL}api/Question/GetByQuestion/${question.QuestionId}`,
-                    {
-                        headers: {
-                            TenantId: loginData.tenantId,
-                            "Content-Type": "application/json",
-                        },
-                    }
-                );
-
-                if (res.ok) {
-                    const apiOptions = await res.json();
-                    options = apiOptions.map((opt) => ({
-                        id: opt.Id || 0,
-                        optionText: opt.OptionText || "",
-                        isCorrect: opt.Answer ?? false,
-                    }));
-
-                    if (options.length < 2) options.push({ optionText: "", isCorrect: false });
-                }
-            } catch (err) {
-                console.error("Error fetching MCQ options:", err);
-            }
+        // FIX: Consistent path handling for new images
+        let sketchPath = null;
+        if (formData.sketch) {
+            sketchPath = `/images/questionImage/${formData.sketch}`;
         }
 
-        setFormData({
-            id: question.QuestionId,
-            subId: question.SubjectId || 0,
-            qnTypeId: question.QnType === "Descriptive" ? "1" : "2",
-            name: question.Name || "",
-            mark: question.Mark ?? 0,
-            remarks: question.Remarks || "",
-            sketch: null, // new file
-            options: options,
+        const payload = {
+            SubId: Number(formData.subId),
+            Name: formData.name.trim(),
+            QnType: formData.qnTypeId === "1" ? "Descriptive" : "MCQ",
+            Mark: formData.mark ?? 0,
+            Remarks: formData.remarks ?? "",
+            EntryBy: loginData?.UserId,
+            Sketch: sketchPath, // Use the consistent path
+            Options: formData.qnTypeId === "2"
+                ? formData.options
+                    .filter(opt => opt.optionText && opt.optionText.trim() !== "")
+                    .map(opt => ({
+                        OptionText: opt.optionText.trim(),
+                        Answer: opt.isCorrect ?? false
+                    }))
+                : null
+        };
+
+        console.log("Add Payload:", payload);
+
+        const response = await fetch(`${config.API_BASE_URL}api/Question/Add`, {
+            method: "POST",
+            headers: {
+                'Content-Type': 'application/json',
+                TenantId: loginData.tenantId,
+            },
+            body: JSON.stringify(payload),
         });
 
-        setExistingImage(question.Sketch || null); // old image
-        setQuestionImage(null);
-        setShowModal(true);
-    };
+        const result = await response.json();
+        if (!response.ok) throw new Error(result?.error || "Insert failed");
 
+        toast.success("Question added successfully");
+
+        // Reset form and refresh data
+        setFormData({
+            id: 0,
+            subId: "",
+            qnTypeId: "",
+            name: "",
+            mark: 0,
+            remarks: "",
+            sketch: null,
+            options: [{ optionText: "", isCorrect: false }],
+        });
+        setQuestionImage(null);
+        fetchQuestionsBySubject();
+
+    } catch (err) {
+        console.error(err);
+        toast.error(err.message);
+    } finally {
+        setLoading(false);
+        setShowModal(false);
+    }
+};
+
+    // const openEditModal = async (question) => {
+    //     if (!question?.QuestionId) return console.error("Invalid question ID");
+
+    //     setIsEdit(true);
+    //     setEditId(question.QuestionId);
+
+    //     let options = [{ optionText: "", isCorrect: false }];
+
+    //     if (question.QnType === "MCQ") {
+    //         try {
+    //             const res = await fetch(
+    //                 `${config.API_BASE_URL}api/Question/GetByQuestion/${question.QuestionId}`,
+    //                 {
+    //                     headers: {
+    //                         TenantId: loginData.tenantId,
+    //                         "Content-Type": "application/json",
+    //                     },
+    //                 }
+    //             );
+
+    //             if (res.ok) {
+    //                 const apiOptions = await res.json();
+    //                 options = apiOptions.map((opt) => ({
+    //                     id: opt.Id || 0,
+    //                     optionText: opt.OptionText || "",
+    //                     isCorrect: opt.Answer ?? false,
+    //                 }));
+
+    //                 if (options.length < 2) options.push({ optionText: "", isCorrect: false });
+    //             }
+    //         } catch (err) {
+    //             console.error("Error fetching MCQ options:", err);
+    //         }
+    //     }
+
+    //     setFormData({
+    //         id: question.QuestionId,
+    //         subId: question.SubjectId || "",
+    //         qnTypeId: question.QnType === "Descriptive" ? "1" : "2",
+    //         name: question.Name || "",
+    //         mark: question.Mark ?? 0,
+    //         remarks: question.Remarks || "",
+    //         sketch: null,
+    //         options: options,
+    //     });
+
+    //     setExistingImage(question.Sketch || null);
+    //     setQuestionImage(null);
+    //     setShowModal(true);
+    // };
+
+
+    const openEditModal = async (question) => {
+    if (!question?.QuestionId) return console.error("Invalid question ID");
+
+    setIsEdit(true);
+    setEditId(question.QuestionId);
+
+    let options = [{ optionText: "", isCorrect: false }];
+
+    if (question.QnType === "MCQ") {
+        try {
+            const res = await fetch(
+                `${config.API_BASE_URL}api/Question/GetByQuestion/${question.QuestionId}`,
+                {
+                    headers: {
+                        TenantId: loginData.tenantId,
+                        "Content-Type": "application/json",
+                    },
+                }
+            );
+
+            if (res.ok) {
+                const apiOptions = await res.json();
+                options = apiOptions.map((opt) => ({
+                    id: opt.Id || 0,
+                    optionText: opt.OptionText || "",
+                    isCorrect: opt.Answer ?? false,
+                }));
+
+                if (options.length < 2) options.push({ optionText: "", isCorrect: false });
+            }
+        } catch (err) {
+            console.error("Error fetching MCQ options:", err);
+        }
+    }
+
+    setFormData({
+        id: question.QuestionId,
+        subId: question.SubjectId || "",
+        qnTypeId: question.QnType === "Descriptive" ? "1" : "2",
+        name: question.Name || "",
+        mark: question.Mark ?? 0,
+        remarks: question.Remarks || "",
+        sketch: null, // new file
+        options: options,
+    });
+
+    // FIX: Store the existing image as is (could be full path or filename)
+    setExistingImage(question.Sketch || null);
+    setQuestionImage(null);
+    setShowModal(true);
+};
+
+    // const handleUpdateSubmit = async (e) => {
+    //     e.preventDefault();
+    //     setLoading(true);
+
+    //     try {
+    //         if (!formData.subId) throw new Error("Please select a subject.");
+    //         if (!formData.qnTypeId) throw new Error("Please select a question type.");
+    //         if (!formData.name.trim()) throw new Error("Question text cannot be empty.");
+    //         if (formData.qnTypeId === "2" && formData.options.length < 2)
+    //             throw new Error("MCQ must have at least 2 options.");
+
+    //         let finalSketch = existingImage;
+
+    //         if (formData.sketch && typeof formData.sketch === 'object') {
+    //             setIsUploading(true);
+
+    //             const uploadFormData = new FormData();
+    //             uploadFormData.append('file', formData.sketch);
+
+    //             const uploadRes = await fetch('/api/upload', {
+    //                 method: 'POST',
+    //                 body: uploadFormData
+    //             });
+
+    //             const uploadData = await uploadRes.json();
+    //             if (!uploadRes.ok) throw new Error(uploadData.error || 'Image upload failed');
+
+    //             finalSketch = uploadData.filename;
+    //             setIsUploading(false);
+    //         }
+
+    //         const payload = {
+    //             Id: formData.id,
+    //             SubId: Number(formData.subId),
+    //             Name: formData.name.trim(),
+    //             QnType: formData.qnTypeId === "1" ? "Descriptive" : "MCQ",
+    //             Mark: formData.mark ?? 0,
+    //             Remarks: formData.remarks ?? "",
+    //             UpdateBy: loginData?.UserId,
+    //             Sketch: finalSketch ? `/images/questionImage/${finalSketch}` : null,
+    //             Options: formData.qnTypeId === "2"
+    //                 ? formData.options
+    //                     .filter(opt => opt.optionText && opt.optionText.trim() !== "")
+    //                     .map(opt => ({
+    //                         Id: opt.id || 0,
+    //                         OptionText: opt.optionText.trim(),
+    //                         Answer: opt.isCorrect ?? false
+    //                     }))
+    //                 : null
+    //         };
+
+    //         const res = await fetch(`${config.API_BASE_URL}api/Question/Update`, {
+    //             method: "POST",
+    //             headers: {
+    //                 TenantId: loginData.tenantId,
+    //                 'Content-Type': 'application/json'
+    //             },
+    //             body: JSON.stringify(payload)
+    //         });
+
+    //         const result = await res.json();
+    //         if (!res.ok) throw new Error(result?.error || "Update failed");
+
+    //         toast.success("Question updated successfully");
+    //         setShowModal(false);
+    //         fetchQuestionsBySubject();
+
+    //     } catch (err) {
+    //         console.error(err);
+    //         toast.error(err.message);
+    //     } finally {
+    //         setLoading(false);
+    //         setIsUploading(false);
+    //     }
+    // };
 
     const handleUpdateSubmit = async (e) => {
-        e.preventDefault();
-        setLoading(true);
+    e.preventDefault();
+    setLoading(true);
 
-        try {
-            if (!formData.subId) throw new Error("Please select a subject.");
-            if (!formData.qnTypeId) throw new Error("Please select a question type.");
-            if (!formData.name.trim()) throw new Error("Question text cannot be empty.");
-            if (formData.qnTypeId === "2" && formData.options.length < 2)
-                throw new Error("MCQ must have at least 2 options.");
+    try {
+        if (!formData.subId) throw new Error("Please select a subject.");
+        if (!formData.qnTypeId) throw new Error("Please select a question type.");
+        if (!formData.name.trim()) throw new Error("Question text cannot be empty.");
+        if (formData.qnTypeId === "2" && formData.options.length < 2)
+            throw new Error("MCQ must have at least 2 options.");
 
-            // Handle image upload for update if a new image was selected
-            let finalSketch = existingImage; // Start with existing image
+        let finalSketch = existingImage;
 
-            if (formData.sketch && typeof formData.sketch === 'object') {
-                // New image was uploaded during edit
-                setIsUploading(true);
+        if (formData.sketch && typeof formData.sketch === 'object') {
+            setIsUploading(true);
 
-                const uploadFormData = new FormData();
-                uploadFormData.append('file', formData.sketch);
+            const uploadFormData = new FormData();
+            uploadFormData.append('file', formData.sketch);
 
-                const uploadRes = await fetch('/api/upload', {
-                    method: 'POST',
-                    body: uploadFormData
-                });
-
-                const uploadData = await uploadRes.json();
-                if (!uploadRes.ok) throw new Error(uploadData.error || 'Image upload failed');
-
-                finalSketch = uploadData.filename;
-                setIsUploading(false);
-            }
-
-            const payload = {
-                Id: formData.id,
-                SubId: Number(formData.subId),
-                Name: formData.name.trim(),
-                QnType: formData.qnTypeId === "1" ? "Descriptive" : "MCQ",
-                Mark: formData.mark ?? 0,
-                Remarks: formData.remarks ?? "",
-                UpdateBy: loginData?.UserId,
-                Sketch: finalSketch ? `/images/questionImage/${finalSketch}` : null,
-                Options: formData.qnTypeId === "2"
-                    ? formData.options
-                        .filter(opt => opt.optionText && opt.optionText.trim() !== "")
-                        .map(opt => ({
-                            Id: opt.id || 0,
-                            OptionText: opt.optionText.trim(),
-                            Answer: opt.isCorrect ?? false
-                        }))
-                    : null
-            };
-
-            console.log("Update Payload:", payload);
-
-            const res = await fetch(`${config.API_BASE_URL}api/Question/Update`, {
-                method: "POST",
-                headers: {
-                    TenantId: loginData.tenantId,
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify(payload)
+            const uploadRes = await fetch('/api/upload', {
+                method: 'POST',
+                body: uploadFormData
             });
 
-            const result = await res.json();
-            if (!res.ok) throw new Error(result?.error || "Update failed");
+            const uploadData = await uploadRes.json();
+            if (!uploadRes.ok) throw new Error(uploadData.error || 'Image upload failed');
 
-            toast.success("Question updated successfully");
-            setShowModal(false);
-            fetchQuestionsBySubject();
-            // fetchQuestionData();
-
-        } catch (err) {
-            console.error(err);
-            toast.error(err.message);
-        } finally {
-            setLoading(false);
+            finalSketch = uploadData.filename;
             setIsUploading(false);
         }
-    };
 
+        // Check if existingImage already contains the full path
+        let sketchPath = null;
+        if (finalSketch) {
+            // If the image already has the full path, use it as is
+            if (finalSketch.startsWith('/images/questionImage/')) {
+                sketchPath = finalSketch;
+            } else {
+                // Otherwise, prepend the path
+                sketchPath = `/images/questionImage/${finalSketch}`;
+            }
+        }
 
-    // Delete functionality
+        const payload = {
+            Id: formData.id,
+            SubId: Number(formData.subId),
+            Name: formData.name.trim(),
+            QnType: formData.qnTypeId === "1" ? "Descriptive" : "MCQ",
+            Mark: formData.mark ?? 0,
+            Remarks: formData.remarks ?? "",
+            UpdateBy: loginData?.UserId,
+            Sketch: sketchPath, // Use the corrected path
+            Options: formData.qnTypeId === "2"
+                ? formData.options
+                    .filter(opt => opt.optionText && opt.optionText.trim() !== "")
+                    .map(opt => ({
+                        Id: opt.id || 0,
+                        OptionText: opt.optionText.trim(),
+                        Answer: opt.isCorrect ?? false
+                    }))
+                : null
+        };
+
+        console.log("Update Payload:", payload);
+
+        const res = await fetch(`${config.API_BASE_URL}api/Question/Update`, {
+            method: "POST",
+            headers: {
+                TenantId: loginData.tenantId,
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(payload)
+        });
+
+        const result = await res.json();
+        if (!res.ok) throw new Error(result?.error || "Update failed");
+
+        toast.success("Question updated successfully");
+        setShowModal(false);
+        fetchQuestionsBySubject();
+
+    } catch (err) {
+        console.error(err);
+        toast.error(err.message);
+    } finally {
+        setLoading(false);
+        setIsUploading(false);
+    }
+};
+
     const openDeleteModal = (question) => {
         if (!question?.QuestionId) return;
         setSelectedId(question.QuestionId);
@@ -536,7 +655,7 @@ export default function AddQuestion() {
 
             setDeleteSuccessMsg("Item deleted successfully.");
             setTimeout(() => setIsDeleteModalOpen(false), 2000);
-            fetchQuestionData();
+            fetchQuestionsBySubject();
         } catch (error) {
             console.error(error);
             toast.error("Delete failed. Please try again.");
@@ -544,7 +663,6 @@ export default function AddQuestion() {
         }
     };
 
-    // View functionality
     const fetchQuestionById = async (questionId) => {
         try {
             const response = await fetch(`${config.API_BASE_URL}api/Procedure/GetData`, {
@@ -596,7 +714,6 @@ export default function AddQuestion() {
         setIsViewModalOpen(true);
     };
 
-    // Export to Excel
     const handleDownloadExcel = () => {
         if (filteredQuestion.length === 0) return alert('No data available to export!');
         const worksheet = XLSX.utils.json_to_sheet(filteredQuestion);
@@ -605,37 +722,8 @@ export default function AddQuestion() {
         XLSX.writeFile(workbook, 'Questions_Report.xlsx');
     };
 
-    const fetchQuestionsBySubject = async (subId = null) => {
-  try {
-    const response = await fetch(`${config.API_BASE_URL}api/Procedure/GetData`, {
-      method: "POST",
-      headers: {
-        TenantId: loginData.tenantId,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        operation: "",
-        procedureName: "SP_ExamManage",
-        parameters: {
-          QueryChecker: 6,
-          SubId: subId || 0, // send 0 for "All Subjects"
-        },
-      }),
-    });
-
-    const data = await response.json();
-    setFilteredQuestion(Array.isArray(data) ? data : []);
-  } catch (error) {
-    console.error(error);
-    toast.error("Failed to load questions");
-  }
-};
-
-
-
     return (
         <div className="overflow-x-auto p-3">
-            {/* CSS Styles */}
             <style jsx>{`
                 .custom-scrollbar::-webkit-scrollbar { display: none; }
                 .custom-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
@@ -666,13 +754,10 @@ export default function AddQuestion() {
                 }
             `}</style>
 
-            {/* Main Content */}
             <div className="rounded-md font-roboto overflow-hidden">
                 <div className="bg-gradient-to-r from-[#2c3e50] to-[#3498db] sticky top-0 z-20 shadow-md">
-                    {/* Search and Filter Section */}
                     <div className="px-3 py-2 flex flex-wrap justify-between items-center gap-2">
                         <div className='flex items-center gap-3'>
-                            {/* Search Input */}
                             <div className="relative flex items-center w-full sm:w-auto min-w-[180px] max-w-[300px]">
                                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                                     <svg className="h-4 w-4 text-gray-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
@@ -695,67 +780,31 @@ export default function AddQuestion() {
                                 )}
                             </div>
 
-                            {/* Subject Dropdown */}
-
-                            {/* <div className="w-full sm:w-auto min-w-[180px] max-w-[300px]">
+                            <div className="w-full sm:w-auto min-w-[180px] max-w-[300px]">
                                 {subjectData.length > 0 && (
                                     <Select
                                         name="subId"
-                                        value={subjectData.find(s => s.value === formData.subId) || null}
+                                        value={formData.subId === "" 
+                                            ? { value: "", label: "All Subjects" } 
+                                            : subjectData.find(s => s.value === formData.subId) || null}
                                         onChange={(selected) => {
                                             const subId = selected?.value || "";
                                             setFormData(prev => ({ ...prev, subId }));
-
-                                            // Fetch questions for this subject
-                                            if (subId) fetchQuestionsBySubject(subId);
-                                            else setFilteredQuestion([]); // clear if no subject
+                                            fetchQuestionsBySubject(subId);
                                         }}
-                                        options={subjectData}
+                                        options={[
+                                            { value: "", label: "All Subjects" },
+                                            ...subjectData
+                                        ]}
                                         placeholder="Select or search subject..."
                                         className="w-full"
                                         isClearable
                                         isSearchable
                                     />
                                 )}
-                            </div> */}
-                            <div className="w-full sm:w-auto min-w-[180px] max-w-[300px]">
-  {subjectData.length > 0 && (
-    <Select
-      name="subId"
-      value={
-        // If subId is empty or "all", select the "All Subjects" option
-        formData.subId === "" 
-          ? { value: "", label: "All Subjects" } 
-          : subjectData.find(s => s.value === formData.subId) || null
-      }
-      onChange={(selected) => {
-        const subId = selected?.value || ""; // empty string = All Subjects
-        setFormData(prev => ({ ...prev, subId }));
-
-        // Fetch questions
-        if (subId) {
-          fetchQuestionsBySubject(subId); // filter by selected subject
-        } else {
-          fetchQuestionsBySubject(null); // fetch all questions
-        }
-      }}
-      options={[
-        { value: "", label: "All Subjects" }, // default first option
-        ...subjectData
-      ]}
-      placeholder="Select or search subject..."
-      className="w-full"
-      isClearable
-      isSearchable
-    />
-  )}
-</div>
-
-
-
+                            </div>
                         </div>
 
-                        {/* Action Buttons */}
                         <div className='flex items-center gap-3'>
                             <Link onClick={handleOpenModal} href="#" passHref className="text-lg text-gray-50 cursor-pointer">
                                 <IoMdAddCircle className="text-xl" />
@@ -764,7 +813,6 @@ export default function AddQuestion() {
                         </div>
                     </div>
 
-                    {/* Questions Table */}
                     <table className="min-w-full text-sm text-left text-gray-600">
                         <thead className="bg-gray-100 text-xs uppercase text-gray-700">
                             <tr className="border-b">
@@ -791,17 +839,12 @@ export default function AddQuestion() {
                                         <td data-label="Mark" className="px-4 py-2">{question.Mark}</td>
                                         <td data-label="Actions" className="px-4 py-2 text-center">
                                             <div className="text-base flex items-end gap-3">
-                                                {/* View Button */}
                                                 <button onClick={() => openViewModal(question)} className="flex items-center gap-1 px-3 py-1.5 text-sm font-medium border border-blue-500 text-blue-500 rounded hover:bg-blue-500 hover:text-white transition-colors duration-200">
                                                     <FiEye className="text-base" />
                                                 </button>
-
-                                                {/* Edit Button */}
                                                 <button onClick={() => openEditModal(question)} title="Edit" className="flex items-center gap-1 px-3 py-1.5 text-sm font-medium border border-[#00925a] text-[#00925a] rounded hover:bg-[#00925a] hover:text-white transition-colors duration-200">
                                                     <FiEdit className="text-base" />
                                                 </button>
-
-                                                {/* Delete Button */}
                                                 <button onClick={() => openDeleteModal(question)} className="flex items-center gap-1 px-3 py-1.5 text-sm font-medium border border-red-500 text-red-500 rounded hover:bg-red-500 hover:text-white transition-colors duration-200">
                                                     <FiTrash2 className="text-base" />
                                                 </button>
@@ -815,7 +858,6 @@ export default function AddQuestion() {
                 </div>
             </div>
 
-            {/* Delete Confirmation Modal */}
             <DeleteConfirmModal
                 isOpen={isDeleteModalOpen}
                 onClose={() => setIsDeleteModalOpen(false)}
@@ -823,7 +865,6 @@ export default function AddQuestion() {
                 statusMessage={deleteSuccessMsg}
             />
 
-            {/* Add/Edit Question Modal */}
             {showModal && (
                 <div className="fixed inset-0 bg-black/20 bg-opacity-40 z-50 flex items-center justify-center">
                     <div data-aos="zoom-in" className="bg-white rounded-lg shadow-md p-6 w-full max-w-xl relative">
@@ -834,7 +875,6 @@ export default function AddQuestion() {
                         </div>
 
                         <form onSubmit={isEdit ? handleUpdateSubmit : handleSubmit} className="space-y-4 text-sm">
-                            {/* Subject Selection */}
                             <div className="flex items-center gap-2 mt-2">
                                 <label className="w-1/3 text-sm font-semibold text-gray-700">Subject Name</label>
                                 <Select
@@ -842,17 +882,12 @@ export default function AddQuestion() {
                                     value={subjectData.find((s) => s.value === formData.subId) || null}
                                     onChange={(selected) => setFormData((prev) => ({ ...prev, subId: selected?.value || "" }))}
                                     options={subjectData}
-                                    // getOptionLabel={(option) => option.Name}
-                                    // getOptionValue={(option) => option.Id}
                                     placeholder="Select Subject"
                                     className="w-full"
                                     isClearable
                                 />
-
-
                             </div>
 
-                            {/* Question Type Selection */}
                             <div className="flex items-center gap-2 mt-2">
                                 <label className="w-1/3 text-sm font-semibold text-gray-700">Question Type</label>
                                 <select name="qnTypeId" value={formData.qnTypeId} onChange={handleQnTypeChange} className="w-full border rounded p-2">
@@ -862,7 +897,6 @@ export default function AddQuestion() {
                                 </select>
                             </div>
 
-                            {/* Descriptive Question Fields */}
                             {formData.qnTypeId === "1" && (
                                 <>
                                     <div className="flex items-center gap-2 mt-2">
@@ -875,9 +909,7 @@ export default function AddQuestion() {
                                         <input type="number" name="mark" value={formData.mark ?? ""} onChange={handleChange} className="w-full border px-3 py-2 rounded" required min="0" step="0.1" />
                                     </div>
 
-                                    {/* Question Image Section */}
                                     <div className="w-full h-40 rounded-lg border border-gray-300 flex flex-col items-center justify-center overflow-hidden relative">
-                                        {/* Show either new image preview or existing image */}
                                         {questionImage ? (
                                             <img
                                                 src={questionImage}
@@ -894,7 +926,6 @@ export default function AddQuestion() {
                                             <span className="text-gray-400 text-sm">Select Question Image</span>
                                         )}
 
-                                        {/* File input */}
                                         <input
                                             type="file"
                                             accept="image/*"
@@ -904,7 +935,6 @@ export default function AddQuestion() {
                                         />
                                     </div>
 
-                                    {/* Buttons */}
                                     <div className="flex items-center space-x-4 mt-2">
                                         <button
                                             type="button"
@@ -917,10 +947,7 @@ export default function AddQuestion() {
                                         {(questionImage || existingImage) && (
                                             <button
                                                 type="button"
-                                                onClick={() => {
-                                                    setQuestionImage(null);
-                                                    setExistingImage(null); // remove existing image
-                                                }}
+                                                onClick={handleRemoveQuestionImage}
                                                 className="text-gray-600 text-sm hover:text-red-500"
                                             >
                                                 Remove
@@ -928,13 +955,10 @@ export default function AddQuestion() {
                                         )}
                                     </div>
 
-
-                                    {error && <p className="text-xs text-red-500 mt-1">{error}</p>}
                                     {isUploading && <p className="text-xs text-gray-500 mt-1">Uploading...</p>}
                                 </>
                             )}
 
-                            {/* MCQ Question Fields */}
                             {formData.qnTypeId === "2" && (
                                 <>
                                     <div className="flex items-center gap-2 mt-2">
@@ -947,7 +971,6 @@ export default function AddQuestion() {
                                         <input type="number" name="mark" value={formData.mark ?? ""} onChange={handleChange} className="w-full border px-3 py-2 rounded" required min="0" step="0.1" />
                                     </div>
 
-                                    {/* MCQ Options */}
                                     <div className="mt-3">
                                         <div className="flex gap-2 px-1 mb-1">
                                             <span className="flex-1 text-sm font-semibold text-gray-700">Options</span>
@@ -976,7 +999,6 @@ export default function AddQuestion() {
                                 </>
                             )}
 
-                            {/* Form Buttons */}
                             {formData.qnTypeId && (
                                 <div className="flex justify-end space-x-2 pt-4">
                                     <button type="button" onClick={() => setShowModal(false)} className="px-3 py-1 bg-gray-500 text-white rounded hover:bg-gray-600">
@@ -992,7 +1014,6 @@ export default function AddQuestion() {
                 </div>
             )}
 
-            {/* View Question Modal */}
             {isViewModalOpen && viewData && (
                 <div className="fixed inset-0 bg-black/20 z-50 flex items-center justify-center">
                     <div data-aos="zoom-in" className="bg-white rounded-lg shadow-md p-6 w-full max-w-xl relative">
@@ -1005,7 +1026,7 @@ export default function AddQuestion() {
                         <div className="space-y-4 text-sm">
                             <div className="flex items-center gap-2">
                                 <label className="w-1/3 font-semibold text-gray-700">Subject</label>
-                                <span>{subjectData.find(s => s.value  === viewData.SubjectId)?.label  || "-"}</span>
+                                <span>{subjectData.find(s => s.value === viewData.SubjectId)?.label || "-"}</span>
                             </div>
 
                             <div className="flex items-center gap-2">
