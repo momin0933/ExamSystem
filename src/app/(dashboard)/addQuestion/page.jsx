@@ -234,6 +234,7 @@ export default function AddQuestion() {
                 QnType: formData.qnTypeId === "1" ? "Descriptive" : "MCQ",
                 Mark: formData.mark ?? 0,
                 Remarks: formData.remarks ?? "",
+                EntryBy: loginData?.UserId,
                 Sketch: formData.sketch ? `/images/questionImage/${formData.sketch}` : null,
                 Options: formData.qnTypeId === "2"
                     ? formData.options
@@ -349,6 +350,7 @@ export default function AddQuestion() {
                 QnType: formData.qnTypeId === "1" ? "Descriptive" : "MCQ",
                 Mark: formData.mark ?? 0,
                 Remarks: formData.remarks ?? "",
+                UpdateBy: loginData?.UserId,
                 Sketch: formData.sketch ? `/images/questionImage/${formData.sketch}` : null,
                 Options: formData.qnTypeId === "2"
                     ? formData.options
