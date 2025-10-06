@@ -57,7 +57,8 @@ export default function AddQuestion() {
     useEffect(() => {
         if (!loginData?.tenantId) return;
         fetchSubjectData();
-        fetchQuestionData();
+        fetchQuestionsBySubject();
+        // fetchQuestionData();
     }, [loginData?.tenantId]);
 
     // Filter questions based on search query
@@ -73,43 +74,120 @@ export default function AddQuestion() {
     }, [searchQuery, questionData]);
 
     // API calls
-    const fetchSubjectData = async () => {
-        try {
-            const response = await fetch(`${config.API_BASE_URL}api/Procedure/GetData`, {
-                method: 'POST',
-                headers: { TenantId: loginData.tenantId, 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    operation: '',
-                    procedureName: 'SP_ExamManage',
-                    parameters: { QueryChecker: 2 },
-                }),
-            });
-            const data = await response.json();
-            setSubjectData(data);
-            // Auto-select first subject
-            if (data.length > 0) setFormData(prev => ({ ...prev, subId: data[0].Id }));
-        } catch (error) {
-            toast.error('Failed to load subjects');
-        }
-    };
+    // const fetchSubjectData = async () => {
+    //     try {
+    //         const response = await fetch(`${config.API_BASE_URL}api/Procedure/GetData`, {
+    //             method: 'POST',
+    //             headers: { TenantId: loginData.tenantId, 'Content-Type': 'application/json' },
+    //             body: JSON.stringify({
+    //                 operation: '',
+    //                 procedureName: 'SP_ExamManage',
+    //                 parameters: { QueryChecker: 2 },
+    //             }),
+    //         });
+    //         const data = await response.json();
+    //         setSubjectData(data);
+    //         // Auto-select first subject
+    //         if (data.length > 0) setFormData(prev => ({ ...prev, subId: data[0].Id }));
+    //     } catch (error) {
+    //         toast.error('Failed to load subjects');
+    //     }
+    // };
 
-    const fetchQuestionData = async () => {
+    // const fetchSubjectData = async () => {
+    //     try {
+    //         const response = await fetch(`${config.API_BASE_URL}api/Procedure/GetData`, {
+    //             method: 'POST',
+    //             headers: {
+    //                 TenantId: loginData.tenantId,
+    //                 'Content-Type': 'application/json'
+    //             },
+    //             body: JSON.stringify({
+    //                 operation: '',
+    //                 procedureName: 'SP_ExamManage',
+    //                 parameters: { QueryChecker: 2 },
+    //             }),
+    //         });
+
+    //         const data = await response.json();
+
+    //         if (Array.isArray(data)) {
+    //             //  Map subjects into react-select format
+    //             const formatted = data.map(sub => ({
+    //                 value: sub.Id,  // ID will be sent to API
+    //                 label: sub.Name // Name shown in dropdown
+    //             }));
+
+    //             setSubjectData(formatted);
+
+    //             //  Auto-select first subject if not editing
+    //             if (formatted.length > 0 && !formData.subId) {
+    //                 setFormData(prev => ({ ...prev, subId: formatted[0].value }));
+    //             }
+    //         } else {
+    //             toast.error("Invalid subject data format");
+    //         }
+
+    //     } catch (error) {
+    //         console.error(error);
+    //         toast.error('Failed to load subjects');
+    //     }
+    // };
+
+
+     const fetchSubjectData = async () => {
         try {
             const response = await fetch(`${config.API_BASE_URL}api/Procedure/GetData`, {
-                method: 'POST',
-                headers: { TenantId: loginData.tenantId, 'Content-Type': 'application/json' },
+                method: "POST",
+                headers: {
+                    TenantId: loginData.tenantId,
+                    "Content-Type": "application/json"
+                },
                 body: JSON.stringify({
-                    operation: '',
-                    procedureName: 'SP_ExamManage',
-                    parameters: { QueryChecker: 5 },
-                }),
+                    operation: "",
+                    procedureName: "SP_ExamManage",
+                    parameters: { QueryChecker: 2 } // subjects
+                })
             });
+
             const data = await response.json();
-            setQuestionData(data);
+
+            if (Array.isArray(data)) {
+                const formatted = data.map(sub => ({
+                    value: sub.Id,
+                    label: sub.Name
+                }));
+                setSubjectData(formatted);
+
+                // Auto-select first subject if none
+                if (formatted.length > 0 && !formData.subId) {
+                    setFormData(prev => ({ ...prev, subId: null })); // initially null => show all
+                }
+            } else {
+                toast.error("Invalid subject data format");
+            }
         } catch (error) {
-            toast.error('Failed to load question data');
+            console.error(error);
+            toast.error("Failed to load subjects");
         }
     };
+    // const fetchQuestionData = async () => {
+    //     try {
+    //         const response = await fetch(`${config.API_BASE_URL}api/Procedure/GetData`, {
+    //             method: 'POST',
+    //             headers: { TenantId: loginData.tenantId, 'Content-Type': 'application/json' },
+    //             body: JSON.stringify({
+    //                 operation: '',
+    //                 procedureName: 'SP_ExamManage',
+    //                 parameters: { QueryChecker: 5 },
+    //             }),
+    //         });
+    //         const data = await response.json();
+    //         setQuestionData(data);
+    //     } catch (error) {
+    //         toast.error('Failed to load question data');
+    //     }
+    // };
 
     // Modal handlers
     const handleOpenModal = () => {
@@ -290,7 +368,8 @@ export default function AddQuestion() {
                 options: [{ optionText: "", isCorrect: false }],
             });
             setQuestionImage(null);
-            fetchQuestionData();
+            // fetchQuestionData();
+            fetchQuestionsBySubject();
 
         } catch (err) {
             console.error(err);
@@ -423,7 +502,8 @@ export default function AddQuestion() {
 
             toast.success("Question updated successfully");
             setShowModal(false);
-            fetchQuestionData();
+            fetchQuestionsBySubject();
+            // fetchQuestionData();
 
         } catch (err) {
             console.error(err);
@@ -525,6 +605,34 @@ export default function AddQuestion() {
         XLSX.writeFile(workbook, 'Questions_Report.xlsx');
     };
 
+    const fetchQuestionsBySubject = async (subId = null) => {
+  try {
+    const response = await fetch(`${config.API_BASE_URL}api/Procedure/GetData`, {
+      method: "POST",
+      headers: {
+        TenantId: loginData.tenantId,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        operation: "",
+        procedureName: "SP_ExamManage",
+        parameters: {
+          QueryChecker: 6,
+          SubId: subId || 0, // send 0 for "All Subjects"
+        },
+      }),
+    });
+
+    const data = await response.json();
+    setFilteredQuestion(Array.isArray(data) ? data : []);
+  } catch (error) {
+    console.error(error);
+    toast.error("Failed to load questions");
+  }
+};
+
+
+
     return (
         <div className="overflow-x-auto p-3">
             {/* CSS Styles */}
@@ -588,21 +696,63 @@ export default function AddQuestion() {
                             </div>
 
                             {/* Subject Dropdown */}
-                            <div className="w-full sm:w-auto min-w-[180px] max-w-[300px]">
+
+                            {/* <div className="w-full sm:w-auto min-w-[180px] max-w-[300px]">
                                 {subjectData.length > 0 && (
                                     <Select
                                         name="subId"
-                                        value={subjectData.find(s => s.Id === formData.subId) || null}
-                                        onChange={(selected) => setFormData(prev => ({ ...prev, subId: selected?.Id || "" }))}
+                                        value={subjectData.find(s => s.value === formData.subId) || null}
+                                        onChange={(selected) => {
+                                            const subId = selected?.value || "";
+                                            setFormData(prev => ({ ...prev, subId }));
+
+                                            // Fetch questions for this subject
+                                            if (subId) fetchQuestionsBySubject(subId);
+                                            else setFilteredQuestion([]); // clear if no subject
+                                        }}
                                         options={subjectData}
-                                        getOptionLabel={option => option.Name}
-                                        getOptionValue={option => option.Id}
-                                        placeholder="Select Subject"
+                                        placeholder="Select or search subject..."
                                         className="w-full"
                                         isClearable
+                                        isSearchable
                                     />
                                 )}
-                            </div>
+                            </div> */}
+                            <div className="w-full sm:w-auto min-w-[180px] max-w-[300px]">
+  {subjectData.length > 0 && (
+    <Select
+      name="subId"
+      value={
+        // If subId is empty or "all", select the "All Subjects" option
+        formData.subId === "" 
+          ? { value: "", label: "All Subjects" } 
+          : subjectData.find(s => s.value === formData.subId) || null
+      }
+      onChange={(selected) => {
+        const subId = selected?.value || ""; // empty string = All Subjects
+        setFormData(prev => ({ ...prev, subId }));
+
+        // Fetch questions
+        if (subId) {
+          fetchQuestionsBySubject(subId); // filter by selected subject
+        } else {
+          fetchQuestionsBySubject(null); // fetch all questions
+        }
+      }}
+      options={[
+        { value: "", label: "All Subjects" }, // default first option
+        ...subjectData
+      ]}
+      placeholder="Select or search subject..."
+      className="w-full"
+      isClearable
+      isSearchable
+    />
+  )}
+</div>
+
+
+
                         </div>
 
                         {/* Action Buttons */}
@@ -689,15 +839,17 @@ export default function AddQuestion() {
                                 <label className="w-1/3 text-sm font-semibold text-gray-700">Subject Name</label>
                                 <Select
                                     name="subId"
-                                    value={subjectData.find((s) => s.Id === formData.subId) || null}
-                                    onChange={(selected) => setFormData((prev) => ({ ...prev, subId: selected?.Id || "" }))}
+                                    value={subjectData.find((s) => s.value === formData.subId) || null}
+                                    onChange={(selected) => setFormData((prev) => ({ ...prev, subId: selected?.value || "" }))}
                                     options={subjectData}
-                                    getOptionLabel={(option) => option.Name}
-                                    getOptionValue={(option) => option.Id}
+                                    // getOptionLabel={(option) => option.Name}
+                                    // getOptionValue={(option) => option.Id}
                                     placeholder="Select Subject"
                                     className="w-full"
                                     isClearable
                                 />
+
+
                             </div>
 
                             {/* Question Type Selection */}
@@ -722,7 +874,7 @@ export default function AddQuestion() {
                                         <label className="w-1/3 text-sm font-semibold text-gray-700">Mark</label>
                                         <input type="number" name="mark" value={formData.mark ?? ""} onChange={handleChange} className="w-full border px-3 py-2 rounded" required min="0" step="0.1" />
                                     </div>
-                                  
+
                                     {/* Question Image Section */}
                                     <div className="w-full h-40 rounded-lg border border-gray-300 flex flex-col items-center justify-center overflow-hidden relative">
                                         {/* Show either new image preview or existing image */}
@@ -853,7 +1005,7 @@ export default function AddQuestion() {
                         <div className="space-y-4 text-sm">
                             <div className="flex items-center gap-2">
                                 <label className="w-1/3 font-semibold text-gray-700">Subject</label>
-                                <span>{subjectData.find(s => s.Id === viewData.SubjectId)?.Name || "-"}</span>
+                                <span>{subjectData.find(s => s.value  === viewData.SubjectId)?.label  || "-"}</span>
                             </div>
 
                             <div className="flex items-center gap-2">
