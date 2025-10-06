@@ -12,10 +12,11 @@ import DeleteConfirmModal from '../../components/DeleteConfirmModal';
 import AOS from 'aos';
 import 'aos/dist/aos.css';
 import Select from 'react-select';
+import { VscDebugPause } from 'react-icons/vsc';
 
 export default function AddQuestion() {
     const { loginData } = useContext(AuthContext);
-    
+
     // State declarations
     const [questionData, setQuestionData] = useState([]);
     const [filteredQuestion, setFilteredQuestion] = useState([]);
@@ -45,6 +46,7 @@ export default function AddQuestion() {
         sketch: null,
         options: [{ optionText: "", isCorrect: false }],
     });
+    const [existingImage, setExistingImage] = useState(null);
 
     // Initialize AOS animations
     useEffect(() => {
@@ -160,11 +162,22 @@ export default function AddQuestion() {
             const data = await res.json();
             if (!res.ok) throw new Error(data.error || 'Upload failed');
 
-            // Save filename for backend
-            setFormData(prev => ({
-                ...prev,
-                sketch: data.filename
-            }));
+            // Save filename for backend - DIFFERENT FOR ADD VS EDIT
+            if (isEdit) {
+                // For edit, we need to store both the file object and filename
+                setFormData(prev => ({
+                    ...prev,
+                    sketch: file // store file object for upload during update
+                }));
+                // Also store the uploaded filename separately
+                setExistingImage(data.filename);
+            } else {
+                // For add, just store filename
+                setFormData(prev => ({
+                    ...prev,
+                    sketch: data.filename
+                }));
+            }
 
         } catch (err) {
             console.error('Upload error:', err);
@@ -215,8 +228,11 @@ export default function AddQuestion() {
     };
 
     // Form submission
+
     const handleSubmit = async (e) => {
+        debugger;
         e.preventDefault();
+
         setLoading(true);
 
         try {
@@ -246,6 +262,8 @@ export default function AddQuestion() {
                     : null
             };
 
+            console.log("Add Payload:", payload);
+
             const response = await fetch(`${config.API_BASE_URL}api/Question/Add`, {
                 method: "POST",
                 headers: {
@@ -259,7 +277,7 @@ export default function AddQuestion() {
             if (!response.ok) throw new Error(result?.error || "Insert failed");
 
             toast.success("Question added successfully");
-            
+
             // Reset form and refresh data
             setFormData({
                 id: 0,
@@ -285,21 +303,17 @@ export default function AddQuestion() {
 
     // Edit functionality
     const openEditModal = async (question) => {
-        const questionId = question?.QuestionId;
-        if (!questionId) {
-            console.error("Cannot edit: questionId is undefined", question);
-            return;
-        }
+        if (!question?.QuestionId) return console.error("Invalid question ID");
 
         setIsEdit(true);
-        setEditId(questionId);
+        setEditId(question.QuestionId);
 
         let options = [{ optionText: "", isCorrect: false }];
 
         if (question.QnType === "MCQ") {
             try {
                 const res = await fetch(
-                    `${config.API_BASE_URL}api/Question/GetByQuestion/${questionId}`,
+                    `${config.API_BASE_URL}api/Question/GetByQuestion/${question.QuestionId}`,
                     {
                         headers: {
                             TenantId: loginData.tenantId,
@@ -311,38 +325,68 @@ export default function AddQuestion() {
                 if (res.ok) {
                     const apiOptions = await res.json();
                     options = apiOptions.map((opt) => ({
+                        id: opt.Id || 0,
                         optionText: opt.OptionText || "",
                         isCorrect: opt.Answer ?? false,
                     }));
 
-                    if (options.length < 2) {
-                        options.push({ optionText: "", isCorrect: false });
-                    }
+                    if (options.length < 2) options.push({ optionText: "", isCorrect: false });
                 }
             } catch (err) {
-                console.error(`Error fetching MCQ options:`, err);
+                console.error("Error fetching MCQ options:", err);
             }
         }
 
         setFormData({
-            id: questionId,
+            id: question.QuestionId,
             subId: question.SubjectId || 0,
             qnTypeId: question.QnType === "Descriptive" ? "1" : "2",
             name: question.Name || "",
             mark: question.Mark ?? 0,
             remarks: question.Remarks || "",
-            sketch: question.Sketch || null,
+            sketch: null, // new file
             options: options,
         });
 
+        setExistingImage(question.Sketch || null); // old image
+        setQuestionImage(null);
         setShowModal(true);
     };
+
 
     const handleUpdateSubmit = async (e) => {
         e.preventDefault();
         setLoading(true);
 
         try {
+            if (!formData.subId) throw new Error("Please select a subject.");
+            if (!formData.qnTypeId) throw new Error("Please select a question type.");
+            if (!formData.name.trim()) throw new Error("Question text cannot be empty.");
+            if (formData.qnTypeId === "2" && formData.options.length < 2)
+                throw new Error("MCQ must have at least 2 options.");
+
+            // Handle image upload for update if a new image was selected
+            let finalSketch = existingImage; // Start with existing image
+
+            if (formData.sketch && typeof formData.sketch === 'object') {
+                // New image was uploaded during edit
+                setIsUploading(true);
+
+                const uploadFormData = new FormData();
+                uploadFormData.append('file', formData.sketch);
+
+                const uploadRes = await fetch('/api/upload', {
+                    method: 'POST',
+                    body: uploadFormData
+                });
+
+                const uploadData = await uploadRes.json();
+                if (!uploadRes.ok) throw new Error(uploadData.error || 'Image upload failed');
+
+                finalSketch = uploadData.filename;
+                setIsUploading(false);
+            }
+
             const payload = {
                 Id: formData.id,
                 SubId: Number(formData.subId),
@@ -351,7 +395,7 @@ export default function AddQuestion() {
                 Mark: formData.mark ?? 0,
                 Remarks: formData.remarks ?? "",
                 UpdateBy: loginData?.UserId,
-                Sketch: formData.sketch ? `/images/questionImage/${formData.sketch}` : null,
+                Sketch: finalSketch ? `/images/questionImage/${finalSketch}` : null,
                 Options: formData.qnTypeId === "2"
                     ? formData.options
                         .filter(opt => opt.optionText && opt.optionText.trim() !== "")
@@ -362,6 +406,8 @@ export default function AddQuestion() {
                         }))
                     : null
             };
+
+            console.log("Update Payload:", payload);
 
             const res = await fetch(`${config.API_BASE_URL}api/Question/Update`, {
                 method: "POST",
@@ -378,13 +424,16 @@ export default function AddQuestion() {
             toast.success("Question updated successfully");
             setShowModal(false);
             fetchQuestionData();
+
         } catch (err) {
             console.error(err);
             toast.error(err.message);
         } finally {
             setLoading(false);
+            setIsUploading(false);
         }
     };
+
 
     // Delete functionality
     const openDeleteModal = (question) => {
@@ -673,26 +722,61 @@ export default function AddQuestion() {
                                         <label className="w-1/3 text-sm font-semibold text-gray-700">Mark</label>
                                         <input type="number" name="mark" value={formData.mark ?? ""} onChange={handleChange} className="w-full border px-3 py-2 rounded" required min="0" step="0.1" />
                                     </div>
-
-                                    {/* Image Upload Section */}
-                                    <div className="w-full h-40 rounded-lg border border-gray-300 flex items-center justify-center overflow-hidden relative">
+                                  
+                                    {/* Question Image Section */}
+                                    <div className="w-full h-40 rounded-lg border border-gray-300 flex flex-col items-center justify-center overflow-hidden relative">
+                                        {/* Show either new image preview or existing image */}
                                         {questionImage ? (
-                                            <img src={questionImage} alt="Question Preview" className="object-cover w-full h-full" />
+                                            <img
+                                                src={questionImage}
+                                                alt="Question Preview"
+                                                className="object-cover w-full h-full"
+                                            />
+                                        ) : existingImage ? (
+                                            <img
+                                                src={existingImage}
+                                                alt="Existing Question Image"
+                                                className="object-cover w-full h-full"
+                                            />
                                         ) : (
                                             <span className="text-gray-400 text-sm">Select Question Image</span>
                                         )}
-                                        <input type="file" accept="image/*" className="absolute inset-0 opacity-0 cursor-pointer" onChange={handleQuestionImageChange} disabled={isUploading} />
+
+                                        {/* File input */}
+                                        <input
+                                            type="file"
+                                            accept="image/*"
+                                            className="absolute inset-0 opacity-0 cursor-pointer"
+                                            onChange={handleQuestionImageChange}
+                                            disabled={isUploading}
+                                        />
                                     </div>
+
+                                    {/* Buttons */}
                                     <div className="flex items-center space-x-4 mt-2">
-                                        <button onClick={() => document.querySelector('input[type="file"]').click()} className={`px-3 py-1 rounded bg-blue-600 text-white text-sm ${isUploading ? 'opacity-50 cursor-not-allowed' : 'hover:bg-blue-700'}`} disabled={isUploading}>
-                                            {questionImage ? "Change" : "Upload"}
+                                        <button
+                                            type="button"
+                                            onClick={() => document.querySelector('input[type="file"]').click()}
+                                            className={`px-3 py-1 rounded bg-blue-600 text-white text-sm hover:bg-blue-700`}
+                                        >
+                                            {questionImage || existingImage ? "Change" : "Upload"}
                                         </button>
-                                        {questionImage && (
-                                            <button onClick={handleRemoveQuestionImage} className="text-gray-600 text-sm hover:text-red-500" disabled={isUploading}>
+
+                                        {(questionImage || existingImage) && (
+                                            <button
+                                                type="button"
+                                                onClick={() => {
+                                                    setQuestionImage(null);
+                                                    setExistingImage(null); // remove existing image
+                                                }}
+                                                className="text-gray-600 text-sm hover:text-red-500"
+                                            >
                                                 Remove
                                             </button>
                                         )}
                                     </div>
+
+
                                     {error && <p className="text-xs text-red-500 mt-1">{error}</p>}
                                     {isUploading && <p className="text-xs text-gray-500 mt-1">Uploading...</p>}
                                 </>
