@@ -55,7 +55,7 @@ export default function SubjectManage() {
                 },
                 body: JSON.stringify({
                     operation: '',
-                    procedureName: 'SP_ExamManage',
+                    procedureName: 'SP_QuestionManage',
                     parameters: {
                         QueryChecker: 1,
                         Name: formData.name,              
@@ -92,7 +92,7 @@ export default function SubjectManage() {
                 },
                 body: JSON.stringify({
                     operation: '',
-                    procedureName: 'SP_ExamManage',
+                    procedureName: 'SP_QuestionManage',
                     parameters: { QueryChecker: 2 },
                 })
             });
@@ -143,7 +143,7 @@ export default function SubjectManage() {
                 },
                 body: JSON.stringify({
                     operation: '',
-                    procedureName: 'SP_ExamManage',
+                    procedureName: 'SP_QuestionManage',
                     parameters: {
                         QueryChecker: 3,
                         Id: editId,
@@ -181,7 +181,7 @@ export default function SubjectManage() {
                 },
                 body: JSON.stringify({
                     operation: '',
-                    procedureName: 'SP_ExamManage',
+                    procedureName: 'SP_QuestionManage',
                     parameters: { QueryChecker: 4, Id: selectedId },
                 }),
             });

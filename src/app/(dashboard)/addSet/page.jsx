@@ -404,7 +404,7 @@ const handleCheckboxChange = (question) => {
                     <label className="w-1/3 text-sm font-semibold text-gray-700">Question</label>
                 <div className="mt-4">
                     {questions.map((q) => (
-                        <div key={q.Id} className="flex items-center gap-2">
+                        <div key={q.questionId} className="flex items-center gap-2">
                             <input
                                 type="checkbox"
                                 value={q.Id}

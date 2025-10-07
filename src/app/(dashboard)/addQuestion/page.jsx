@@ -33,7 +33,7 @@ export default function AddQuestion() {
     const [isUploading, setIsUploading] = useState(false);
     const [existingImage, setExistingImage] = useState(null);
     const [selectedSubject, setSelectedSubject] = useState("");
-    
+
     const [formData, setFormData] = useState({
         id: 0,
         subId: "",
@@ -76,7 +76,7 @@ export default function AddQuestion() {
                 },
                 body: JSON.stringify({
                     operation: "",
-                    procedureName: "SP_ExamManage",
+                    procedureName: "SP_QuestionManage",
                     parameters: { QueryChecker: 2 }
                 })
             });
@@ -108,9 +108,9 @@ export default function AddQuestion() {
                 },
                 body: JSON.stringify({
                     operation: "",
-                    procedureName: "SP_ExamManage",
+                    procedureName: "SP_QuestionManage",
                     parameters: {
-                        QueryChecker: 6,
+                        QueryChecker: 5,
                         SubId: subId || 0,
                     },
                 }),
@@ -295,10 +295,10 @@ export default function AddQuestion() {
             setQuestionImage(null);
             //fetchQuestionsBySubject();
             if (selectedSubject && selectedSubject !== "") {
-            
+
                 await fetchQuestionsBySubject(selectedSubject);
             } else {
-                
+
                 await fetchQuestionsBySubject();
             }
 
@@ -506,9 +506,9 @@ export default function AddQuestion() {
                 },
                 body: JSON.stringify({
                     operation: '',
-                    procedureName: 'SP_ExamManage',
+                    procedureName: 'SP_QuestionManage',
                     parameters: {
-                        QueryChecker: 7,
+                        QueryChecker: 6,
                         Id: questionId,
                     },
                 }),
@@ -725,7 +725,7 @@ export default function AddQuestion() {
 
             {showModal && (
                 <div className="fixed inset-0 bg-black/20 bg-opacity-40 z-50 flex items-center justify-center">
-                    <div data-aos="zoom-in" className="bg-white rounded-lg shadow-md p-6 w-full max-w-xl relative">
+                    <div data-aos="zoom-in" className="bg-white rounded-lg shadow-md  w-full max-w-xl relative overflow-y-auto max-h-[90vh] p-6">
                         <button onClick={() => setShowModal(false)} className="btn btn-sm btn-circle btn-ghost absolute right-2 top-2">✕</button>
 
                         <div className="border-b border-gray-300 pb-2 mb-4">
@@ -829,13 +829,60 @@ export default function AddQuestion() {
                                         <input type="number" name="mark" value={formData.mark ?? ""} onChange={handleChange} className="w-full border px-3 py-2 rounded" required min="0" step="0.1" />
                                     </div>
 
+                                    <div className="w-full h-40 rounded-lg border border-gray-300 flex flex-col items-center justify-center overflow-hidden relative">
+                                        {questionImage ? (
+                                            <img
+                                                src={questionImage}
+                                                alt="Question Preview"
+                                                className="object-cover w-full h-full"
+                                            />
+                                        ) : existingImage ? (
+                                            <img
+                                                src={existingImage}
+                                                alt="Existing Question Image"
+                                                className="object-cover w-full h-full"
+                                            />
+                                        ) : (
+                                            <span className="text-gray-400 text-sm">Select Question Image</span>
+                                        )}
+
+                                        <input
+                                            type="file"
+                                            accept="image/*"
+                                            className="absolute inset-0 opacity-0 cursor-pointer"
+                                            onChange={handleQuestionImageChange}
+                                            disabled={isUploading}
+                                        />
+                                    </div>
+
+                                    <div className="flex items-center space-x-4 mt-2">
+                                        <button
+                                            type="button"
+                                            onClick={() => document.querySelector('input[type="file"]').click()}
+                                            className={`px-3 py-1 rounded bg-blue-600 text-white text-sm hover:bg-blue-700`}
+                                        >
+                                            {questionImage || existingImage ? "Change" : "Upload"}
+                                        </button>
+
+                                        {(questionImage || existingImage) && (
+                                            <button
+                                                type="button"
+                                                onClick={handleRemoveQuestionImage}
+                                                className="text-gray-600 text-sm hover:text-red-500"
+                                            >
+                                                Remove
+                                            </button>
+                                        )}
+                                    </div>
+
+                                    {isUploading && <p className="text-xs text-gray-500 mt-1">Uploading...</p>}
+
                                     <div className="mt-3">
                                         <div className="flex gap-2 px-1 mb-1">
                                             <span className="flex-1 text-sm font-semibold text-gray-700">Options</span>
                                             <span className="w-21 text-sm font-semibold text-gray-700 text-center">Choose Ans</span>
                                             <span className="w-8"></span>
                                         </div>
-
                                         {formData.options.map((opt, index) => (
                                             <div key={index} className="flex gap-2 mt-2 items-center">
                                                 <input type="text" value={opt.optionText} onChange={(e) => handleOptionChange(index, "optionText", e.target.value)} placeholder={`Option ${index + 1}`} className="flex-1 min-w-0 border px-2 py-1 rounded" />
@@ -873,65 +920,84 @@ export default function AddQuestion() {
             )}
 
             {isViewModalOpen && viewData && (
-                <div className="fixed inset-0 bg-black/20 z-50 flex items-center justify-center">
-                    <div data-aos="zoom-in" className="bg-white rounded-lg shadow-md p-6 w-full max-w-xl relative">
-                        <button onClick={() => setIsViewModalOpen(false)} className="btn btn-sm btn-circle btn-ghost absolute right-2 top-2">✕</button>
 
-                        <div className="border-b border-gray-300 pb-2 mb-4">
-                            <h3 className="font-bold text-lg">View Question Details</h3>
+                <div className="fixed inset-0 bg-black/30 z-50 flex items-center justify-center p-4">
+                    <div data-aos="zoom-in" className="bg-white rounded-xl shadow-xl p-6 w-full max-w-lg relative overflow-y-auto max-h-[90vh]">
+                        {/* Close Button */}
+                        <button
+                            onClick={() => setIsViewModalOpen(false)}
+                            className="absolute right-3 top-3 text-gray-500 hover:text-gray-700 text-lg font-bold"
+                        >
+                            ✕
+                        </button>
+
+                        {/* Header */}
+                        <div className="border-b border-gray-200 pb-3 mb-4">
+                            <h3 className="text-xl font-semibold text-gray-800">View Question Details</h3>
                         </div>
 
-                        <div className="space-y-4 text-sm">
+                        <div className="space-y-4 text-sm text-gray-700">
+                            {/* Subject */}
                             <div className="flex items-center gap-2">
-                                <label className="w-1/3 font-semibold text-gray-700">Subject</label>
-                                <span>{subjectData.find(s => s.value === viewData.SubjectId)?.label || "-"}</span>
+                                <span className="w-32 font-semibold text-gray-800">Subject</span>
+                                <span className="flex-1">{subjectData.find(s => s.value === viewData.SubjectId)?.label || "-"}</span>
                             </div>
 
+                            {/* Question Type */}
                             <div className="flex items-center gap-2">
-                                <label className="w-1/3 font-semibold text-gray-700">Question Type</label>
-                                <span>{viewData.QnType}</span>
+                                <span className="w-32 font-semibold text-gray-800">Question Type</span>
+                                <span className="flex-1">{viewData.QnType}</span>
                             </div>
 
+                            {/* Question */}
                             <div className="flex items-start gap-2">
-                                <label className="w-1/3 font-semibold text-gray-700">Question</label>
-                                <p className="whitespace-pre-wrap">{viewData.Name}</p>
+                                <span className="w-32 font-semibold text-gray-800">Question</span>
+                                <p className="flex-1 whitespace-pre-wrap bg-gray-50 p-2 rounded border border-gray-200">{viewData.Name}</p>
                             </div>
 
+                            {/* Mark */}
                             <div className="flex items-center gap-2">
-                                <label className="w-1/3 font-semibold text-gray-700">Mark</label>
-                                <span>{viewData.Mark}</span>
+                                <span className="w-32 font-semibold text-gray-800">Mark</span>
+                                <span className="flex-1">{viewData.Mark}</span>
                             </div>
 
+                            {/* MCQ Options */}
                             {viewData.QnType === "MCQ" && (
                                 <div className="mt-2">
-                                    <label className="w-full font-semibold text-gray-700">Options</label>
-                                    {viewData.Options.map((opt, idx) => (
-                                        <div key={idx} className="flex items-center gap-2 mt-1">
-                                            <span className="w-6 font-semibold">
-                                                {String.fromCharCode(65 + idx)}){/* 65 = 'A' */}
-                                            </span>
-                                            <span className="flex-1">{opt.optionText}</span>
-                                            <input type="checkbox" checked={opt.isCorrect} readOnly className="ml-2" />
-                                        </div>
-                                    ))}
+                                    <span className="block font-semibold text-gray-800 mb-1">Options</span>
+                                    <div className="space-y-1">
+                                        {viewData.Options.map((opt, idx) => (
+                                            <div key={idx} className="flex items-center gap-2 bg-gray-50 p-2 rounded border border-gray-200">
+                                                <span className="w-6 font-semibold text-gray-800">{String.fromCharCode(65 + idx)})</span>
+                                                <span className="flex-1">{opt.optionText}</span>
+                                                <input type="checkbox" checked={opt.isCorrect} readOnly className="ml-2 w-4 h-4 accent-blue-600" />
+                                            </div>
+                                        ))}
+                                    </div>
                                 </div>
                             )}
 
+                            {/* Sketch/Image */}
                             {viewData.Sketch && (
                                 <div className="flex items-center gap-2 mt-2">
-                                    <label className="w-1/3 font-semibold text-gray-700">Image</label>
-                                    <img src={viewData.Sketch} alt="Sketch" className="max-w-[150px] max-h-[150px]" />
+                                    <span className="w-32 font-semibold text-gray-800">Image</span>
+                                    <img src={viewData.Sketch} alt="Sketch" className="max-w-[150px] max-h-[150px] rounded border border-gray-200" />
                                 </div>
                             )}
 
+                            {/* Close Button */}
                             <div className="flex justify-end pt-4">
-                                <button onClick={() => setIsViewModalOpen(false)} className="px-3 py-1 bg-gray-500 text-white rounded hover:bg-gray-600">
+                                <button
+                                    onClick={() => setIsViewModalOpen(false)}
+                                    className="px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition"
+                                >
                                     Close
                                 </button>
                             </div>
                         </div>
                     </div>
                 </div>
+
             )}
         </div>
     );
