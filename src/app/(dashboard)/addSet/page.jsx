@@ -11,6 +11,7 @@ import { toast } from 'react-hot-toast';
 import Select from 'react-select';
 
 
+
 export default function AddSet() {
     const { loginData } = useContext(AuthContext);
     const [setData, setSetData] = useState([]);
@@ -29,7 +30,7 @@ export default function AddSet() {
     const [selectedSubject, setSelectedSubject] = useState('');
     const [questionData, setQuestionData] = useState([]);
 
-    const [isViewModalOpen, setIsViewModalOpen] = useState(false); 
+    const [isViewModalOpen, setIsViewModalOpen] = useState(false);
     const [viewData, setViewData] = useState(null);
 
     const [formData, setFormData] = useState({
@@ -37,7 +38,7 @@ export default function AddSet() {
         remarks: ''
     });
 
-    const [showPreview, setShowPreview] = useState(false); //  for showing preview table
+    const [showPreview, setShowPreview] = useState(false); //for showing preview table
 
     //  Load subjects
     useEffect(() => {
@@ -45,6 +46,20 @@ export default function AddSet() {
         fetchSubjectData();
         fetchSetData();
     }, [loginData?.tenantId]);
+
+    const resetForm = () => {
+        setFormData({
+            name: '',
+            remarks: ''
+        });
+        setSelectedQuestions([]);
+        setTotalMark(0);
+        setSelectedSubject('');
+        setEditId(null);
+        setIsEdit(false);
+        setQuestionData([]);
+        setShowPreview(false);
+    };
 
     const fetchSubjectData = async () => {
         try {
@@ -75,7 +90,34 @@ export default function AddSet() {
     };
 
     //  Load questions by subject
-    const fetchQuestionsBySubject = async (subId = null) => {
+    // const fetchQuestionsBySubject = async (subId = null) => {
+    //     try {
+    //         const response = await fetch(`${config.API_BASE_URL}api/Procedure/GetData`, {
+    //             method: "POST",
+    //             headers: {
+    //                 TenantId: loginData.tenantId,
+    //                 "Content-Type": "application/json",
+    //             },
+    //             body: JSON.stringify({
+    //                 operation: "",
+    //                 procedureName: "SP_QuestionManage",
+    //                 parameters: {
+    //                     QueryChecker: 5,
+    //                     SubId: subId || 0,
+    //                 },
+    //             }),
+    //         });
+
+    //         const data = await response.json();
+    //         const questions = Array.isArray(data) ? data : [];
+    //         setQuestionData(questions);
+    //     } catch (error) {
+    //         console.error(error);
+    //         toast.error("Failed to load questions");
+    //     }
+    // };
+
+    const fetchQuestionsBySubject = async (subId = null, setId = null) => {
         try {
             const response = await fetch(`${config.API_BASE_URL}api/Procedure/GetData`, {
                 method: "POST",
@@ -95,12 +137,22 @@ export default function AddSet() {
 
             const data = await response.json();
             const questions = Array.isArray(data) ? data : [];
+            // if (!setId) {
+            //     setSelectedQuestions([]);
+            // }
+            //       if (!setId && !isEdit) {
+            //     setSelectedQuestions([]);
+            // }
+
             setQuestionData(questions);
+            return questions;
         } catch (error) {
             console.error(error);
             toast.error("Failed to load questions");
+            return [];
         }
     };
+
 
     // Load existing sets
     const fetchSetData = async () => {
@@ -142,6 +194,7 @@ export default function AddSet() {
     // Modal open
     const handleOpenModal = () => {
         setShowModal(true);
+         resetForm()
         setIsEdit(false);
         setEditId(null);
         setFormData({ name: '', remarks: '' });
@@ -160,15 +213,50 @@ export default function AddSet() {
     };
 
     //  Checkbox select
+    // const handleCheckboxChange = (question) => {
+    //     let updatedSelected = [...selectedQuestions];
+    //     if (updatedSelected.some(q => q.QuestionId === question.QuestionId)) {
+    //         updatedSelected = updatedSelected.filter(q => q.QuestionId !== question.QuestionId);
+    //     } else {
+    //         updatedSelected.push(question);
+    //     }
+    //     setSelectedQuestions(updatedSelected);
+    //     const total = updatedSelected.reduce((acc, q) => acc + (q.Mark || 0), 0);
+    //     setTotalMark(total);
+    // };
+
     const handleCheckboxChange = (question) => {
         let updatedSelected = [...selectedQuestions];
-        if (updatedSelected.some(q => q.QuestionId === question.QuestionId)) {
-            updatedSelected = updatedSelected.filter(q => q.QuestionId !== question.QuestionId);
+
+        // Check if question is already selected (handle both property names)
+        const isSelected = updatedSelected.some(q =>
+            q.QuestionId === question.QuestionId
+            // || 
+            // q.QnId === question.QuestionId
+        );
+
+        if (isSelected) {
+            // Remove the question
+            updatedSelected = updatedSelected.filter(q =>
+                q.QuestionId !== question.QuestionId
+                // && 
+                // q.QnId !== question.QuestionId
+            );
         } else {
-            updatedSelected.push(question);
+            // Add the question with consistent structure
+            updatedSelected.push({
+                QuestionId: question.QuestionId,
+                Name: question.Name,
+                Mark: question.Mark,
+                QnType: question.QnType,
+                SubjectId: question.SubjectId,
+                SubjectName: question.SubjectName,
+                Remarks: question.Remarks || ""
+            });
         }
+
         setSelectedQuestions(updatedSelected);
-        const total = updatedSelected.reduce((acc, q) => acc + (q.Mark || 0), 0);
+        const total = updatedSelected.reduce((acc, q) => acc + (parseFloat(q.Mark) || 0), 0);
         setTotalMark(total);
     };
 
@@ -224,6 +312,63 @@ export default function AddSet() {
             toast.error(err.message);
         }
     };
+
+    // const handleSubmit = async (e) => {
+    //     e.preventDefault();
+
+    //     // Basic validation
+    //     if (!formData.name) return toast.error("Set Name required");
+    //     if (selectedQuestions.length === 0) return toast.error("Select at least 1 question");
+
+    //     try {
+    //         // Prepare JSON for Questions
+    //         const questionsJson = selectedQuestions.map(q => ({
+    //             SubId: q.SubjectId,
+    //             QnId: q.QuestionId,
+    //             Mark: q.Mark || 0,
+    //             Remarks: q.Remarks || ''
+    //         }));
+
+    //         // Determine query checker based on edit mode
+    //         const queryChecker = isEdit ? 5 : 1;
+
+    //         const requestBody = {
+    //             operation: '',
+    //             procedureName: 'SP_QuestionSetManage',
+    //             parameters: {
+    //                 QueryChecker: queryChecker,
+    //                 Name: formData.name,
+    //                 Remarks: formData.remarks || '',
+    //                 TotalMark: totalMark || 0,
+    //                 EntryBy: loginData.UserId,
+    //                 Questions: JSON.stringify(questionsJson)
+    //             }
+    //         };
+
+    //         // Add SetId for update operation
+    //         if (isEdit && editId) {
+    //             requestBody.parameters.Id = editId;
+    //         }
+
+    //         const response = await fetch(`${config.API_BASE_URL}api/Procedure/GetData`, {
+    //             method: 'POST',
+    //             headers: {
+    //                 TenantId: loginData.tenantId,
+    //                 'Content-Type': 'application/json',
+    //             },
+    //             body: JSON.stringify(requestBody)
+    //         });
+
+    //         if (!response.ok) throw new Error('Failed to save set');
+
+    //         toast.success(`Set ${isEdit ? 'updated' : 'saved'} successfully`);
+    //         setShowModal(false);
+    //         resetForm();
+    //         fetchSetData();
+    //     } catch (err) {
+    //         toast.error(err.message);
+    //     }
+    // };
     const fetchSetById = async (Id) => {
         console.log('Fetching set for ID:', Id);
         try {
@@ -284,17 +429,82 @@ export default function AddSet() {
         setIsViewModalOpen(true);
     };
 
-
-    //  Edit
-    const openEditModal = (setItem) => {
+    const openEditModal = async (setItem) => {
         setShowModal(true);
         setIsEdit(true);
         setEditId(setItem.Id);
-        setFormData({
-            name: setItem.Name,
-            remarks: setItem.Remarks || ''
-        });
+
+        setSelectedQuestions([]); // Clear initially
+        setTotalMark(0);
+
+        try {
+            const response = await fetch(`${config.API_BASE_URL}api/Procedure/GetData`, {
+                method: "POST",
+                headers: {
+                    TenantId: loginData.tenantId,
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify({
+                    operation: "",
+                    procedureName: "SP_QuestionSetManage",
+                    parameters: {
+                        QueryChecker: 4,
+                        Id: setItem.Id,
+                    },
+                }),
+            });
+
+            const data = await response.json();
+            console.log("Edit Data", data)
+
+            if (!Array.isArray(data) || data.length === 0) {
+                toast.error("No data found for this question set!");
+                return;
+            }
+
+            const master = data[0];
+
+            // Set master info
+            setFormData({
+                name: master.SetName,
+                remarks: master.Remarks || "",
+            });
+            setTotalMark(master.TotalMark || 0);
+
+            const details = data
+                .filter(item => item.QuestionId !== null && item.SubjectId !== null)
+                .map((item) => ({
+                    QuestionId: item.QuestionId,
+                    Name: item.QuestionName,
+                    Mark: item.AssignedMark || item.QuestionMark,
+                    QnType: item.QnType,
+                    SubjectId: item.SubjectId,
+                    SubjectName: item.SubjectName,
+                    Remarks: item.Remarks || ""
+                }));
+
+            // Set selected questions
+            setSelectedQuestions(details);
+
+            const subjectIds = [...new Set(details.map(d => d.SubjectId))];
+
+            if (subjectIds.length > 0) {
+                // Set the first subject as selected
+                const firstSubjectId = subjectIds[0];
+                setSelectedSubject(firstSubjectId);
+
+                // Fetch questions for that subject
+                await fetchQuestionsBySubject(firstSubjectId, setItem.Id);
+            } else {
+                setQuestionData([]);
+            }
+
+        } catch (error) {
+            console.error("Error fetching set:", error);
+            toast.error("Failed to load question set for edit");
+        }
     };
+
 
     return (
         <div className="overflow-x-auto p-3">
@@ -490,13 +700,16 @@ export default function AddSet() {
 
                 {/* MODAL */}
                 {showModal && (
-                    <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+                    <div className="fixed inset-0 bg-black/40 z-50 flex items-center justify-center">
                         <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl relative overflow-hidden border border-gray-200">
                             {/* Header */}
                             <div className="flex justify-between items-center px-6 py-4 border-b bg-gradient-to-r from-blue-50 to-blue-100">
                                 <h3 className="font-bold text-lg text-gray-800">Set Entry</h3>
                                 <button
-                                    onClick={() => setShowModal(false)}
+                                    onClick={() => {
+                                        setShowModal(false);
+                                        resetForm();
+                                    }}
                                     className="text-gray-500 hover:text-red-500 text-xl font-bold transition"
                                 >
                                     ✕
@@ -542,6 +755,7 @@ export default function AddSet() {
                                                     const subId = selected?.value || "";
                                                     setSelectedSubject(subId);
                                                     fetchQuestionsBySubject(subId);
+                                                    // fetchQuestionsBySubject(subId, isEdit ? editId : null);
                                                 }}
                                                 options={subjectData}
                                                 placeholder="Select or search subject..."
@@ -566,6 +780,10 @@ export default function AddSet() {
                                                         <input
                                                             type="checkbox"
                                                             checked={selectedQuestions.some(sq => sq.QuestionId === q.QuestionId)}
+                                                            // checked={selectedQuestions.some(sq =>
+                                                            //     sq.QuestionId === q.QuestionId ||
+                                                            //     (sq.QnId && sq.QnId === q.QuestionId) // Handle different property names
+                                                            // )}
                                                             onChange={() => handleCheckboxChange(q)}
                                                             className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-400"
                                                         />
@@ -582,6 +800,104 @@ export default function AddSet() {
                                     </div>
 
                                     {/* Preview */}
+
+                                    {showPreview && selectedQuestions.length > 0 && (
+                                        <div className="mt-4 border border-gray-300 rounded-lg p-3 bg-gray-100">
+                                            <h4 className="font-semibold mb-2 text-gray-800">Preview Selected Questions</h4>
+                                            <table className="w-full text-sm border border-gray-300 rounded overflow-hidden">
+                                                <thead className="bg-blue-50 text-gray-700">
+                                                    <tr>
+                                                        <th className="border px-2 py-1">SL</th>
+                                                        <th className="border px-2 py-1">Subject</th>
+                                                        <th className="border px-2 py-1">Total Qn</th>
+                                                        <th className="border px-2 py-1">Type</th>
+                                                        <th className="border px-2 py-1">Mark</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                    {(() => {
+                                                        const grouped = selectedQuestions.reduce((acc, q) => {
+                                                            if (!acc[q.SubjectName]) acc[q.SubjectName] = {};
+                                                            if (!acc[q.SubjectName][q.QnType])
+                                                                acc[q.SubjectName][q.QnType] = { count: 0, totalMark: 0 };
+                                                            acc[q.SubjectName][q.QnType].count++;
+                                                            acc[q.SubjectName][q.QnType].totalMark += Number(q.Mark) || 0;
+                                                            return acc;
+                                                        }, {});
+
+                                                        const subjects = Object.entries(grouped);
+                                                        let grandTotalQuestions = 0;
+                                                        let grandTotalMarks = 0;
+
+                                                        return (
+                                                            <>
+                                                                {subjects.map(([subject, types], idx) => {
+                                                                    const totalForSubject = Object.values(types).reduce(
+                                                                        (acc, t) => ({
+                                                                            count: acc.count + t.count,
+                                                                            totalMark: acc.totalMark + t.totalMark,
+                                                                        }),
+                                                                        { count: 0, totalMark: 0 }
+                                                                    );
+
+                                                                    grandTotalQuestions += totalForSubject.count;
+                                                                    grandTotalMarks += totalForSubject.totalMark;
+
+                                                                    return (
+                                                                        <React.Fragment key={idx}>
+                                                                            {Object.entries(types).map(([type, data], tIdx) => (
+                                                                                <tr key={`${subject}-${type}`} className="bg-white hover:bg-gray-50">
+                                                                                    {tIdx === 0 && (
+                                                                                        <>
+                                                                                            <td
+                                                                                                className="border px-2 py-1 text-center font-medium"
+                                                                                                rowSpan={Object.keys(types).length}
+                                                                                            >
+                                                                                                {idx + 1}
+                                                                                            </td>
+                                                                                            <td
+                                                                                                className="border px-2 py-1 font-semibold text-gray-800"
+                                                                                                rowSpan={Object.keys(types).length}
+                                                                                            >
+                                                                                                {subject}
+                                                                                            </td>
+                                                                                        </>
+                                                                                    )}
+                                                                                    <td className="border px-2 py-1 text-center">{data.count}</td>
+                                                                                    <td className="border px-2 py-1 text-center">{type}</td>
+                                                                                    <td className="border px-2 py-1 text-center">{data.totalMark}</td>
+                                                                                </tr>
+                                                                            ))}
+
+                                                                            {/* Per-subject subtotal */}
+                                                                            <tr className="bg-blue-50 font-semibold text-gray-800">
+                                                                                <td colSpan={2} className="border px-2 py-1 text-right">
+                                                                                    Subtotal:
+                                                                                </td>
+                                                                                <td className="border px-2 py-1 text-center">{totalForSubject.count}</td>
+                                                                                <td className="border px-2 py-1 text-center">Total</td>
+                                                                                <td className="border px-2 py-1 text-center">{totalForSubject.totalMark}</td>
+                                                                            </tr>
+                                                                        </React.Fragment>
+                                                                    );
+                                                                })}
+
+                                                                {/* Grand Total */}
+                                                                <tr className="bg-green-100 font-bold text-gray-900">
+                                                                    <td colSpan={2} className="border px-2 py-1 text-right">
+                                                                        Grand Total:
+                                                                    </td>
+                                                                    <td className="border px-2 py-1 text-center">{grandTotalQuestions}</td>
+                                                                    <td className="border px-2 py-1 text-center">All Types</td>
+                                                                    <td className="border px-2 py-1 text-center">{grandTotalMarks}</td>
+                                                                </tr>
+                                                            </>
+                                                        );
+                                                    })()}
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    )}
 
 
                                     {/* Buttons */}
