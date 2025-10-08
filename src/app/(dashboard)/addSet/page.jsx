@@ -4,11 +4,12 @@ import Link from 'next/link';
 import { IoMdAddCircle } from 'react-icons/io';
 import { FaFileExcel } from 'react-icons/fa';
 import React, { useState, useEffect, useContext } from 'react';
-import { FiEdit, FiTrash2 } from 'react-icons/fi';
+import { FiEdit, FiTrash2, FiEye } from "react-icons/fi";
 import DeleteConfirmModal from '../../components/DeleteConfirmModal';
 import { AuthContext } from '../../provider/AuthProvider';
 import { toast } from 'react-hot-toast';
 import Select from 'react-select';
+
 
 export default function AddSet() {
     const { loginData } = useContext(AuthContext);
@@ -27,6 +28,9 @@ export default function AddSet() {
     const [subjectData, setSubjectData] = useState([]);
     const [selectedSubject, setSelectedSubject] = useState('');
     const [questionData, setQuestionData] = useState([]);
+
+    const [isViewModalOpen, setIsViewModalOpen] = useState(false); 
+    const [viewData, setViewData] = useState(null);
 
     const [formData, setFormData] = useState({
         name: '',
@@ -115,7 +119,7 @@ export default function AddSet() {
             });
             const data = await response.json();
             console.log("Set Data", data)
-             const set = Array.isArray(data) ? data : [];
+            const set = Array.isArray(data) ? data : [];
             setSetData(set);
             //  setSetData(Array.isArray(data) ? data : []);
         } catch (error) {
@@ -176,50 +180,109 @@ export default function AddSet() {
 
     //  Save set
     const handleSubmit = async (e) => {
-    e.preventDefault();
+        e.preventDefault();
 
-    // Basic validation
-    if (!formData.name) return toast.error("Set Name required");
-    if (selectedQuestions.length === 0) return toast.error("Select at least 1 question");
+        // Basic validation
+        if (!formData.name) return toast.error("Set Name required");
+        if (selectedQuestions.length === 0) return toast.error("Select at least 1 question");
 
-    try {
-        // Prepare JSON for Questions
-        const questionsJson = selectedQuestions.map(q => ({
-            SubId: q.SubjectId,      // adjust property names according to your API
-            QnId: q.QuestionId,
-            Mark: q.Mark || 0,
-            Remarks: q.Remarks || ''
-        }));
+        try {
+            // Prepare JSON for Questions
+            const questionsJson = selectedQuestions.map(q => ({
+                SubId: q.SubjectId,      // adjust property names according to your API
+                QnId: q.QuestionId,
+                Mark: q.Mark || 0,
+                Remarks: q.Remarks || ''
+            }));
 
-        const response = await fetch(`${config.API_BASE_URL}api/Procedure/GetData`, {
-            method: 'POST',
-            headers: {
-                TenantId: loginData.tenantId,
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-                operation: '', 
-                procedureName: 'SP_QuestionSetManage',
-                parameters: {
-                    QueryChecker: 1, 
-                    Name: formData.name,
-                    Remarks: formData.remarks || '',
-                    TotalMark: totalMark || 0,
-                    EntryBy: loginData.UserId,
-                    Questions: JSON.stringify(questionsJson) 
-                }
-            })
-        });
+            const response = await fetch(`${config.API_BASE_URL}api/Procedure/GetData`, {
+                method: 'POST',
+                headers: {
+                    TenantId: loginData.tenantId,
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    operation: '',
+                    procedureName: 'SP_QuestionSetManage',
+                    parameters: {
+                        QueryChecker: 1,
+                        Name: formData.name,
+                        Remarks: formData.remarks || '',
+                        TotalMark: totalMark || 0,
+                        EntryBy: loginData.UserId,
+                        Questions: JSON.stringify(questionsJson)
+                    }
+                })
+            });
 
-        if (!response.ok) throw new Error('Failed to save set');
+            if (!response.ok) throw new Error('Failed to save set');
 
-        toast.success(`Set ${isEdit ? 'updated' : 'saved'} successfully`);
-        setShowModal(false);
-        fetchSetData();
-    } catch (err) {
-        toast.error(err.message);
-    }
-};
+            toast.success(`Set ${isEdit ? 'updated' : 'saved'} successfully`);
+            setShowModal(false);
+            fetchSetData();
+        } catch (err) {
+            toast.error(err.message);
+        }
+    };
+    const fetchSetById = async (Id) => {
+        console.log('Fetching set for ID:', Id);
+        try {
+            const response = await fetch(`${config.API_BASE_URL}api/Procedure/GetData`, {
+                method: 'POST',
+                headers: {
+                    TenantId: loginData.tenantId,
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    operation: '',
+                    procedureName: 'SP_QuestionSetManage',
+                    parameters: {
+                        QueryChecker: 3,
+                        Id: Id
+                    },
+                }),
+            });
+
+            if (!response.ok) throw new Error(await response.text());
+
+            const data = await response.json();
+            console.log('Fetched Set Data:', data);
+
+            if (data.length === 0) {
+                toast.error("No data found for this set");
+                setViewData(null);
+                return;
+            }
+
+            const set = {
+                Id: data[0].Id,
+                SetName: data[0].SetName,
+                TotalMark: data[0].TotalMark,
+                TotalQuestions: data[0].TotalQuestions,
+                Questions: data.map((q) => ({
+                    SubjectName: q.SubjectName,
+                    QuestionName: q.Question,
+                    QnType: q.QnType,
+                    Mark: q.Mark,
+                })),
+            };
+
+            setViewData(set);
+        } catch (err) {
+            console.error('Error fetching set:', err);
+            toast.error('Failed to load set data');
+            setViewData(null);
+        }
+    };
+
+
+    const openViewModal = async (set) => {
+        console.log("Opening set:", set);
+        const id = set?.Id;
+        if (!id) return;
+        await fetchSetById(id);
+        setIsViewModalOpen(true);
+    };
 
 
     //  Edit
@@ -388,6 +451,10 @@ export default function AddSet() {
                                             <td data-label="Mark" className="px-4 py-2 text-center">{set.TotalMark}</td>
                                             <td data-label="Actions" className="px-4 py-2 text-center">
                                                 <div className="text-base flex items-end gap-3">
+                                                    <button onClick={() => openViewModal(set)} className="flex items-center gap-1 px-3 py-1.5 text-sm font-medium border border-blue-500 text-blue-500 rounded hover:bg-blue-500 hover:text-white transition-colors duration-200">
+                                                        <FiEye className="text-base" />
+                                                    </button>
+
                                                     <button
                                                         onClick={() => openEditModal(set)}
                                                         title="Edit"
@@ -515,7 +582,7 @@ export default function AddSet() {
                                     </div>
 
                                     {/* Preview */}
-                                   
+
 
                                     {/* Buttons */}
                                     <div className="flex justify-end gap-2 pt-6 border-t border-gray-200">
@@ -540,6 +607,83 @@ export default function AddSet() {
                         </div>
                     </div>
                 )}
+
+                {isViewModalOpen && viewData && (
+
+                    <div className="fixed inset-0 bg-black/40 z-50 flex items-center justify-center">
+                        <div
+                            data-aos="zoom-in"
+                            className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl relative overflow-y-auto max-h-[90vh] p-6"
+                        >
+                            {/* Close Button */}
+                            <button
+                                onClick={() => setIsViewModalOpen(false)}
+                                className="absolute top-4 right-4 text-gray-400 hover:text-gray-700 font-bold transition"
+                            >
+                                ✕
+                            </button>
+
+                            {/* Header */}
+                            <div className="mb-6 text-center">
+                                <h3 className="text-2xl font-bold text-gray-800">View Question Set</h3>
+                            </div>
+
+                            <div className="space-y-5 text-gray-700 text-sm">
+                                {/* Set Info */}
+                                <div className="flex flex-nowrap justify-between items-center gap-6 text-gray-700 text-sm font-medium">
+                                    <span><b>Set Name: </b><span className="font-normal">{viewData.SetName}</span></span>
+                                    <span><b>Total Question: </b> <span className="font-normal">{viewData.TotalQuestions}</span></span>
+                                    <span><b>Total Mark: </b> <span className="font-normal">{viewData.TotalMark}</span></span>
+                                </div>
+
+
+                                {/* Questions Table */}
+                                <div className="mt-4">
+                                    <h4 className="text-lg font-semibold text-gray-800 mb-3">Questions</h4>
+                                    <div className="overflow-x-auto rounded-lg border border-gray-200">
+                                        <table className="w-full text-sm border-collapse">
+                                            <thead className="bg-blue-50 text-blue-800">
+                                                <tr>
+                                                    <th className="p-2 text-left border-b">SL</th>
+                                                    <th className="p-2 text-left border-b">Subject</th>
+                                                    <th className="p-2 text-left border-b">Question</th>
+                                                    <th className="p-2 text-left border-b">Type</th>
+                                                    <th className="p-2 text-left border-b">Mark</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody className="divide-y divide-gray-200">
+                                                {viewData.Questions.map((q, i) => (
+                                                    <tr key={i} className="hover:bg-gray-50 transition">
+                                                        <td className="p-2">{i + 1}</td>
+                                                        <td className="p-2">{q.SubjectName}</td>
+                                                        <td className="p-2">{q.QuestionName}</td>
+                                                        <td className="p-2">{q.QnType}</td>
+                                                        <td className="p-2">{q.Mark}</td>
+                                                    </tr>
+                                                ))}
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+
+                                {/* Close Button */}
+                                <div className="flex justify-end mt-6">
+                                    <button
+                                        onClick={() => setIsViewModalOpen(false)}
+                                        className="px-5 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition"
+                                    >
+                                        Close
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+
+                )}
+
+
+
 
             </div>
         </div>
