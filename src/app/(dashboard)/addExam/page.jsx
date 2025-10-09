@@ -45,7 +45,7 @@ export default function AddExam() {
 
   // Fetch question sets for dropdown
   const fetchQuestionSets = async () => {
-    if (!loginData || !loginData.tenantId) {
+    if (!loginData.tenantId) {
       console.warn("No loginData available, skipping fetch");
       return;
     }
@@ -72,9 +72,9 @@ export default function AddExam() {
     }
   };
 
-  // Fetch exams list
+  // Fetch exams list for show grid data
   const fetchExams = async () => {
-    if (!loginData || !loginData.tenantId) {
+    if (!loginData.tenantId) {
       console.warn("No loginData available, skipping fetch");
       return;
     }
@@ -166,8 +166,7 @@ export default function AddExam() {
       name: "",
       setId: "",
       totalMark: 0,
-      remarks: "",
-      examDate: "",
+      remarks: "",    
       entryBy: loginData?.UserId,
       isActive: true
     });
@@ -208,8 +207,7 @@ export default function AddExam() {
         name: data.Name || "",
         setId: data.SetId || "",
         totalMark: data.TotalMark || 0,
-        remarks: data.Remarks || "",
-        examDate: data.ExamDate || "",
+        remarks: data.Remarks || "",    
         entryBy: data.EntryBy || loginData?.UserId,
         isActive: data.IsActive ?? true,
       });
