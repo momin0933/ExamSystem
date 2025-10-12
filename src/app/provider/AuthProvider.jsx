@@ -36,10 +36,10 @@ export const AuthProvider = ({ children }) => {
         }),
       });
       if (!response.ok) throw new Error("Invalid login credentials");
-      const data = await response.json();
+      const data = await response.json()
       const { accessToken: token, userData } = data;
       // Update the loginData state
-      const updatedLoginData = { ...userData, tenantId,token };
+      const updatedLoginData = { ...userData, tenantId, token };
       setLoginData(updatedLoginData);
       // Save login data to local storage
       localStorage.setItem("loginData", JSON.stringify(updatedLoginData));
@@ -47,7 +47,14 @@ export const AuthProvider = ({ children }) => {
       //document.cookie = `authToken=${token}; Path=/; Secure; SameSite=Strict`;
       document.cookie = `authToken=${token}; Path=/; SameSite=Strict${window.location.protocol === 'https:' ? '; Secure' : ''}`;
       // Navigate to the homepage
-      router.push("/homepage");
+      // router.push("/homepage");
+
+      // Conditional navigation based on UserRole
+      if (userData.UserRole?.trim() === "Participate") {
+        router.push("/examPage"); // Navigate to exam page
+      } else {
+        router.push("/homepage"); // Admins or others
+      }
     } catch (err) {
       setError(err.message || "Invalid credentials, please try again later.");
     } finally {

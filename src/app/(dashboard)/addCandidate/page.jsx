@@ -133,6 +133,25 @@ export default function AddCandidate() {
         }
     };
 
+      const generatePassword = () => {
+        return Math.random().toString(36).slice(-8); // random 8-character password
+    };
+    //  Generate userId & password when name changes
+    const handleNameChange = (e) => {
+        const fullName = e.target.value;
+        // Get the first name only (before first space)
+        const firstName = fullName ? fullName.split(" ")[0] : "";
+        const password = generatePassword(); // still auto-generate password
+
+        setFormData((prev) => ({
+            ...prev,
+            name: fullName,
+            userId: firstName,
+            password,
+
+        }));
+    };
+    
     const openEditCandidateModal = async (candidate) => {
 
         if (!candidate?.id) {
@@ -231,21 +250,6 @@ export default function AddCandidate() {
         setShowModal(true);
     };
 
-    //  Generate userId & password when name changes
-    const handleNameChange = (e) => {
-        const fullName = e.target.value;
-        // Get the first name only (before first space)
-        const firstName = fullName ? fullName.split(" ")[0] : "";
-        const password = generatePassword(); // still auto-generate password
-
-        setFormData((prev) => ({
-            ...prev,
-            name: fullName,
-            userId: firstName,
-            password,
-
-        }));
-    };
 
     // Handle name change
     // const handleNameChange = (e) => {
@@ -262,9 +266,7 @@ export default function AddCandidate() {
     // };
 
 
-    const generatePassword = () => {
-        return Math.random().toString(36).slice(-8); // random 8-character password
-    };
+  
 
     //  Submit form
     // const handleSubmit = async (e) => {
