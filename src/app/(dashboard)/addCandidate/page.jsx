@@ -133,25 +133,45 @@ export default function AddCandidate() {
         }
     };
 
-      const generatePassword = () => {
-        return Math.random().toString(36).slice(-8); // random 8-character password
-    };
-    //  Generate userId & password when name changes
-    const handleNameChange = (e) => {
-        const fullName = e.target.value;
-        // Get the first name only (before first space)
-        const firstName = fullName ? fullName.split(" ")[0] : "";
-        const password = generatePassword(); // still auto-generate password
+    //   const generatePassword = () => {
+    //     return Math.random().toString(36).slice(-8); // random 8-character password
+    // };
+    // //  Generate userId & password when name changes
+    // const handleNameChange = (e) => {
+    //     const fullName = e.target.value;
+    //     // Get the first name only (before first space)
+    //     const firstName = fullName ? fullName.split(" ")[0] : "";
+    //     const password = generatePassword(); // still auto-generate password
 
-        setFormData((prev) => ({
-            ...prev,
-            name: fullName,
-            userId: firstName,
-            password,
+    //     setFormData((prev) => ({
+    //         ...prev,
+    //         name: fullName,
+    //         userId: firstName,
+    //         password,
 
-        }));
-    };
-    
+    //     }));
+    // };
+
+    const generatePassword = () => {
+    // random 4 chars + current timestamp in base36 to make it unique
+    return Math.random().toString(36).slice(-4) + Date.now().toString(36).slice(-4);
+};
+
+// Generate userId & password when name changes
+const handleNameChange = (e) => {
+    const fullName = e.target.value;
+    const firstName = fullName ? fullName.split(" ")[0] : "";
+    const password = generatePassword(); 
+
+    setFormData((prev) => ({
+        ...prev,
+        name: fullName,
+        userId: firstName,
+        password,
+    }));
+};
+
+
     const openEditCandidateModal = async (candidate) => {
 
         if (!candidate?.id) {
@@ -250,66 +270,6 @@ export default function AddCandidate() {
         setShowModal(true);
     };
 
-
-    // Handle name change
-    // const handleNameChange = (e) => {
-    //     const fullName = e.target.value;
-
-    //     setFormData((prev) => ({
-    //         ...prev,
-    //         name: fullName,
-    //         // Auto-generate userId only for new candidates
-    //         userId: isEdit ? prev.userId : (fullName.split(" ")[0] || ""),
-    //         // Auto-generate password only for new candidates
-    //         password: isEdit ? prev.password : generatePassword(),
-    //     }));
-    // };
-
-
-  
-
-    //  Submit form
-    // const handleSubmit = async (e) => {
-    //     e.preventDefault();
-
-    //     // Prepare payload
-    //     const payload = {
-    //         ...formData,
-    //         exmCandidateLists: [
-    //             {
-    //                 examId: formData.examId,
-    //                 name: formData.name
-    //             }
-    //         ]
-    //     };
-
-    //     try {
-    //         const response = await fetch(
-    //             `${config.API_BASE_URL}api/ExamUserAccount/AddCandidate`,
-    //             {
-    //                 method: "POST",
-    //                 headers: {
-    //                     TenantId: loginData.tenantId,
-    //                     "Content-Type": "application/json",
-    //                 },
-    //                 body: JSON.stringify(payload),
-    //             }
-    //         );
-
-    //         if (!response.ok) {
-    //             const text = await response.text();
-    //             console.error("Server returned error:", text);
-    //             throw new Error("Failed to add candidate");
-    //         }
-
-    //         const result = await response.json();
-    //         toast.success(result.message || "Candidate added successfully");
-    //         setShowModal(false);
-    //     } catch (err) {
-    //         console.error("Submit Error:", err);
-    //         toast.error(err.message);
-    //     }
-    // };
 
     const handleSubmit = async (e) => {
         e.preventDefault();

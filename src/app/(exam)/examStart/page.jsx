@@ -188,7 +188,7 @@ export default function ExamStartPage() {
                             </button>
                         ) : (
                             <button
-                                onClick={handleSubmitExam}
+                                // onClick={handleSubmitExam}
                                 className="px-5 py-2 rounded-lg bg-green-500 hover:bg-green-600 text-white font-medium"
                             >
                                 Submit Exam
