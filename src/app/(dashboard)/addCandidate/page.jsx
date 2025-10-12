@@ -16,6 +16,8 @@ import Select from 'react-select';
 export default function AddCandidate() {
     const { loginData } = useContext(AuthContext);
 
+    console.log("LoginData", loginData)
+
     const [questionData, setQuestionData] = useState([]);
     const [filteredQuestion, setFilteredQuestion] = useState([]);
     const [loading, setLoading] = useState(false);
@@ -29,26 +31,24 @@ export default function AddCandidate() {
     const [subjectData, setSubjectData] = useState([]);
     const [isViewModalOpen, setIsViewModalOpen] = useState(false);
     const [exam, setExam] = useState([]);
+    const [candidates, setCandidates] = useState([]);
 
     const [formData, setFormData] = useState({
+        id: "",
         name: "",
-        userId: "",
         password: "",
         email: "",
         mobileNo: "",
-        examId: "",
-        examName: "",
-        // remarks: "",
+        userRole: "",
+        isActive: true,
+        exmCandidateLists: []
     });
 
     useEffect(() => {
         AOS.init({ duration: 800, once: true });
     }, []);
 
-    useEffect(() => {
-        if (!loginData?.tenantId) return;
-        fetchExams();
-    }, [loginData?.tenantId]);
+
 
     useEffect(() => {
         const lowerSearch = searchQuery.toLowerCase();
@@ -85,245 +85,256 @@ export default function AddCandidate() {
         }
     };
 
+    const fetchCandidateWithExam = async () => {
+        if (!loginData.tenantId) return;
+
+        try {
+
+            const response = await fetch(`${config.API_BASE_URL}api/Procedure/GetData`, {
+                method: "POST",
+                headers: {
+                    TenantId: loginData.tenantId,
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify({
+                    operation: "",
+                    procedureName: "SP_CandidateManage",
+                    parameters: {
+                        QueryChecker: 1
+                    },
+                }),
+            });
 
 
+            const data = await response.json();
+            console.log("Candidate List", data)
+            const candidatesArray = Array.isArray(data) ? data : [];
 
-   const resetForm = () => {
-    setFormData({
-        id: 0,
-        name: "",
-        setId: "",
-          email: "",  
-           mobileNo: "",
-        totalMark: 0,
-        remarks: "",
-        entryBy: loginData?.UserId,
-        isActive: true
-    });
-    setIsEdit(false);
-    setEditId(null);
-};
+            // Format the data to match your table columns
+            const formatted = candidatesArray.map((candidate) => ({
+                id: candidate.Id,
+                name: candidate.Name,
+                password: candidate.Password,
+                examName: candidate.ExamName,
+                userId: candidate.UserId,
+                userRole: candidate.UserRole,
+                email: candidate.Email,
+                mobileNo: candidate.MobileNo,
+            }));
 
-  const handleOpenModal = () => {
-    resetForm();
-    setShowModal(true);
-  };
+            //  Sort by id descending
+            formatted.sort((a, b) => b.id - a.id);
+            setCandidates(formatted);
+            console.log("Candidate Data:", formatted);
 
-    //  Generate userId & password when name changes
-    const handleNameChange = (e) => {
-        const fullName = e.target.value;
-        // Get the first name only (before first space)
-        const firstName = fullName ? fullName.split(" ")[0] : "";
-        const password = generatePassword(); // still auto-generate password
-
-        setFormData((prev) => ({
-            ...prev,
-            name: fullName,
-            userId: firstName,
-            password,
-        }));
+        } catch (err) {
+            console.error(err);
+            toast.error("Failed to load candidates");
+        }
     };
 
+    //   const generatePassword = () => {
+    //     return Math.random().toString(36).slice(-8); // random 8-character password
+    // };
+    // //  Generate userId & password when name changes
+    // const handleNameChange = (e) => {
+    //     const fullName = e.target.value;
+    //     // Get the first name only (before first space)
+    //     const firstName = fullName ? fullName.split(" ")[0] : "";
+    //     const password = generatePassword(); // still auto-generate password
+
+    //     setFormData((prev) => ({
+    //         ...prev,
+    //         name: fullName,
+    //         userId: firstName,
+    //         password,
+
+    //     }));
+    // };
 
     const generatePassword = () => {
-        return Math.random().toString(36).slice(-8); // random 8-character password
-    };
+    // random 4 chars + current timestamp in base36 to make it unique
+    return Math.random().toString(36).slice(-4) + Date.now().toString(36).slice(-4);
+};
 
-    //  Submit form
-  const handleSubmit = async (e) => {
-    e.preventDefault();
+// Generate userId & password when name changes
+const handleNameChange = (e) => {
+    const fullName = e.target.value;
+    const firstName = fullName ? fullName.split(" ")[0] : "";
+    const password = generatePassword(); 
 
-    // Prepare payload
-    const payload = {
-        ...formData,
-        exmCandidateLists: [
-            {
-                examId: formData.examId,
-                name: formData.name
+    setFormData((prev) => ({
+        ...prev,
+        name: fullName,
+        userId: firstName,
+        password,
+    }));
+};
+
+
+    const openEditCandidateModal = async (candidate) => {
+
+        if (!candidate?.id) {
+            console.error("Invalid Candidate ID");
+            return;
+        }
+
+        try {
+            setIsEdit(true);
+            setEditId(candidate.id);
+
+            // Call your API that fetches candidate by Id
+            const res = await fetch(`${config.API_BASE_URL}api/Procedure/GetData`, {
+                method: "POST",
+                headers: {
+                    TenantId: loginData?.tenantId,
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify({
+                    operation: "",
+                    procedureName: "SP_CandidateManage",
+                    parameters: {
+                        QueryChecker: 2,
+                        UserAccountId: candidate.id
+
+                    },
+                }),
+            });
+
+            if (!res.ok) throw new Error("Failed to fetch candidate data");
+
+            const data = await res.json();
+            console.log("Edit Candidate Data", data)
+            const candidateData = Array.isArray(data) ? data[0] : null;
+
+            if (!candidateData) {
+                toast.error("Candidate not found");
+                return;
             }
-        ]
+
+            setFormData({
+                id: candidateData.Id,
+                name: candidateData.Name || "",
+                password: candidateData.Password || generatePassword(),
+                userId: candidateData.UserId || candidateData.Name.split(" ")[0],
+                email: candidateData.Email || "",
+                mobileNo: candidateData.MobileNo || "",
+                userRole: candidateData.UserRole || "Participate",
+                isActive: candidateData.IsActive ?? true,
+                examId: candidateData.ExamId || "",
+                examName: candidateData.ExamName || "",
+                exmCandidateLists: [
+                    {
+                        examId: candidateData.ExamId || "",
+                        name: candidateData.ExamName || ""
+                    }
+                ]
+            });
+
+            setShowModal(true);
+
+        } catch (err) {
+            console.error("Error fetching candidate details:", err);
+            toast.error("Failed to load candidate data for editing");
+        }
     };
 
-    try {
-        const response = await fetch(
-            `${config.API_BASE_URL}api/ExamUserAccount/AddCandidate`,
-            {
+
+    useEffect(() => {
+        if (!loginData?.tenantId) return;
+        fetchExams();
+        fetchCandidateWithExam();
+    }, [loginData?.tenantId]);
+
+    const resetForm = () => {
+        setFormData({
+            id: "",
+            name: "",
+            password: "",
+            userId: "",
+            email: "",
+            mobileNo: "",
+            userRole: "Participate",
+            isActive: true,
+            examId: "",
+            examName: "",
+            exmCandidateLists: []
+        });
+        setIsEdit(false);
+        setEditId(null);
+    };
+
+
+    const handleOpenModal = () => {
+        resetForm();
+        setShowModal(true);
+    };
+
+
+    const handleSubmit = async (e) => {
+        e.preventDefault();
+
+        // Basic validation
+        if (!formData.name.trim()) return toast.error("Name is required");
+        if (!formData.email.trim()) return toast.error("Email is required");
+        if (!formData.mobileNo.trim()) return toast.error("Mobile No is required");
+
+        // Prepare payload
+        const payload = {
+            id: isEdit ? formData.id : 0,
+            name: formData.name,      
+            password: formData.password,
+            userId: formData.userId,
+            email: formData.email,
+            mobileNo: formData.mobileNo,
+            userRole: "Participate",
+            isActive: formData.isActive ?? true,
+            entryBy: loginData.UserId,
+            updateBy: isEdit ? loginData.UserId : null,
+            exmCandidateLists: [
+                {
+                    examId: formData.examId,
+                    name: formData.examName,
+                    entryBy: loginData.UserId,
+                    updateBy: isEdit ? loginData.UserId : null
+                }
+            ]
+        };
+
+        try {
+            const apiEndpoint = isEdit
+                ? `${config.API_BASE_URL}api/ExamUserAccount/UpdateCandidate`
+                : `${config.API_BASE_URL}api/ExamUserAccount/AddCandidate`;
+
+            const response = await fetch(apiEndpoint, {
                 method: "POST",
                 headers: {
                     TenantId: loginData.tenantId,
                     "Content-Type": "application/json",
                 },
                 body: JSON.stringify(payload),
+            });
+
+            if (!response.ok) {
+                const text = await response.text();
+                console.error("Server error:", text);
+                throw new Error("Failed to submit candidate");
             }
-        );
 
-        if (!response.ok) {
-            const text = await response.text();
-            console.error("Server returned error:", text);
-            throw new Error("Failed to add candidate");
+            const result = await response.json();
+            toast.success(result.message || (isEdit ? "Candidate updated successfully" : "Candidate added successfully"));
+
+            setShowModal(false);
+            fetchCandidateWithExam(); // refresh table
+            resetForm();
+
+        } catch (err) {
+            console.error(err);
+            toast.error(err.message);
         }
-
-        const result = await response.json();
-        toast.success(result.message || "Candidate added successfully");
-        setShowModal(false);
-    } catch (err) {
-        console.error("Submit Error:", err);
-        toast.error(err.message);
-    }
-};
-
-
-
-
-    const openEditModal = async (question) => {
-        // if (!question?.QuestionId) return console.error("Invalid question ID");
-
-        // setIsEdit(true);
-        // setEditId(question.QuestionId);
-
-        // let options = [{ optionText: "", isCorrect: false }];
-
-        // if (question.QnType === "MCQ") {
-        //     try {
-        //         const res = await fetch(
-        //             `${config.API_BASE_URL}api/Question/GetByQuestion/${question.QuestionId}`,
-        //             {
-        //                 headers: {
-        //                     TenantId: loginData.tenantId,
-        //                     "Content-Type": "application/json",
-        //                 },
-        //             }
-        //         );
-
-        //         if (res.ok) {
-        //             const apiOptions = await res.json();
-        //             options = apiOptions.map((opt) => ({
-        //                 id: opt.Id || 0,
-        //                 optionText: opt.OptionText || "",
-        //                 isCorrect: opt.Answer ?? false,
-        //             }));
-
-        //             if (options.length < 2) options.push({ optionText: "", isCorrect: false });
-        //         }
-        //     } catch (err) {
-        //         console.error("Error fetching MCQ options:", err);
-        //     }
-        // }
-
-        // setFormData({
-        //     id: question.QuestionId,
-        //     subId: question.SubjectId || "",
-        //     qnTypeId: question.QnType === "Descriptive" ? "1" : "2",
-        //     name: question.Name || "",
-        //     mark: question.Mark ?? 0,
-        //     remarks: question.Remarks || "",
-        //     sketch: null, // new file
-        //     options: options,
-        // });
-
-        // // FIX: Store the existing image as is (could be full path or filename)
-        // setExistingImage(question.Sketch || null);
-        // setQuestionImage(null);
-        // setShowModal(true);
     };
 
-    const handleUpdateSubmit = async (e) => {
-        // e.preventDefault();
-        // setLoading(true);
 
-        // try {
-        //     if (!formData.subId) throw new Error("Please select a subject.");
-        //     if (!formData.qnTypeId) throw new Error("Please select a question type.");
-        //     if (!formData.name.trim()) throw new Error("Question text cannot be empty.");
-        //     if (!formData.mark) throw new Error("Question Mark cannot be empty.");
-        //     if (formData.qnTypeId === "2" && formData.options.length < 2)
-        //         throw new Error("MCQ must have at least 2 options.");
-
-        //     let finalSketch = existingImage;
-
-        //     if (formData.sketch && typeof formData.sketch === 'object') {
-        //         setIsUploading(true);
-
-        //         const uploadFormData = new FormData();
-        //         uploadFormData.append('file', formData.sketch);
-
-        //         const uploadRes = await fetch('/api/upload', {
-        //             method: 'POST',
-        //             body: uploadFormData
-        //         });
-
-        //         const uploadData = await uploadRes.json();
-        //         if (!uploadRes.ok) throw new Error(uploadData.error || 'Image upload failed');
-
-        //         finalSketch = uploadData.filename;
-        //         setIsUploading(false);
-        //     }
-
-        //     // Check if existingImage already contains the full path
-        //     let sketchPath = null;
-        //     if (finalSketch) {
-        //         // If the image already has the full path, use it as is
-        //         if (finalSketch.startsWith('/images/questionImage/')) {
-        //             sketchPath = finalSketch;
-        //         } else {
-        //             // Otherwise, prepend the path
-        //             sketchPath = `/images/questionImage/${finalSketch}`;
-        //         }
-        //     }
-
-        //     const payload = {
-        //         Id: formData.id,
-        //         SubId: Number(formData.subId),
-        //         Name: formData.name.trim(),
-        //         QnType: formData.qnTypeId === "1" ? "Descriptive" : "MCQ",
-        //         Mark: formData.mark ?? 0,
-        //         Remarks: formData.remarks ?? "",
-        //         UpdateBy: loginData?.UserId,
-        //         Sketch: sketchPath, // Use the corrected path
-        //         Options: formData.qnTypeId === "2"
-        //             ? formData.options
-        //                 .filter(opt => opt.optionText && opt.optionText.trim() !== "")
-        //                 .map(opt => ({
-        //                     Id: opt.id || 0,
-        //                     OptionText: opt.optionText.trim(),
-        //                     Answer: opt.isCorrect ?? false
-        //                 }))
-        //             : null
-        //     };
-
-        //     console.log("Update Payload:", payload);
-
-        //     const res = await fetch(`${config.API_BASE_URL}api/Question/Update`, {
-        //         method: "POST",
-        //         headers: {
-        //             TenantId: loginData.tenantId,
-        //             'Content-Type': 'application/json'
-        //         },
-        //         body: JSON.stringify(payload)
-        //     });
-
-        //     const result = await res.json();
-        //     if (!res.ok) throw new Error(result?.error || "Update failed");
-
-        //     toast.success("Question updated successfully");
-        //     setShowModal(false);
-        //     //fetchQuestionsBySubject();
-        //     if (selectedSubject && selectedSubject !== "") {
-
-        //         await fetchQuestionsBySubject(selectedSubject);
-        //     } else {
-
-        //         await fetchQuestionsBySubject();
-        //     }
-
-        // } catch (err) {
-        //     console.error(err);
-        //     toast.error(err.message);
-        // } finally {
-        //     setLoading(false);
-        //     setIsUploading(false);
-        // }
-    };
 
     const openDeleteModal = (question) => {
         if (!question?.QuestionId) return;
@@ -474,42 +485,65 @@ export default function AddCandidate() {
                         <thead className="bg-gray-100 text-xs uppercase text-gray-700">
                             <tr className="border-b">
                                 <th className="px-4 py-2 text-center">SL</th>
-                                <th className="px-4 py-2 text-center">Name</th>
-                                <th className="px-4 py-2 text-center">Exam</th>
+                                <th className="px-4 py-2 ">Name</th>
+                                <th className="px-4 py-2 text-center">User Id</th>
+                                <th className="px-4 py-2 text-center">Password</th>
+                                <th className="px-4 py-2 ">Exam</th>
+                                <th className="px-4 py-2 text-center">Email</th>
+                                <th className="px-4 py-2 text-center">Mobile No</th>
                                 <th className="px-4 py-2 text-center">Actions</th>
                             </tr>
                         </thead>
-                        {/* <tbody className="bg-white text-xs text-gray-700">
-                            {filteredQuestion.length === 0 ? (
-                                <tr>
-                                    <td colSpan="6" className="text-center py-4">No data found</td>
+
+                        <tbody className="bg-white text-xs text-gray-700">
+                            {candidates.length === 0 ? (
+                                <tr key="no-data">
+                                    <td colSpan="6" className="text-center py-4">
+                                        No data found
+                                    </td>
                                 </tr>
                             ) : (
-                                filteredQuestion.map((question, index) => (
-                                    <tr key={index} className="border-b border-gray-300 hover:bg-gray-50">
-                                        <td data-label="SL" className="px-4 py-2 text-center">{index + 1}</td>
-                                        <td data-label="Subject" className="px-4 py-2">{question.SubjectName}</td>
-                                        <td data-label="Question" className="px-4 py-2">{question.Name}</td>
-                                        <td data-label="Type" className="px-4 py-2">{question.QnType}</td>
-                                        <td data-label="Mark" className="px-4 py-2">{question.Mark}</td>
-                                        <td data-label="Actions" className="px-4 py-2 text-center">
-                                            <div className="text-base flex items-end gap-3">
-                                                <button onClick={() => openViewModal(question)} className="flex items-center gap-1 px-3 py-1.5 text-sm font-medium border border-blue-500 text-blue-500 rounded hover:bg-blue-500 hover:text-white transition-colors duration-200">
-                                                    <FiEye className="text-base" />
-                                                </button>
-                                                <button onClick={() => openEditModal(question)} title="Edit" className="flex items-center gap-1 px-3 py-1.5 text-sm font-medium border border-[#00925a] text-[#00925a] rounded hover:bg-[#00925a] hover:text-white transition-colors duration-200">
+                                candidates.map((candidate, index) => (
+                                    <tr
+                                        key={candidate.id ?? index}
+                                        className="border-b border-gray-300 hover:bg-gray-50"
+                                    >
+                                        <td className="px-4 py-2 text-center">{index + 1}</td>
+                                        <td className="px-4 py-2">{candidate.name}</td>
+                                        <td className="px-4 py-2 text-center">{candidate.userId}</td>
+                                        <td className="px-4 py-2 text-center">{candidate.password}</td>
+                                        <td className="px-4 py-2 ">{candidate.examName}</td>
+                                        <td className="px-4 py-2 text-center">{candidate.email}</td>
+                                        <td className="px-4 py-2 text-center">{candidate.mobileNo}</td>
+                                        <td className="px-4 py-2 text-center">
+                                            <div className="flex items-center justify-center gap-3">
+                                                {/* <button
+                                onClick={() => openViewModal(candidate)}
+                                className="flex items-center gap-1 px-3 py-1.5 text-sm font-medium border border-blue-500 text-blue-500 rounded hover:bg-blue-500 hover:text-white transition-colors duration-200"
+                            >
+                                <FiEye className="text-base" />
+                            </button> */}
+                                                <button
+                                                    onClick={() => openEditCandidateModal(candidate)}
+                                                    className="flex items-center gap-1 px-3 py-1.5 text-sm font-medium border border-[#00925a] text-[#00925a] rounded hover:bg-[#00925a] hover:text-white transition-colors duration-200"
+                                                >
                                                     <FiEdit className="text-base" />
                                                 </button>
-                                                <button onClick={() => openDeleteModal(question)} className="flex items-center gap-1 px-3 py-1.5 text-sm font-medium border border-red-500 text-red-500 rounded hover:bg-red-500 hover:text-white transition-colors duration-200">
-                                                    <FiTrash2 className="text-base" />
-                                                </button>
+                                                {/* <button
+                                onClick={() => openDeleteModal(candidate)}
+                                className="flex items-center gap-1 px-3 py-1.5 text-sm font-medium border border-red-500 text-red-500 rounded hover:bg-red-500 hover:text-white transition-colors duration-200"
+                            >
+                                <FiTrash2 className="text-base" />
+                            </button> */}
                                             </div>
                                         </td>
                                     </tr>
                                 ))
                             )}
-                        </tbody> */}
+                        </tbody>
                     </table>
+
+
                 </div>
             </div>
 
@@ -558,7 +592,7 @@ export default function AddCandidate() {
                                 <input
                                     type="text"
                                     name="userId"
-                                    value={formData.userId || ""} 
+                                    value={formData.userId || ""}
                                     readOnly
                                     className="w-full border rounded p-2 bg-gray-100"
                                 />
