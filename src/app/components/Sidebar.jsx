@@ -13,6 +13,7 @@ import { DataContext } from '../provider/DataProvider';
 import { MdOutlineQuiz, MdSubject } from "react-icons/md";
 import { BsPatchQuestion } from "react-icons/bs";
 import { RiStackLine } from "react-icons/ri"
+import { FaUserPlus } from "react-icons/fa";
 
 const Sidebar = () => {
   const { loginData, logout } = useContext(AuthContext);
@@ -145,6 +146,14 @@ const Sidebar = () => {
             className="flex items-center gap-2 text-sm text-gray-600 hover:text-black"
           >
             <MdOutlineQuiz className="w-4 h-4" /> Add Exam
+          </Link>
+
+          <Link
+            href="/addCandidate"
+            prefetch={true}
+            className="flex items-center gap-2 text-sm text-gray-600 hover:text-black"
+          >
+            <FaUserPlus  className="w-4 h-4" /> Add Candidate
           </Link>
         </div>
       )}

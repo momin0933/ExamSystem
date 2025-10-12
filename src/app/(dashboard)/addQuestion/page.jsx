@@ -468,33 +468,87 @@ export default function AddQuestion() {
         setIsDeleteModalOpen(true);
     };
 
-    const handleConfirmDelete = async () => {
-        if (!selectedId) return;
+const handleConfirmDelete = async () => {
+    debugger;
+    if (!selectedId) return;
 
-        try {
-            const response = await fetch(`${config.API_BASE_URL}api/Question/Delete/${selectedId}`, {
-                method: 'DELETE',
-                headers: { TenantId: loginData.tenantId },
-            });
+    try {
+        const response = await fetch(`${config.API_BASE_URL}api/Question/Delete/${selectedId}`, {
+            method: 'DELETE',
+            // headers: { TenantId: loginData.tenantId },
+              headers: {
+                    TenantId: loginData.tenantId,
+                    'Content-Type': 'application/json'
+                },
+        });
 
-            if (!response.ok) throw new Error('Failed to delete');
-
-            setDeleteSuccessMsg("Item deleted successfully.");
-            setTimeout(() => setIsDeleteModalOpen(false), 2000);
-            //fetchQuestionsBySubject();
-            if (selectedSubject && selectedSubject !== "") {
-
-                await fetchQuestionsBySubject(selectedSubject);
-            } else {
-
-                await fetchQuestionsBySubject();
+        if (!response.ok) {
+            let errorMessage = "Delete failed. Please try again.";
+            
+            try {
+                const errorText = await response.text();
+                
+                // Check for specific error messages
+                if (errorText.includes("used in a question set")) {
+                    errorMessage = "This question cannot be deleted because it is already used in a question set.";
+                } else if (errorText.includes("Question not found")) {
+                    errorMessage = "Question not found.";
+                }
+                
+            } catch (textError) {
+                // If we can't read the response text, use default message
+                console.error("Could not read error response:", textError);
             }
-        } catch (error) {
-            console.error(error);
-            toast.error("Delete failed. Please try again.");
-            setIsDeleteModalOpen(false);
+            
+            throw new Error(errorMessage);
         }
-    };
+
+        setDeleteSuccessMsg("Item deleted successfully.");
+        setTimeout(() => setIsDeleteModalOpen(false), 1000);
+        
+        if (selectedSubject && selectedSubject !== "") {
+            await fetchQuestionsBySubject(selectedSubject);
+        } else {
+            await fetchQuestionsBySubject();
+        }
+    } catch (error) {
+        // Don't log to console if it's our expected error
+        if (!error.message.includes("used in a question set")) {
+            console.error("Delete error:", error);
+        }
+        
+        toast.error(error.message);
+        setIsDeleteModalOpen(false);
+    }
+};
+    // const handleConfirmDelete = async () => {
+    //     debugger;
+    //     if (!selectedId) return;
+
+    //     try {
+    //         const response = await fetch(`${config.API_BASE_URL}api/Question/Delete/${selectedId}`, {
+    //             method: 'DELETE',
+    //             headers: { TenantId: loginData.tenantId },
+    //         });
+
+    //         if (!response.ok) throw new Error('Failed to delete');
+
+    //         setDeleteSuccessMsg("Item deleted successfully.");
+    //         setTimeout(() => setIsDeleteModalOpen(false), 2000);
+    //         //fetchQuestionsBySubject();
+    //         if (selectedSubject && selectedSubject !== "") {
+
+    //             await fetchQuestionsBySubject(selectedSubject);
+    //         } else {
+
+    //             await fetchQuestionsBySubject();
+    //         }
+    //     } catch (error) {
+    //         console.error(error);
+    //         toast.error("Delete failed. Please try again.");
+    //         setIsDeleteModalOpen(false);
+    //     }
+    // };
 
     const fetchQuestionById = async (questionId) => {
         try {
