@@ -9,7 +9,7 @@ export default function ExamStartPage() {
     const [questions, setQuestions] = useState([]);
     const [currentIndex, setCurrentIndex] = useState(0);
     const [loading, setLoading] = useState(false);
-    const [answers, setAnswers] = useState({}); // {questionId: answerValue}
+    const [answers, setAnswers] = useState({});
 
 
 

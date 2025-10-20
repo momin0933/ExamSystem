@@ -51,7 +51,7 @@ export const AuthProvider = ({ children }) => {
 
       // Conditional navigation based on UserRole
       if (userData.UserRole?.trim() === "Participate") {
-        router.push("/examPage"); // Navigate to exam page
+        router.push("/participate"); // Navigate to Participate page
       } else {
         router.push("/homepage"); // Admins or others
       }
