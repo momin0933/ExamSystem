@@ -26,19 +26,27 @@ export default function AddExam() {
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [deleteSuccessMsg, setDeleteSuccessMsg] = useState('');
   const [deleteId, setDeleteId] = useState(null);
-  
 
-  // Form data state
   const [formData, setFormData] = useState({
     id: 0,
     name: "",
     setId: "",
     totalMark: 0,
-    remarks: "",
-    examTime: 0,
+    examTime: "00:00", 
     entryBy: loginData?.UserId,
-    isActive: true
+    isActive: true,
   });
+  const [examHour, setExamHour] = useState(formData.examTime ? formData.examTime.split(":")[0] : "00");
+  const [examMinute, setExamMinute] = useState(formData.examTime ? formData.examTime.split(":")[1] : "00");
+
+  useEffect(() => {
+    if (formData.examTime) {
+      const [hh, mm] = formData.examTime.split(":");
+      setExamHour(hh || "00");
+      setExamMinute(mm || "00");
+    }
+  }, [formData.examTime]);
+
 
   // Initialize AOS animations
   useEffect(() => {
@@ -101,7 +109,7 @@ export default function AddExam() {
         examTime: exam.ExamTime
       }));
 
-      console.log("option",options)
+      console.log("option", options)
       setExam(options);
 
     } catch (err) {
@@ -120,68 +128,63 @@ export default function AddExam() {
 
   const handleSubmit = async (e) => {
     debugger;
-  e.preventDefault();
-  setLoading(true);
+    e.preventDefault();
+    setLoading(true);
 
-  try {
-    if (!formData.setId) throw new Error("Please select a question set.");
-    if (!formData.name.trim()) throw new Error("Exam name cannot be empty.");
-
-    // Convert examTime to "HH:mm:ss" string
-    let examTime = null;
-    if (formData.examTime) {
-      const parts = formData.examTime.split(":"); // ["HH","MM"]
-      if (parts.length === 2) {
-        examTime = `${parts[0].padStart(2, "0")}:${parts[1].padStart(2, "0")}:00`;
-      } else if (parts.length === 3) {
-        examTime = `${parts[0].padStart(2, "0")}:${parts[1].padStart(2, "0")}:${parts[2].padStart(2, "0")}`;
+    try {
+      if (!formData.setId) throw new Error("Please select a question set.");
+      if (!formData.name.trim()) throw new Error("Exam name cannot be empty.");
+      let examTime = null;
+      if (examHour || examMinute) {
+        const hh = String(examHour).padStart(2, "0");
+        const mm = String(examMinute).padStart(2, "0");
+        examTime = `${hh}:${mm}:00`;
       }
+
+
+      const payload = {
+        Id: formData.id,
+        SetId: Number(formData.setId),
+        Name: formData.name.trim(),
+        TotalMark: Number(formData.totalMark),
+        ExamTime: examTime, 
+        ...(isEdit
+          ? { UpdateBy: loginData?.UserId }
+          : { EntryBy: loginData?.UserId }),
+        IsActive: true,
+      };
+
+      console.log("Payload to submit:", payload);
+
+      const apiUrl = isEdit
+        ? `${config.API_BASE_URL}api/Exam/UpdateExam`
+        : `${config.API_BASE_URL}api/Exam/AddExam`;
+
+      const response = await fetch(apiUrl, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          TenantId: loginData?.tenantId,
+        },
+        body: JSON.stringify(payload),
+      });
+
+      const result = await response.json(); 
+      if (!response.ok) throw new Error(result?.error || "Failed to save exam");
+
+      toast.success(isEdit ? "Exam updated successfully!" : "Exam added successfully!");
+      resetForm();
+      setShowModal(false);
+      fetchExams();
+    } catch (err) {
+      console.error(err);
+      toast.error(err.message);
+    } finally {
+      setLoading(false);
     }
-
-    const payload = {
-      Id: formData.id,
-      SetId: Number(formData.setId),
-      Name: formData.name.trim(),
-      TotalMark: Number(formData.totalMark),
-      ExamTime: examTime, // HH:mm:ss string
-      ...(isEdit
-        ? { UpdateBy: loginData?.UserId }
-        : { EntryBy: loginData?.UserId }),
-      IsActive: true,
-    };
-
-    console.log("Payload to submit:", payload);
-
-    const apiUrl = isEdit
-      ? `${config.API_BASE_URL}api/Exam/UpdateExam`
-      : `${config.API_BASE_URL}api/Exam/AddExam`;
-
-    const response = await fetch(apiUrl, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        TenantId: loginData?.tenantId,
-      },
-      body: JSON.stringify(payload),
-    });
-
-    const result = await response.json(); // safe JSON parsing now
-    if (!response.ok) throw new Error(result?.error || "Failed to save exam");
-
-    toast.success(isEdit ? "Exam updated successfully!" : "Exam added successfully!");
-    resetForm();
-    setShowModal(false);
-    fetchExams();
-  } catch (err) {
-    console.error(err);
-    toast.error(err.message);
-  } finally {
-    setLoading(false);
-  }
-};
+  };
 
 
-  // Reset form data
   const resetForm = () => {
     setFormData({
       id: 0,
@@ -189,10 +192,14 @@ export default function AddExam() {
       setId: "",
       totalMark: 0,
       remarks: "",
-      examTime: 0,
+      examTime: "00:00",
       entryBy: loginData?.UserId,
       isActive: true
     });
+
+    setExamHour("00");
+    setExamMinute("00");
+
     setIsEdit(false);
     setEditId(null);
   };
@@ -209,7 +216,6 @@ export default function AddExam() {
       console.error("Invalid Exam ID");
       return;
     }
-
     try {
       setIsEdit(true);
       setEditId(exam.id);
@@ -230,12 +236,14 @@ export default function AddExam() {
         name: data.Name || "",
         setId: data.SetId || "",
         totalMark: data.TotalMark || 0,
-        examTime:data.ExamTime,
+        examTime: data.ExamTime,
         remarks: data.Remarks || "",
         entryBy: data.EntryBy || loginData?.UserId,
         isActive: data.IsActive ?? true,
       });
-
+      const [hh, mm] = exam.examTime ? exam.examTime.split(":") : ["00", "00"];
+      setExamHour(hh);
+      setExamMinute(mm);
       setShowModal(true);
     } catch (err) {
       console.error("Error fetching exam details:", err);
@@ -359,7 +367,7 @@ export default function AddExam() {
                 <th className="px-4 py-2 text-center">Set Name</th>
                 <th className="px-4 py-2 text-center">Exam Name</th>
                 <th className="px-4 py-2 text-center">Total Mark</th>
-                 <th className="px-4 py-2 text-center">Exam Time</th>
+                <th className="px-4 py-2 text-center">Exam Time</th>
                 <th className="px-4 py-2 text-center">Actions</th>
               </tr>
             </thead>
@@ -373,7 +381,7 @@ export default function AddExam() {
                 exam.map((item, index) => (
                   <tr key={item.id} className="border-b border-gray-300 hover:bg-gray-50">
                     <td data-label="SL" className="px-4 py-2 text-center">{index + 1}</td>
-                      <td data-label="Set Name" className="px-4 py-2 text-center">{item.setName}</td>
+                    <td data-label="Set Name" className="px-4 py-2 text-center">{item.setName}</td>
                     <td data-label="Exam Name" className="px-4 py-2 text-center">{item.examName}</td>
                     <td data-label="Total Mark" className="px-4 py-2 text-center">{item.totalMark}</td>
                     <td data-label="Exam Time" className="px-4 py-2 text-center">{item.examTime}</td>
@@ -464,13 +472,28 @@ export default function AddExam() {
               </div>
 
               <div className="flex items-center gap-3">
-                <label className="w-1/3 text-sm font-semibold text-gray-700">Exam Time(hh:mm)</label>
-                <input
-                  type="text"
-                  value={formData.examTime || "00:00"} 
-                  onChange={(e) => setFormData({ ...formData, examTime: e.target.value })}
-                  className="w-full border px-3 py-2 rounded bg-white text-gray-700"
-                />
+                <label className="w-1/3 text-sm font-semibold text-gray-700">Exam Time</label>
+                <div className="flex gap-2">
+                  <input
+                    type="number"
+                    min="0"
+                    max="23"
+                    value={examHour}
+                    onChange={(e) => setExamHour(e.target.value)}
+                    className="w-16 border px-2 py-1 rounded text-center"
+                    placeholder="hh"
+                  />hh
+                  <span className="flex items-center">:</span>
+                  <input
+                    type="number"
+                    min="0"
+                    max="59"
+                    value={examMinute}
+                    onChange={(e) => setExamMinute(e.target.value)}
+                    className="w-16 border px-2 py-1 rounded text-center"
+                    placeholder="mm"
+                  />mm
+                </div>
               </div>
 
 
