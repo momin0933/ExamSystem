@@ -19,8 +19,8 @@ export default function SubjectManage() {
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState(null);
     const [searchQuery, setSearchQuery] = useState('');
-    const [isEdit, setIsEdit] = useState(false); 
-    const [editId, setEditId] = useState(null); 
+    const [isEdit, setIsEdit] = useState(false);
+    const [editId, setEditId] = useState(null);
     const [showModal, setShowModal] = useState(false);
     const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
     const [selectedId, setSelectedId] = useState(null);
@@ -33,7 +33,7 @@ export default function SubjectManage() {
     // Unified formData keys
     const [formData, setFormData] = useState({
         id: 0,
-        name: '',      
+        name: '',
     });
 
     const handleOpenModal = () => setShowModal(true);
@@ -58,7 +58,7 @@ export default function SubjectManage() {
                     procedureName: 'SP_QuestionManage',
                     parameters: {
                         QueryChecker: 1,
-                        Name: formData.name,              
+                        Name: formData.name,
                         EntryBy: loginData.UserId,
                     },
                 }),
@@ -98,6 +98,7 @@ export default function SubjectManage() {
             });
             if (!response.ok) throw new Error('Failed to load data');
             const data = await response.json();
+            console.log("Subject Data", data)
             setSubjectData(data);
         } catch (error) {
             toast.error('Failed to load Subject data');
@@ -109,7 +110,8 @@ export default function SubjectManage() {
         let filteredData = subjectData;
         if (searchQuery.trim() !== '') {
             filteredData = filteredData.filter(subject =>
-                subject.Name.toLowerCase().includes(searchQuery.toLowerCase())
+                subject.Name.toLowerCase().includes(searchQuery.toLowerCase())||
+                subject.EntryDate.toLowerCase().includes(searchQuery.toLowerCase())
             );
         }
         setFilteredSubject(filteredData);
@@ -126,8 +128,8 @@ export default function SubjectManage() {
     //  Open edit modal
     const openEditModal = (subject) => {
         setIsEdit(true);
-        setEditId(subject.Id);          
-        setFormData({ name: subject.Name });  
+        setEditId(subject.Id);
+        setFormData({ name: subject.Name });
         setShowModal(true);
     };
 
@@ -147,7 +149,7 @@ export default function SubjectManage() {
                     parameters: {
                         QueryChecker: 3,
                         Id: editId,
-                        Name: formData.name,                       
+                        Name: formData.name,
                         UpdateBy: loginData.UserId,
                     },
                 }),
@@ -155,7 +157,7 @@ export default function SubjectManage() {
             if (!response.ok) throw new Error(`Update failed!`);
             toast.success(`Subject updated successfully`);
             await fetchSubjectData();
-            setFormData({ id: 0, name: '' });  
+            setFormData({ id: 0, name: '' });
         } catch (err) {
             toast.error(err.message);
         } finally {
@@ -186,7 +188,7 @@ export default function SubjectManage() {
                 }),
             });
             if (!response.ok) throw new Error('Failed to delete');
-            setDeleteSuccessMsg("Item deleted successfully."); 
+            setDeleteSuccessMsg("Item deleted successfully.");
             setTimeout(() => setIsDeleteModalOpen(false), 2000);
             fetchSubjectData();
         } catch (error) {
@@ -326,25 +328,27 @@ export default function SubjectManage() {
                     <table className="min-w-full text-sm text-left text-gray-600">
                         <thead className="bg-gray-100 text-xs uppercase text-gray-700">
                             <tr className="border-b">
-                                <th className="px-4 py-2 text-center w-[10%]">SL</th>
-                                <th className="px-4 py-2 text-center w-[75%]">Name</th>
-                                <th className="px-4 py-2 text-center w-[15%]">Actions</th>
+                                <th className="px-4 py-2 text-center">SL</th>
+                                <th className="px-4 py-2 text-center">Subject Name</th>
+                                <th className="px-4 py-2 text-center">Entry Date</th>
+                                <th className="px-4 py-2 text-center">Actions</th>
                             </tr>
                         </thead>
                         <tbody className="bg-white text-xs text-gray-700">
                             {filteredSubject.length === 0 ? (
                                 <tr>
-                                    <td colSpan="8" className="text-center py-4">No data found</td>
+                                    <td colSpan="4" className="text-center py-4">No data found</td>
                                 </tr>
                             ) : (
                                 filteredSubject.map((subject, index) => (
                                     <tr key={index} className="border-b border-gray-300 hover:bg-gray-50">
-                                        <td data-label="Reg Date" className="px-4 py-2 text-center"> {index + 1}</td>
-                                        <td data-label="Subject Name" className="px-4 py-2 text-center">{subject.Name}</td>
+                                        <td data-label="SL" className="px-4 py-2 text-center">{index + 1}</td>
+                                        <td data-label="Name" className="px-4 py-2 text-center">{subject.Name}</td>
+                                        <td data-label="Entry Date" className="px-4 py-2 text-center">
+                                            {subject.EntryDate ? new Date(subject.EntryDate).toLocaleDateString("en-GB") : "-"}
+                                        </td>
                                         <td data-label="Actions" className="px-4 py-2 text-center">
-                                            <div className="text-base flex items-end gap-3">
-
-
+                                            <div className="flex justify-center gap-3">
                                                 <button
                                                     onClick={() => openEditModal(subject)}
                                                     title="Edit"
@@ -352,31 +356,27 @@ export default function SubjectManage() {
                                                 >
                                                     <FiEdit className="text-base" />
                                                 </button>
-
-
-
                                                 <button
                                                     onClick={() => openDeleteModal(subject.Id)}
                                                     className="flex items-center gap-1 px-3 py-1.5 text-sm font-medium border border-red-500 text-red-500 rounded hover:bg-red-500 hover:text-white transition-colors duration-200"
                                                 >
                                                     <FiTrash2 className="text-base" />
                                                 </button>
-
-                                                {/* Modal */}
-                                                <DeleteConfirmModal
-                                                    isOpen={isDeleteModalOpen}
-                                                    onClose={() => setIsDeleteModalOpen(false)}
-                                                    onConfirm={handleConfirmDelete}
-                                                    statusMessage={deleteSuccessMsg}
-                                                />
-
                                             </div>
+                                            {/* Modal */}
+                                            <DeleteConfirmModal
+                                                isOpen={isDeleteModalOpen}
+                                                onClose={() => setIsDeleteModalOpen(false)}
+                                                onConfirm={handleConfirmDelete}
+                                                statusMessage={deleteSuccessMsg}
+                                            />
                                         </td>
                                     </tr>
                                 ))
                             )}
                         </tbody>
                     </table>
+
                 </div>
 
             </div>
@@ -405,7 +405,7 @@ export default function SubjectManage() {
                                     required
                                 />
                             </div>
-                 
+
                             {/* Buttons */}
                             <div className="flex justify-end space-x-2 pt-4">
                                 <button

@@ -15,6 +15,7 @@ export const AuthProvider = ({ children }) => {
       setLoginData(JSON.parse(savedLoginData));
     }
   }, []);
+
   const login = async (credentials, tenantId) => {
     setLoading(true);
     setError("");
@@ -38,6 +39,11 @@ export const AuthProvider = ({ children }) => {
       if (!response.ok) throw new Error("Invalid login credentials");
       const data = await response.json()
       const { accessToken: token, userData } = data;
+
+        // Check if the user is active
+    if (userData.IsActive === 0 || userData.IsActive === false) {
+      throw new Error("Your account is inactive. Please contact the administrator.");
+    }
       // Update the loginData state
       const updatedLoginData = { ...userData, tenantId, token };
       setLoginData(updatedLoginData);
@@ -51,7 +57,7 @@ export const AuthProvider = ({ children }) => {
 
       // Conditional navigation based on UserRole
       if (userData.UserRole?.trim() === "Participate") {
-        router.push("/examPage"); // Navigate to exam page
+        router.push("/participate"); // Navigate to Participate page
       } else {
         router.push("/homepage"); // Admins or others
       }

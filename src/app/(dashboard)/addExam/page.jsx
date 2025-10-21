@@ -27,16 +27,26 @@ export default function AddExam() {
   const [deleteSuccessMsg, setDeleteSuccessMsg] = useState('');
   const [deleteId, setDeleteId] = useState(null);
 
-  // Form data state
   const [formData, setFormData] = useState({
     id: 0,
     name: "",
     setId: "",
     totalMark: 0,
-    remarks: "",
+    examTime: "00:00", 
     entryBy: loginData?.UserId,
-    isActive: true
+    isActive: true,
   });
+  const [examHour, setExamHour] = useState(formData.examTime ? formData.examTime.split(":")[0] : "00");
+  const [examMinute, setExamMinute] = useState(formData.examTime ? formData.examTime.split(":")[1] : "00");
+
+  useEffect(() => {
+    if (formData.examTime) {
+      const [hh, mm] = formData.examTime.split(":");
+      setExamHour(hh || "00");
+      setExamMinute(mm || "00");
+    }
+  }, [formData.examTime]);
+
 
   // Initialize AOS animations
   useEffect(() => {
@@ -74,6 +84,7 @@ export default function AddExam() {
 
   // Fetch exams list for show grid data
   const fetchExams = async () => {
+    debugger;
     if (!loginData.tenantId) {
       console.warn("No loginData available, skipping fetch");
       return;
@@ -88,12 +99,17 @@ export default function AddExam() {
       });
 
       const data = await res.json();
+      console.log("Exam data", data)
       const options = data.map(exam => ({
         id: exam.Id,
-        examName: exam.Name,
+        setName: exam.SetName,
+        examName: exam.ExamName,
         setId: exam.SetId,
-        totalMark: exam.TotalMark
+        totalMark: exam.TotalMark,
+        examTime: exam.ExamTime
       }));
+
+      console.log("option", options)
       setExam(options);
 
     } catch (err) {
@@ -110,26 +126,35 @@ export default function AddExam() {
     }
   }, [loginData?.tenantId]);
 
-  // Handle form submission (Add/Edit)
   const handleSubmit = async (e) => {
+    debugger;
     e.preventDefault();
     setLoading(true);
 
     try {
       if (!formData.setId) throw new Error("Please select a question set.");
       if (!formData.name.trim()) throw new Error("Exam name cannot be empty.");
+      let examTime = null;
+      if (examHour || examMinute) {
+        const hh = String(examHour).padStart(2, "0");
+        const mm = String(examMinute).padStart(2, "0");
+        examTime = `${hh}:${mm}:00`;
+      }
+
 
       const payload = {
         Id: formData.id,
         SetId: Number(formData.setId),
         Name: formData.name.trim(),
         TotalMark: Number(formData.totalMark),
-        // EntryBy: loginData?.UserId,
+        ExamTime: examTime, 
         ...(isEdit
           ? { UpdateBy: loginData?.UserId }
           : { EntryBy: loginData?.UserId }),
         IsActive: true,
       };
+
+      console.log("Payload to submit:", payload);
 
       const apiUrl = isEdit
         ? `${config.API_BASE_URL}api/Exam/UpdateExam`
@@ -144,7 +169,7 @@ export default function AddExam() {
         body: JSON.stringify(payload),
       });
 
-      const result = await response.json();
+      const result = await response.json(); 
       if (!response.ok) throw new Error(result?.error || "Failed to save exam");
 
       toast.success(isEdit ? "Exam updated successfully!" : "Exam added successfully!");
@@ -159,17 +184,22 @@ export default function AddExam() {
     }
   };
 
-  // Reset form data
+
   const resetForm = () => {
     setFormData({
       id: 0,
       name: "",
       setId: "",
       totalMark: 0,
-      remarks: "",    
+      remarks: "",
+      examTime: "00:00",
       entryBy: loginData?.UserId,
       isActive: true
     });
+
+    setExamHour("00");
+    setExamMinute("00");
+
     setIsEdit(false);
     setEditId(null);
   };
@@ -186,7 +216,6 @@ export default function AddExam() {
       console.error("Invalid Exam ID");
       return;
     }
-
     try {
       setIsEdit(true);
       setEditId(exam.id);
@@ -207,11 +236,14 @@ export default function AddExam() {
         name: data.Name || "",
         setId: data.SetId || "",
         totalMark: data.TotalMark || 0,
-        remarks: data.Remarks || "",    
+        examTime: data.ExamTime,
+        remarks: data.Remarks || "",
         entryBy: data.EntryBy || loginData?.UserId,
         isActive: data.IsActive ?? true,
       });
-
+      const [hh, mm] = exam.examTime ? exam.examTime.split(":") : ["00", "00"];
+      setExamHour(hh);
+      setExamMinute(mm);
       setShowModal(true);
     } catch (err) {
       console.error("Error fetching exam details:", err);
@@ -332,8 +364,10 @@ export default function AddExam() {
             <thead className="bg-gray-100 text-xs uppercase text-gray-700">
               <tr className="border-b">
                 <th className="px-4 py-2 text-center">SL</th>
+                <th className="px-4 py-2 text-center">Set Name</th>
                 <th className="px-4 py-2 text-center">Exam Name</th>
                 <th className="px-4 py-2 text-center">Total Mark</th>
+                <th className="px-4 py-2 text-center">Exam Time</th>
                 <th className="px-4 py-2 text-center">Actions</th>
               </tr>
             </thead>
@@ -347,8 +381,10 @@ export default function AddExam() {
                 exam.map((item, index) => (
                   <tr key={item.id} className="border-b border-gray-300 hover:bg-gray-50">
                     <td data-label="SL" className="px-4 py-2 text-center">{index + 1}</td>
+                    <td data-label="Set Name" className="px-4 py-2 text-center">{item.setName}</td>
                     <td data-label="Exam Name" className="px-4 py-2 text-center">{item.examName}</td>
                     <td data-label="Total Mark" className="px-4 py-2 text-center">{item.totalMark}</td>
+                    <td data-label="Exam Time" className="px-4 py-2 text-center">{item.examTime}</td>
                     <td data-label="Actions" className="px-4 py-2 text-center">
                       <div className="flex justify-center gap-3">
                         <button
@@ -434,6 +470,32 @@ export default function AddExam() {
                   className="w-full border px-3 py-2 rounded bg-gray-100 text-gray-600"
                 />
               </div>
+
+              <div className="flex items-center gap-3">
+                <label className="w-1/3 text-sm font-semibold text-gray-700">Exam Time</label>
+                <div className="flex gap-2">
+                  <input
+                    type="number"
+                    min="0"
+                    max="23"
+                    value={examHour}
+                    onChange={(e) => setExamHour(e.target.value)}
+                    className="w-16 border px-2 py-1 rounded text-center"
+                    placeholder="hh"
+                  />hh
+                  <span className="flex items-center">:</span>
+                  <input
+                    type="number"
+                    min="0"
+                    max="59"
+                    value={examMinute}
+                    onChange={(e) => setExamMinute(e.target.value)}
+                    className="w-16 border px-2 py-1 rounded text-center"
+                    placeholder="mm"
+                  />mm
+                </div>
+              </div>
+
 
               {/* Form Actions */}
               <div className="flex justify-end space-x-2 pt-4">

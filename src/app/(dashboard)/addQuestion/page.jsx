@@ -468,59 +468,59 @@ export default function AddQuestion() {
         setIsDeleteModalOpen(true);
     };
 
-const handleConfirmDelete = async () => {
-    debugger;
-    if (!selectedId) return;
+    const handleConfirmDelete = async () => {
+        debugger;
+        if (!selectedId) return;
 
-    try {
-        const response = await fetch(`${config.API_BASE_URL}api/Question/Delete/${selectedId}`, {
-            method: 'DELETE',
-            // headers: { TenantId: loginData.tenantId },
-              headers: {
+        try {
+            const response = await fetch(`${config.API_BASE_URL}api/Question/Delete/${selectedId}`, {
+                method: 'DELETE',
+                // headers: { TenantId: loginData.tenantId },
+                headers: {
                     TenantId: loginData.tenantId,
                     'Content-Type': 'application/json'
                 },
-        });
+            });
 
-        if (!response.ok) {
-            let errorMessage = "Delete failed. Please try again.";
-            
-            try {
-                const errorText = await response.text();
-                
-                // Check for specific error messages
-                if (errorText.includes("used in a question set")) {
-                    errorMessage = "This question cannot be deleted because it is already used in a question set.";
-                } else if (errorText.includes("Question not found")) {
-                    errorMessage = "Question not found.";
+            if (!response.ok) {
+                let errorMessage = "Delete failed. Please try again.";
+
+                try {
+                    const errorText = await response.text();
+
+                    // Check for specific error messages
+                    if (errorText.includes("used in a question set")) {
+                        errorMessage = "This question cannot be deleted because it is already used in a question set.";
+                    } else if (errorText.includes("Question not found")) {
+                        errorMessage = "Question not found.";
+                    }
+
+                } catch (textError) {
+                    // If we can't read the response text, use default message
+                    console.error("Could not read error response:", textError);
                 }
-                
-            } catch (textError) {
-                // If we can't read the response text, use default message
-                console.error("Could not read error response:", textError);
-            }
-            
-            throw new Error(errorMessage);
-        }
 
-        setDeleteSuccessMsg("Item deleted successfully.");
-        setTimeout(() => setIsDeleteModalOpen(false), 1000);
-        
-        if (selectedSubject && selectedSubject !== "") {
-            await fetchQuestionsBySubject(selectedSubject);
-        } else {
-            await fetchQuestionsBySubject();
+                throw new Error(errorMessage);
+            }
+
+            setDeleteSuccessMsg("Item deleted successfully.");
+            setTimeout(() => setIsDeleteModalOpen(false), 1000);
+
+            if (selectedSubject && selectedSubject !== "") {
+                await fetchQuestionsBySubject(selectedSubject);
+            } else {
+                await fetchQuestionsBySubject();
+            }
+        } catch (error) {
+            // Don't log to console if it's our expected error
+            if (!error.message.includes("used in a question set")) {
+                console.error("Delete error:", error);
+            }
+
+            toast.error(error.message);
+            setIsDeleteModalOpen(false);
         }
-    } catch (error) {
-        // Don't log to console if it's our expected error
-        if (!error.message.includes("used in a question set")) {
-            console.error("Delete error:", error);
-        }
-        
-        toast.error(error.message);
-        setIsDeleteModalOpen(false);
-    }
-};
+    };
     // const handleConfirmDelete = async () => {
     //     debugger;
     //     if (!selectedId) return;
@@ -750,14 +750,24 @@ const handleConfirmDelete = async () => {
                                         <td data-label="Type" className="px-4 py-2">{question.QnType}</td>
                                         <td data-label="Mark" className="px-4 py-2">{question.Mark}</td>
                                         <td data-label="Actions" className="px-4 py-2 text-center">
-                                            <div className="text-base flex items-end gap-3">
-                                                <button onClick={() => openViewModal(question)} className="flex items-center gap-1 px-3 py-1.5 text-sm font-medium border border-blue-500 text-blue-500 rounded hover:bg-blue-500 hover:text-white transition-colors duration-200">
+                                            <div className="flex justify-center gap-3">
+                                                <button
+                                                    onClick={() => openViewModal(question)}
+                                                    className="flex items-center gap-1 px-3 py-1.5 text-sm font-medium border border-blue-500 text-blue-500 rounded hover:bg-blue-500 hover:text-white transition-colors duration-200"
+                                                >
                                                     <FiEye className="text-base" />
                                                 </button>
-                                                <button onClick={() => openEditModal(question)} title="Edit" className="flex items-center gap-1 px-3 py-1.5 text-sm font-medium border border-[#00925a] text-[#00925a] rounded hover:bg-[#00925a] hover:text-white transition-colors duration-200">
+                                                <button
+                                                    onClick={() => openEditModal(question)}
+                                                    title="Edit"
+                                                    className="flex items-center gap-1 px-3 py-1.5 text-sm font-medium border border-[#00925a] text-[#00925a] rounded hover:bg-[#00925a] hover:text-white transition-colors duration-200"
+                                                >
                                                     <FiEdit className="text-base" />
                                                 </button>
-                                                <button onClick={() => openDeleteModal(question)} className="flex items-center gap-1 px-3 py-1.5 text-sm font-medium border border-red-500 text-red-500 rounded hover:bg-red-500 hover:text-white transition-colors duration-200">
+                                                <button
+                                                    onClick={() => openDeleteModal(question)}
+                                                    className="flex items-center gap-1 px-3 py-1.5 text-sm font-medium border border-red-500 text-red-500 rounded hover:bg-red-500 hover:text-white transition-colors duration-200"
+                                                >
                                                     <FiTrash2 className="text-base" />
                                                 </button>
                                             </div>
@@ -767,6 +777,7 @@ const handleConfirmDelete = async () => {
                             )}
                         </tbody>
                     </table>
+
                 </div>
             </div>
 

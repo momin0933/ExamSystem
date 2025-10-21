@@ -74,7 +74,7 @@ export default function AddCandidate() {
             const data = await res.json();
             const options = data.map((exam) => ({
                 id: exam.Id,
-                examName: exam.Name,
+                examName: exam.ExamName,
                 setId: exam.SetId,
                 totalMark: exam.TotalMark
             }));
@@ -158,18 +158,48 @@ export default function AddCandidate() {
 };
 
 // Generate userId & password when name changes
-const handleNameChange = (e) => {
-    const fullName = e.target.value;
-    const firstName = fullName ? fullName.split(" ")[0] : "";
-    const password = generatePassword(); 
+// const handleNameChange = (e) => {
+//     const fullName = e.target.value;
+//     const firstName = fullName ? fullName.split(" ")[0] : "";
+//     const password = generatePassword(); 
 
-    setFormData((prev) => ({
-        ...prev,
-        name: fullName,
-        userId: firstName,
-        password,
-    }));
+//     setFormData((prev) => ({
+//         ...prev,
+//         name: fullName,
+//         userId: firstName,
+//         password,
+//     }));
+// };
+
+const generateRandomNumber = () => {
+  return Math.floor(1000 + Math.random() * 9000); // 4-digit number
 };
+
+const handleNameChange = (e) => {
+  const fullName = e.target.value; // remove extra spaces
+  if (!fullName) {
+    setFormData(prev => ({ ...prev, name: "", userId: "" }));
+    return;
+  }
+
+  const nameParts = fullName.split(/\s+/); // split by one or more spaces
+  const longestPart = nameParts.reduce(
+    (max, part) => (part.length > max.length ? part : max),
+    ""
+  );
+
+  const userId = longestPart.toLowerCase() + generateRandomNumber();
+  const password = generatePassword(); 
+
+  setFormData(prev => ({
+    ...prev,
+    name: fullName,
+    userId,
+    password,
+  }));
+};
+
+
 
 
     const openEditCandidateModal = async (candidate) => {
