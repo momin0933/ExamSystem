@@ -32,57 +32,62 @@ export default function ParticipatePage() {
         setFormData({ ...formData, [e.target.name]: e.target.value })
     }
 
- const handleNext = async () => {
-    debugger;
-  try {
-    if (!formData.CandidateId) {
-      toast.error("Candidate is required");
-      return;
-    }
+    const handleNext = async () => {
+        debugger;
+        try {
+            if (!formData.CandidateId) {
+                toast.error("Candidate is required");
+                return;
+            }
 
-    const payload = {
-      CandidateId: formData.CandidateId,
-      CurrentSalary: Number(formData.CurrentSalary) || null,
-      CurrentOrg: formData.CurrentOrg || null,
-      NoticePeriod: Number(formData.NoticePeriod) || null,
-      Remarks: formData.Remarks || null,
-      EntryBy: loginData?.UserId,
-      EntryDate: new Date().toISOString(),
-      IsActive: true
+            const payload = {
+                CandidateId: formData.CandidateId,
+                CurrentSalary: Number(formData.CurrentSalary) || null,
+                CurrentOrg: formData.CurrentOrg || null,
+                NoticePeriod: Number(formData.NoticePeriod) || null,
+                Remarks: formData.Remarks || null,
+                EntryBy: loginData?.UserId,
+                EntryDate: new Date().toISOString(),
+                IsActive: true
+            };
+
+            console.log("Sending payload:", payload);
+
+            const res = await fetch(`${config.API_BASE_URL}api/Participate/AddParticipate`, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    TenantId: loginData?.tenantId
+                },
+                body: JSON.stringify(payload),
+            });
+
+            if (!res.ok) {
+                const text = await res.text();
+                throw new Error(text || "Failed to save participation data");
+            }
+
+            const resultText = await res.text();
+            const savedId = parseInt(resultText, 10);
+            console.log("API returned Id:", savedId);
+
+            // if (!isNaN(savedId) && savedId > 0) {
+            // //   toast.success("Saved successfully!");
+            //   router.push("/examPage");
+            // } else {
+            //   toast.error("Failed to save participation data.");
+            // }
+            if (!isNaN(savedId) && savedId > 0) {
+                // Store the new ParticipateId locally before redirect
+                localStorage.setItem("participateId", savedId);
+                router.push("/examPage");
+            }
+
+        } catch (error) {
+            console.error("Participation save error:", error);
+            toast.error(error.message || "Error saving data.");
+        }
     };
-
-    console.log("Sending payload:", payload);
-
-    const res = await fetch(`${config.API_BASE_URL}api/Participate/AddParticipate`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        TenantId: loginData?.tenantId
-      },
-      body: JSON.stringify(payload),
-    });
-
-    if (!res.ok) {
-      const text = await res.text();
-      throw new Error(text || "Failed to save participation data");
-    }
-
-    const resultText = await res.text();
-    const savedId = parseInt(resultText, 10);
-    console.log("API returned Id:", savedId);
-
-    if (!isNaN(savedId) && savedId > 0) {
-    //   toast.success("Saved successfully!");
-      router.push("/examPage");
-    } else {
-      toast.error("Failed to save participation data.");
-    }
-
-  } catch (error) {
-    console.error("Participation save error:", error);
-    toast.error(error.message || "Error saving data.");
-  }
-};
 
 
     return (
@@ -100,7 +105,7 @@ export default function ParticipatePage() {
                             type="text"
                             className="w-3/4 border border-gray-300 p-3 rounded-lg bg-gray-100"
                             placeholder="Candidate Name"
-                            value={candidate.name || ""} 
+                            value={candidate.name || ""}
                             readOnly
                         />
                     </div>

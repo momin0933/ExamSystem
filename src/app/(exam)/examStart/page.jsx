@@ -13,9 +13,73 @@ export default function ExamStartPage() {
     const [loading, setLoading] = useState(false);
     const [answers, setAnswers] = useState({});
     const [participateId, setParticipateId] = useState(null);
-   
+
     const router = useRouter()
 
+    // const fetchQuestionPaper = async () => {
+    //     if (!loginData?.tenantId || !loginData?.UserAutoId) {
+    //         toast.error("User info missing, please login again.");
+    //         return;
+    //     }
+
+    //     try {
+    //         setLoading(true);
+    //         const response = await fetch(`${config.API_BASE_URL}api/Procedure/GetData`, {
+    //             method: "POST",
+    //             headers: {
+    //                 TenantId: loginData.tenantId,
+    //                 "Content-Type": "application/json",
+    //             },
+    //             body: JSON.stringify({
+    //                 operation: "",
+    //                 procedureName: "SP_GetQuestionPaperByParticipate",
+    //                 parameters: {
+    //                     QueryChecker: 1,
+    //                     ParticipateId: loginData.UserAutoId,
+    //                 },
+    //             }),
+    //         });
+
+    //         if (!response.ok) throw new Error("Failed to fetch question paper");
+
+    //         const data = await response.json();
+    //         console.log("Question Data", data)
+
+    //         // Format questions
+    //         const formatted = Array.isArray(data)
+    //             ? data.reduce((acc, item) => {
+    //                 let question = acc.find(q => q.questionId === item.QuestionId);
+    //                 if (!question) {
+    //                     question = {
+    //                         questionId: item.QuestionId,
+    //                         question: item.Question,
+    //                         qnType: item.QnType,
+    //                         mark: item.Mark,
+    //                         sketch: item.Sketch,
+    //                         options: [],
+    //                         examName: item.ExamName,
+    //                         Answer: item.Answer,                            
+    //                     };
+    //                     acc.push(question);
+    //                 }
+    //                 // Only MCQ question has options
+    //                 if (item.QnType === "MCQ" && item.Option) {
+    //                     question.options.push(item.Option);
+    //                 }
+    //                 return acc;
+    //             }, [])
+    //             : [];
+
+    //         setQuestions(formatted);
+    //         console.log("Formatted Questions:", formatted);
+    //         setCurrentIndex(0);
+    //     } catch (err) {
+    //         console.error(err);
+    //         toast.error("Failed to load question paper");
+    //     } finally {
+    //         setLoading(false);
+    //     }
+    // };
 
     const fetchQuestionPaper = async () => {
         if (!loginData?.tenantId || !loginData?.UserAutoId) {
@@ -25,6 +89,7 @@ export default function ExamStartPage() {
 
         try {
             setLoading(true);
+
             const response = await fetch(`${config.API_BASE_URL}api/Procedure/GetData`, {
                 method: "POST",
                 headers: {
@@ -44,12 +109,14 @@ export default function ExamStartPage() {
             if (!response.ok) throw new Error("Failed to fetch question paper");
 
             const data = await response.json();
-            console.log("Question Data", data)
+            //console.log("Raw Question Data:", data);
 
-            // Format questions
             const formatted = Array.isArray(data)
                 ? data.reduce((acc, item) => {
+                    // Check if this question already exists in the accumulator
                     let question = acc.find(q => q.questionId === item.QuestionId);
+
+                    // If not found, create a new question object
                     if (!question) {
                         question = {
                             questionId: item.QuestionId,
@@ -57,19 +124,32 @@ export default function ExamStartPage() {
                             qnType: item.QnType,
                             mark: item.Mark,
                             sketch: item.Sketch,
-                            options: [],
                             examName: item.ExamName,
+                            options: [],
+                            correctOption: null,
                         };
                         acc.push(question);
                     }
-                    // Only MCQ question has options
+
+                    // Push all options for MCQs
                     if (item.QnType === "MCQ" && item.Option) {
                         question.options.push(item.Option);
                     }
+
+                    // Set correct answer for MCQ
+                    if (item.QnType === "MCQ" && item.Answer === true) {
+                        question.correctOption = item.Option;
+                    }
+
+                    // Handle True/False or Written type questions
+                    // if (item.QnType === "T/F" || item.QnType === "Written") {
+                    //     question.correctOption = item.Answer;
+                    // }
                     return acc;
                 }, [])
                 : [];
 
+            //console.log("Formatted Questions:", formatted);
             setQuestions(formatted);
             setCurrentIndex(0);
         } catch (err) {
@@ -80,11 +160,21 @@ export default function ExamStartPage() {
         }
     };
 
-useEffect(() => {
-  if (loginData?.UserAutoId) {
-    setParticipateId(loginData.UserAutoId);
-  }
-}, [loginData]);
+    // useEffect(() => {
+    //     if (loginData?.UserAutoId) {
+    //         setParticipateId(loginData.UserAutoId);
+    //     }
+    // }, [loginData]);
+    useEffect(() => {
+        const id = localStorage.getItem("participateId");
+        console.log("Participate Id",id)
+        if (id) {
+            setParticipateId(Number(id));
+        } else {
+            toast.error("Participate ID not found, please restart exam.");
+            router.push("/participate");
+        }
+    }, []);
 
     useEffect(() => {
         fetchQuestionPaper();
@@ -106,72 +196,75 @@ useEffect(() => {
         if (currentIndex < questions.length - 1) setCurrentIndex(prev => prev + 1);
     };
 
-  const handleSubmitExam = async (e) => {
-  e.preventDefault();
-  setLoading(true);
+    const handleSubmitExam = async (e) => {
+        debugger;
+        e.preventDefault();
+        setLoading(true);
 
-  try {
-    if (!participateId) throw new Error("Participate ID is missing!");
-    if (Object.keys(answers).length === 0) throw new Error("No answers found to submit.");
+        try {
+            if (!participateId) throw new Error("Participate ID is missing!");
+            if (Object.keys(answers).length === 0) throw new Error("No answers found to submit.");
 
-    // Prepare payload
-    const payload = Object.entries(answers).map(([qId, ansValue]) => {
-      // Find the question in the questions array
-      const currentQuestion = questions.find(q => q.questionId === Number(qId));
-      return {
-        ParticipateId: participateId,
-        QnId: Number(qId),
-        Answer: ansValue || "",
-        QnMark: currentQuestion?.mark || 0,
-        AnsMark: 0,
-        Remarks: null,
-        EntryBy: loginData?.UserId,
-        EntryDate: new Date().toISOString(),
-        IsActive: true,
-      };
-    });
+            // Prepare payload
+            const payload = Object.entries(answers).map(([qId, ansValue]) => {
+                // Find the question in the questions array
+                const currentQuestion = questions.find(q => q.questionId === Number(qId));
+                let ansMark = 0;
+                if (currentQuestion?.qnType === "MCQ") {
+                    if (ansValue === currentQuestion.correctOption) {
+                        ansMark = currentQuestion.mark || 0;
+                    }
+                }
+                return {
+                    ParticipateId: participateId,
+                    QnId: Number(qId),
+                    Answer: ansValue || "",
+                    QnMark: currentQuestion?.mark || 0,
+                    AnsMark: ansMark,
+                    Remarks: null,
+                    EntryBy: loginData?.UserId,
+                    EntryDate: new Date().toISOString(),
+                    IsActive: true,
+                };
+            });
 
-    console.log("Submitting Exam Answers Payload:", payload);
+            console.log("Submitting Exam Answers Payload:", payload);
 
-    const response = await fetch(`${config.API_BASE_URL}api/Participate/AddParticipateAns`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        TenantId: loginData?.tenantId,
-      },
-      body: JSON.stringify(payload),
-    });
+            const response = await fetch(`${config.API_BASE_URL}api/Participate/AddParticipateAns`, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    TenantId: loginData?.tenantId,
+                },
+                body: JSON.stringify(payload),
+            });
 
-    if (!response.ok) {
-      const text = await response.text();
-      throw new Error(text || "Failed to submit exam answers");
-    }
+            if (!response.ok) {
+                const text = await response.text();
+                throw new Error(text || "Failed to submit exam answers");
+            }
 
-    toast.success("Exam answers submitted successfully!");
-    router.push("/examEnd");
-  } catch (err) {
-    console.error("Exam submission error:", err);
-    toast.error(err.message || "Error submitting exam answers.");
-  } finally {
-    setLoading(false);
-  }
-};
-
-
-
-
+            toast.success("Exam answers submitted successfully!");
+            router.push("/examEnd");
+        } catch (err) {
+            console.error("Exam submission error:", err);
+            toast.error(err.message || "Error submitting exam answers.");
+        } finally {
+            setLoading(false);
+        }
+    };
 
     const currentQuestion = questions[currentIndex];
 
     return (
         <div className="max-w-3xl mx-auto p-6 bg-white shadow-md rounded-lg">
             {/* {currentIndex === 0 && questions.length > 0 && ( */}
-                <div className="mb-6 text-center">
-                    <h1 className="text-2xl font-bold text-gray-800">Fashion Tex Group Of Company</h1>
-                    <h2 className="text-lg font-semibold text-gray-600 mt-1">
-                        Recruitment Exam: {questions[0]?.examName || ""}
-                    </h2>
-                </div>
+            <div className="mb-6 text-center">
+                <h1 className="text-2xl font-bold text-gray-800">Fashion Tex Group Of Company</h1>
+                <h2 className="text-lg font-semibold text-gray-600 mt-1">
+                    Recruitment Exam: {questions[0]?.examName || ""}
+                </h2>
+            </div>
             {/* )} */}
 
             {loading ? (
@@ -234,7 +327,7 @@ useEffect(() => {
                             Previous
                         </button>
 
-                           <h2 className="text-gray-600 text-sm mb-1">
+                        <h2 className="text-gray-600 text-sm mb-1">
                             Question {currentIndex + 1} of {questions.length}
                         </h2>
 
