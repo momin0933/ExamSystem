@@ -13,6 +13,7 @@ export default function ExamStartPage() {
     const [loading, setLoading] = useState(false);
     const [answers, setAnswers] = useState({});
     const [participateId, setParticipateId] = useState(null);
+    const [timeLeft, setTimeLeft] = useState(null);
 
     const router = useRouter()
 
@@ -81,6 +82,45 @@ export default function ExamStartPage() {
     //     }
     // };
 
+    // Format seconds → HH:mm:ss
+    const formatTime = (seconds) => {
+        const hrs = Math.floor(seconds / 3600);
+        const mins = Math.floor((seconds % 3600) / 60);
+        const secs = seconds % 60;
+        return `${hrs.toString().padStart(2, "0")}:${mins
+            .toString()
+            .padStart(2, "0")}:${secs.toString().padStart(2, "0")}`;
+    };
+
+    // Initialize timer after questions load
+    useEffect(() => {
+        if (questions.length > 0) {
+            const examTime = questions[0]?.examTime; // e.g. "00:30:00"
+            if (examTime) {
+                const [hours, minutes, seconds] = examTime.split(":").map(Number);
+                const totalSeconds = hours * 3600 + minutes * 60 + seconds;
+                setTimeLeft(totalSeconds);
+            }
+        }
+    }, [questions]);
+
+    // Countdown effect
+    useEffect(() => {
+        if (timeLeft === null) return;
+
+        if (timeLeft <= 0) {
+            toast.error("⏰ Time’s up! Auto-submitting your exam...");
+            handleSubmitExam(new Event("submit"));
+            return;
+        }
+
+        const timer = setInterval(() => {
+            setTimeLeft((prev) => prev - 1);
+        }, 1000);
+
+        return () => clearInterval(timer);
+    }, [timeLeft]);
+
     const fetchQuestionPaper = async () => {
         if (!loginData?.tenantId || !loginData?.UserAutoId) {
             toast.error("User info missing, please login again.");
@@ -109,7 +149,7 @@ export default function ExamStartPage() {
             if (!response.ok) throw new Error("Failed to fetch question paper");
 
             const data = await response.json();
-            //console.log("Raw Question Data:", data);
+            console.log("Raw Question Data:", data);
 
             const formatted = Array.isArray(data)
                 ? data.reduce((acc, item) => {
@@ -125,6 +165,7 @@ export default function ExamStartPage() {
                             mark: item.Mark,
                             sketch: item.Sketch,
                             examName: item.ExamName,
+                            examTime: item.ExamTime,
                             options: [],
                             correctOption: null,
                         };
@@ -149,7 +190,7 @@ export default function ExamStartPage() {
                 }, [])
                 : [];
 
-            //console.log("Formatted Questions:", formatted);
+            console.log("Formatted Questions:", formatted);
             setQuestions(formatted);
             setCurrentIndex(0);
         } catch (err) {
@@ -167,7 +208,7 @@ export default function ExamStartPage() {
     // }, [loginData]);
     useEffect(() => {
         const id = localStorage.getItem("participateId");
-        console.log("Participate Id",id)
+        console.log("Participate Id", id)
         if (id) {
             setParticipateId(Number(id));
         } else {
@@ -257,15 +298,34 @@ export default function ExamStartPage() {
     const currentQuestion = questions[currentIndex];
 
     return (
-        <div className="max-w-3xl mx-auto p-6 bg-white shadow-md rounded-lg">
-            {/* {currentIndex === 0 && questions.length > 0 && ( */}
-            <div className="mb-6 text-center">
-                <h1 className="text-2xl font-bold text-gray-800">Fashion Tex Group Of Company</h1>
-                <h2 className="text-lg font-semibold text-gray-600 mt-1">
-                    Recruitment Exam: {questions[0]?.examName || ""}
-                </h2>
+        <div className="max-w-3xl mx-auto px-6 py-4 bg-white shadow-md rounded-lg">
+            <div className="relative flex justify-center items-center mb-6 px-6 py-4 bg-white">
+                {/* Logo + Title Centered */}
+                <div className="flex flex-col items-center text-center">
+                    <img
+                        src="/images/FashionTex-Logo.png"
+                        alt="Fashion Tex Ltd Logo"
+                        className="w-24 h-20 object-contain drop-shadow-md"
+                    />
+                    <h1 className="text-2xl font-extrabold text-gray-800 tracking-wide mt-2">
+                        Fashion Tex Group Of Company
+                    </h1>
+                    <h2 className="text-lg font-medium text-gray-600 mt-1">
+                        <span className="text-indigo-700 font-semibold">
+                            {questions[0]?.examName || ""}
+                        </span>
+                    </h2>
+                </div>
+
+                {/* Timer at Top-Right */}
+                {timeLeft !== null && (
+                    <div className="absolute top-0 right-0 mt-4 mr-6 bg-white border border-red-200 px-4 py-2 rounded-xl shadow-sm">
+                        <p className="font-bold text-red-600 tracking-wider">
+                            ⏰ <span className="text-red-700">{formatTime(timeLeft)}</span>
+                        </p>
+                    </div>
+                )}
             </div>
-            {/* )} */}
 
             {loading ? (
                 <p className="text-center text-gray-500 text-lg">Loading questions...</p>
