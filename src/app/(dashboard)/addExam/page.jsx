@@ -26,7 +26,8 @@ export default function AddExam() {
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [deleteSuccessMsg, setDeleteSuccessMsg] = useState('');
   const [deleteId, setDeleteId] = useState(null);
-
+  const [setData, setSetData] = useState([]);
+  const [filteredSet, setFilteredSet] = useState([]);
   const [formData, setFormData] = useState({
     id: 0,
     name: "",
@@ -82,6 +83,23 @@ export default function AddExam() {
     }
   };
 
+
+useEffect(() => {
+    let filteredData = setData;
+
+    if (searchQuery.trim() !== '') {
+        const query = searchQuery.toLowerCase();
+        filteredData = filteredData.filter(set =>
+            set.setName.toLowerCase().includes(query) ||
+            set.examName.toLowerCase().includes(query)
+        );
+    }
+
+    setFilteredSet(filteredData);
+}, [searchQuery, setData]);
+
+
+
   // Fetch exams list for show grid data
   const fetchExams = async () => {
     debugger;
@@ -111,6 +129,8 @@ export default function AddExam() {
 
       console.log("option", options)
       setExam(options);
+      setSetData(options); 
+      setFilteredSet(options); 
 
     } catch (err) {
       console.error(err);
@@ -373,12 +393,12 @@ export default function AddExam() {
             </thead>
 
             <tbody className="bg-white text-xs text-gray-700">
-              {exam.length === 0 ? (
+              {filteredSet.length === 0 ? (
                 <tr key="no-exams">
                   <td colSpan="4" className="text-center py-4">No exams found</td>
                 </tr>
               ) : (
-                exam.map((item, index) => (
+                filteredSet.map((item, index) => (
                   <tr key={item.id} className="border-b border-gray-300 hover:bg-gray-50">
                     <td data-label="SL" className="px-4 py-2 text-center">{index + 1}</td>
                     <td data-label="Set Name" className="px-4 py-2 text-center">{item.setName}</td>

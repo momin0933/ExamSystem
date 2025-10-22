@@ -16,72 +16,6 @@ export default function ExamStartPage() {
     const [timeLeft, setTimeLeft] = useState(null);
 
     const router = useRouter()
-
-    // const fetchQuestionPaper = async () => {
-    //     if (!loginData?.tenantId || !loginData?.UserAutoId) {
-    //         toast.error("User info missing, please login again.");
-    //         return;
-    //     }
-
-    //     try {
-    //         setLoading(true);
-    //         const response = await fetch(`${config.API_BASE_URL}api/Procedure/GetData`, {
-    //             method: "POST",
-    //             headers: {
-    //                 TenantId: loginData.tenantId,
-    //                 "Content-Type": "application/json",
-    //             },
-    //             body: JSON.stringify({
-    //                 operation: "",
-    //                 procedureName: "SP_GetQuestionPaperByParticipate",
-    //                 parameters: {
-    //                     QueryChecker: 1,
-    //                     ParticipateId: loginData.UserAutoId,
-    //                 },
-    //             }),
-    //         });
-
-    //         if (!response.ok) throw new Error("Failed to fetch question paper");
-
-    //         const data = await response.json();
-    //         console.log("Question Data", data)
-
-    //         // Format questions
-    //         const formatted = Array.isArray(data)
-    //             ? data.reduce((acc, item) => {
-    //                 let question = acc.find(q => q.questionId === item.QuestionId);
-    //                 if (!question) {
-    //                     question = {
-    //                         questionId: item.QuestionId,
-    //                         question: item.Question,
-    //                         qnType: item.QnType,
-    //                         mark: item.Mark,
-    //                         sketch: item.Sketch,
-    //                         options: [],
-    //                         examName: item.ExamName,
-    //                         Answer: item.Answer,                            
-    //                     };
-    //                     acc.push(question);
-    //                 }
-    //                 // Only MCQ question has options
-    //                 if (item.QnType === "MCQ" && item.Option) {
-    //                     question.options.push(item.Option);
-    //                 }
-    //                 return acc;
-    //             }, [])
-    //             : [];
-
-    //         setQuestions(formatted);
-    //         console.log("Formatted Questions:", formatted);
-    //         setCurrentIndex(0);
-    //     } catch (err) {
-    //         console.error(err);
-    //         toast.error("Failed to load question paper");
-    //     } finally {
-    //         setLoading(false);
-    //     }
-    // };
-
     // Format seconds → HH:mm:ss
     const formatTime = (seconds) => {
         const hrs = Math.floor(seconds / 3600);
@@ -95,7 +29,7 @@ export default function ExamStartPage() {
     // Initialize timer after questions load
     useEffect(() => {
         if (questions.length > 0) {
-            const examTime = questions[0]?.examTime; // e.g. "00:30:00"
+            const examTime = questions[0]?.examTime; 
             if (examTime) {
                 const [hours, minutes, seconds] = examTime.split(":").map(Number);
                 const totalSeconds = hours * 3600 + minutes * 60 + seconds;
@@ -200,12 +134,6 @@ export default function ExamStartPage() {
             setLoading(false);
         }
     };
-
-    // useEffect(() => {
-    //     if (loginData?.UserAutoId) {
-    //         setParticipateId(loginData.UserAutoId);
-    //     }
-    // }, [loginData]);
     useEffect(() => {
         const id = localStorage.getItem("participateId");
         console.log("Participate Id", id)

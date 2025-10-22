@@ -17,10 +17,7 @@ export default function AddCandidate() {
     const { loginData } = useContext(AuthContext);
 
     console.log("LoginData", loginData)
-
-    const [questionData, setQuestionData] = useState([]);
     const [filteredQuestion, setFilteredQuestion] = useState([]);
-    const [loading, setLoading] = useState(false);
     const [searchQuery, setSearchQuery] = useState('');
     const [isEdit, setIsEdit] = useState(false);
     const [editId, setEditId] = useState(null);
@@ -28,10 +25,10 @@ export default function AddCandidate() {
     const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
     const [selectedId, setSelectedId] = useState(null);
     const [deleteSuccessMsg, setDeleteSuccessMsg] = useState("");
-    const [subjectData, setSubjectData] = useState([]);
-    const [isViewModalOpen, setIsViewModalOpen] = useState(false);
     const [exam, setExam] = useState([]);
     const [candidates, setCandidates] = useState([]);
+    const [filteredSet, setFilteredSet] = useState([]);
+    const [setData, setSetData] = useState([]);
 
     const [formData, setFormData] = useState({
         id: "",
@@ -48,18 +45,22 @@ export default function AddCandidate() {
         AOS.init({ duration: 800, once: true });
     }, []);
 
-
-
     useEffect(() => {
-        const lowerSearch = searchQuery.toLowerCase();
-        const filtered = questionData.filter(q => {
-            const matchesQuestion = q?.Name?.toLowerCase().includes(lowerSearch);
-            const matchesType = q?.QnType?.toLowerCase().includes(lowerSearch);
-            const matchesSubject = q?.SubjectName?.toLowerCase().includes(lowerSearch);
-            return matchesQuestion || matchesType || matchesSubject;
-        });
-        setFilteredQuestion(filtered);
-    }, [searchQuery, questionData]);
+        let filteredData = candidates;
+
+        if (searchQuery.trim() !== '') {
+            const query = searchQuery.toLowerCase();
+            filteredData = filteredData.filter(candidate =>
+                candidate.name.toLowerCase().includes(query) ||
+                candidate.userId.toLowerCase().includes(query) ||
+                candidate.examName.toLowerCase().includes(query)  ||
+                candidate.mobileNo.toLowerCase().includes(query) ||
+                candidate.email.toLowerCase().includes(query) 
+            );
+        }
+        setFilteredSet(filteredData);
+    }, [searchQuery, candidates]);
+
 
     const fetchExams = async () => {
         if (!loginData.tenantId) return;
@@ -125,6 +126,8 @@ export default function AddCandidate() {
             //  Sort by id descending
             formatted.sort((a, b) => b.id - a.id);
             setCandidates(formatted);
+            setSetData(formatted);
+            setFilteredSet(formatted);
             console.log("Candidate Data:", formatted);
 
         } catch (err) {
@@ -133,71 +136,41 @@ export default function AddCandidate() {
         }
     };
 
-    //   const generatePassword = () => {
-    //     return Math.random().toString(36).slice(-8); // random 8-character password
-    // };
-    // //  Generate userId & password when name changes
-    // const handleNameChange = (e) => {
-    //     const fullName = e.target.value;
-    //     // Get the first name only (before first space)
-    //     const firstName = fullName ? fullName.split(" ")[0] : "";
-    //     const password = generatePassword(); // still auto-generate password
-
-    //     setFormData((prev) => ({
-    //         ...prev,
-    //         name: fullName,
-    //         userId: firstName,
-    //         password,
-
-    //     }));
-    // };
 
     const generatePassword = () => {
-    // random 4 chars + current timestamp in base36 to make it unique
-    return Math.random().toString(36).slice(-4) + Date.now().toString(36).slice(-4);
-};
+        // random 4 chars + current timestamp in base36 to make it unique
+        return Math.random().toString(36).slice(-4) + Date.now().toString(36).slice(-4);
+    };
 
-// Generate userId & password when name changes
-// const handleNameChange = (e) => {
-//     const fullName = e.target.value;
-//     const firstName = fullName ? fullName.split(" ")[0] : "";
-//     const password = generatePassword(); 
 
-//     setFormData((prev) => ({
-//         ...prev,
-//         name: fullName,
-//         userId: firstName,
-//         password,
-//     }));
-// };
 
-const generateRandomNumber = () => {
-  return Math.floor(1000 + Math.random() * 9000); // 4-digit number
-};
+    const generateRandomNumber = () => {
+        return Math.floor(1000 + Math.random() * 9000); // 4-digit number
+    };
 
-const handleNameChange = (e) => {
-  const fullName = e.target.value; // remove extra spaces
-  if (!fullName) {
-    setFormData(prev => ({ ...prev, name: "", userId: "" }));
-    return;
-  }
+    const handleNameChange = (e) => {
+        const fullName = e.target.value; // remove extra spaces
+        if (!fullName) {
+            setFormData(prev => ({ ...prev, name: "", userId: "" }));
+            return;
+        }
 
-  const nameParts = fullName.split(/\s+/); // split by one or more spaces
-  const longestPart = nameParts.reduce(
-    (max, part) => (part.length > max.length ? part : max),
-    ""
-  );
+        const nameParts = fullName.split(/\s+/); // split by one or more spaces
+        const longestPart = nameParts.reduce(
+            (max, part) => (part.length > max.length ? part : max),
+            ""
+        );
 
-  const userId = longestPart.toLowerCase() + generateRandomNumber();
-  const password = generatePassword(); 
+        const userId = longestPart.toLowerCase() + generateRandomNumber();
+        const password = generatePassword();
 
-  setFormData(prev => ({
-    ...prev,
-    name: fullName,
-    userId,
-    password,
-  }));
-};
+        setFormData(prev => ({
+            ...prev,
+            name: fullName,
+            userId,
+            password,
+        }));
+    };
 
 
 
@@ -312,7 +285,7 @@ const handleNameChange = (e) => {
         // Prepare payload
         const payload = {
             id: isEdit ? formData.id : 0,
-            name: formData.name,      
+            name: formData.name,
             password: formData.password,
             userId: formData.userId,
             email: formData.email,
@@ -526,14 +499,14 @@ const handleNameChange = (e) => {
                         </thead>
 
                         <tbody className="bg-white text-xs text-gray-700">
-                            {candidates.length === 0 ? (
+                            {filteredSet.length === 0 ? (
                                 <tr key="no-data">
                                     <td colSpan="6" className="text-center py-4">
                                         No data found
                                     </td>
                                 </tr>
                             ) : (
-                                candidates.map((candidate, index) => (
+                                filteredSet.map((candidate, index) => (
                                     <tr
                                         key={candidate.id ?? index}
                                         className="border-b border-gray-300 hover:bg-gray-50"
