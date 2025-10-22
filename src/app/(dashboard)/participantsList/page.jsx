@@ -133,19 +133,19 @@ export default function AddExam() {
     };
 
 
-    useEffect(() => {
-        let filteredData = setData;
+    // useEffect(() => {
+    //     let participateList = setData;
 
-        if (searchQuery.trim() !== '') {
-            const query = searchQuery.toLowerCase();
-            filteredData = filteredData.filter(set =>
-                set.setName.toLowerCase().includes(query) ||
-                set.examName.toLowerCase().includes(query)
-            );
-        }
+    //     if (searchQuery.trim() !== '') {
+    //         const query = searchQuery.toLowerCase();
+    //         participateList = participateList.filter(set =>
+    //             set.name.toLowerCase().includes(query) ||
+    //             set.examName.toLowerCase().includes(query)
+    //         );
+    //     }
 
-        setFilteredSet(filteredData);
-    }, [searchQuery, setData]);
+    //     setFilteredSet(filteredData);
+    // }, [searchQuery, setData]);
 
     useEffect(() => {
         if (loginData?.tenantId) {
@@ -155,10 +155,6 @@ export default function AddExam() {
         }
     }, [loginData?.tenantId]);
 
-    // Open modal for adding new exam
-    const handleOpenModal = () => {
-        setShowModal(true);
-    };
 
     return (
         <div className="overflow-x-auto p-3">
@@ -191,6 +187,10 @@ export default function AddExam() {
       `}</style>
 
             <div className="rounded-md font-roboto overflow-hidden">
+                <div className="mb-6">
+                    <h1 className="text-2xl font-bold text-gray-800">Participant Management</h1>
+                    <p className="text-gray-600 mt-2">View and manage participant exam papers</p>
+                </div>
                 <div className="bg-gradient-to-r from-[#2c3e50] to-[#3498db] sticky top-0 z-20 shadow-md">
 
                     {/* Header with search and actions */}
@@ -222,8 +222,8 @@ export default function AddExam() {
                         {/* Action buttons */}
                         <div className='flex items-center gap-3'>
                             {/* <Link onClick={handleOpenModal} href="#" passHref className="text-lg text-gray-50 cursor-pointer">
-                <IoMdAddCircle className="text-xl" />
-              </Link> */}
+                            <IoMdAddCircle className="text-xl" />
+                        </Link> */}
                             <FaFileExcel className="text-lg cursor-pointer text-gray-50" />
                         </div>
                     </div>
@@ -256,7 +256,7 @@ export default function AddExam() {
                                         <td data-label="User ID" className="px-4 py-2 text-center">{item.value}</td>
                                         <td data-label="Password" className="px-4 py-2 text-center">{item.password}</td>
                                         <td data-label="Organization" className="px-4 py-2 text-center">{item.org}</td>
-                                        <td data-label="Salary" className="px-4 py-2 text-center">{item.salary}</td>
+                                        <td data-label="Salary" className="px-4 py-2 text-center">$ {item.salary}</td>
                                         <td data-label="Notice Period" className="px-4 py-2 text-center">{item.noticePeriod}</td>
                                         <td data-label="Actions" className="px-4 py-2 text-center">
                                             <div className="flex justify-center gap-3">
@@ -282,10 +282,10 @@ export default function AddExam() {
                 </div>
             </div>
 
-        
+
             {showQuestionModal && (
-                <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4">
-                    <div className="bg-white rounded-xl shadow-xl p-6 w-full max-w-4xl max-h-[90vh] overflow-y-auto relative">
+                <div className="fixed inset-0 bg-black/40 flex items-start justify-center z-50 p-4 overflow-y-auto">
+                    <div className="bg-white rounded-xl p-6 w-full max-w-4xl mt-10 relative">
                         {/* Close button */}
                         <button
                             onClick={() => setShowQuestionModal(false)}
@@ -297,40 +297,50 @@ export default function AddExam() {
                         {participateQuestionPaper.length > 0 ? (
                             <>
                                 {/* Candidate Info */}
-                                <div className="mb-6 p-4 bg-blue-50 rounded-md border-l-4 border-blue-500">
-                                    <h2 className="text-xl font-semibold text-blue-700">
-                                        Candidate: {participateQuestionPaper[0].userInfo.name}
+                                <div className="mb-8 p-4 bg-blue-50 rounded-lg text-center">
+                                    <h2 className="text-2xl font-semibold text-blue-700">
+                                        {participateQuestionPaper[0].userInfo.name}
                                     </h2>
                                     <p className="text-sm text-gray-700 mt-1">
-                                        <span className="font-medium">User ID:</span> {participateQuestionPaper[0].userInfo.userId} |{" "}
-                                        <span className="font-medium">Organization:</span> {participateQuestionPaper[0].userInfo.org} |{" "}
-                                        <span className="font-medium">Salary:</span> {participateQuestionPaper[0].userInfo.salary} |{" "}
+                                        {/* <span className="font-medium">User ID:</span> {participateQuestionPaper[0].userInfo.userId} |{" "} */}
+                                        <span className="font-medium">Current Organization:</span> {participateQuestionPaper[0].userInfo.org} |{" "}
+                                        <span className="font-medium">Current Salary:</span> {participateQuestionPaper[0].userInfo.salary} |{" "}
                                         <span className="font-medium">Notice Period:</span> {participateQuestionPaper[0].userInfo.noticePeriod} days
                                     </p>
                                 </div>
 
                                 {/* Question List */}
-                                <div className="space-y-6">
+                                <div className="space-y-4">
                                     {participateQuestionPaper.map((q, index) => (
-                                        <div key={q.qnId} className="border rounded-lg p-5 shadow-sm hover:shadow-md transition-shadow duration-200">
-                                            {/* Question Header */}
-                                            <div className="flex justify-between items-center mb-3">
-                                                <h3 className="font-semibold text-gray-800 text-lg">
-                                                    {index + 1}. {q.question}
-                                                </h3>
-                                                <span className="text-sm text-gray-500 font-medium">({q.qnType})</span>
+                                        <div key={q.qnId} className="p-4 bg-gray-50 rounded-lg">
+                                            {/* Question Header + Marks */}
+                                            <div className="flex justify-between items-start mb-2">
+                                                <div>
+                                                    <h3 className="font-semibold text-gray-800 text-lg">
+                                                        {index + 1}. {q.question}
+                                                    </h3>
+                                                    <span className="text-sm text-gray-500 font-medium">{q.qnType}</span>
+                                                </div>
+                                                <div className="text-sm text-gray-600 flex gap-4 mt-1">
+                                                    <span>Mark: {q.qnMark}</span>
+                                                    <span>Scored: {q.ansMark}</span>
+                                                </div>
                                             </div>
+
+                                            {/* Optional Sketch / Image */}
+                                            {q.sketch && (
+                                                <div className="mb-2">
+                                                    <img src={q.sketch} alt="Question Sketch" className="max-w-full rounded" />
+                                                </div>
+                                            )}
 
                                             {/* MCQ Options */}
                                             {q.qnType === "MCQ" && (
-                                                <ul className="ml-6 space-y-1">
+                                                <ul className="ml-4 space-y-1">
                                                     {q.options.map((opt, i) => (
                                                         <li
                                                             key={i}
-                                                            className={`p-2 rounded border text-sm ${q.participateAns === opt
-                                                                ? "bg-green-100 border-green-500 text-green-800 font-semibold"
-                                                                : "border-gray-300"
-                                                                }`}
+                                                            className={`p-2 rounded text-sm ${q.participateAns === opt ? "bg-green-100 text-green-800 font-medium" : "text-gray-700"}`}
                                                         >
                                                             <span className="font-medium">{String.fromCharCode(65 + i)}.</span> {opt}
                                                         </li>
@@ -338,30 +348,32 @@ export default function AddExam() {
                                                 </ul>
                                             )}
 
-                                            {/* Non-MCQ Answer */}
+                                            {/* Descriptive / Non-MCQ Answer */}
                                             {q.qnType !== "MCQ" && (
-                                                <div className="mt-2 ml-2 text-sm text-gray-700">
+                                                <div className="mt-2 ml-2 text-sm text-gray-700 pl-2">
                                                     <span className="font-medium">Answer:</span>{" "}
                                                     <span className="text-blue-700">{q.participateAns || "No Answer Provided"}</span>
                                                 </div>
                                             )}
 
-                                            {/* Marks */}
-                                            <div className="mt-3 text-sm text-gray-500 border-t pt-2">
-                                                <span className="font-medium">Question Mark:</span> {q.qnMark} |{" "}
-                                                <span className="font-medium">Scored:</span> {q.ansMark}
-                                            </div>
+
                                         </div>
+
                                     ))}
                                 </div>
                             </>
                         ) : (
                             <p className="text-center text-gray-500 py-12 text-lg">No questions found.</p>
                         )}
+
+                        <div className="flex justify-end space-x-2 pt-4">
+                            <button type="button" onClick={() => setShowQuestionModal(false)} className="px-3 py-1 bg-gray-500 text-white rounded hover:bg-gray-600">
+                                Cancel
+                            </button>
+                        </div>
                     </div>
                 </div>
             )}
-
 
         </div>
     )
