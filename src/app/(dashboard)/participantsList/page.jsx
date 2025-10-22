@@ -105,9 +105,12 @@ export default function AddExam() {
                             qnId: item.QnId,
                             question: item.Question,
                             qnType: item.QnType,
-                            options: item.OptionText ? [item.OptionText] : [],
+                            // options: item.OptionText ? [item.OptionText] : [],
+                            options: item.OptionText ? [{ text: item.OptionText, adminAnswer: item.AdminAnswer }] : [],
                             participateAns: item.ParticipateAns,
+                            adminAnswer: item.AdminAnswer,
                             qnMark: item.QnMark,
+                            qnImage: item.Sketch,
                             ansMark: item.AnsMark,
                             userInfo: {
                                 name: item.ParticipateName,
@@ -118,8 +121,12 @@ export default function AddExam() {
                                 noticePeriod: item.NoticePeriod,
                             },
                         });
-                    } else if (item.OptionText && !existing.options.includes(item.OptionText)) {
-                        existing.options.push(item.OptionText);
+                    }
+                    // else if (item.OptionText && !existing.options.includes(item.OptionText)) {
+                    //     existing.options.push(item.OptionText);
+                    // }
+                    else if (item.OptionText && !existing.options.some(o => o.text === item.OptionText)) {
+                        existing.options.push({ text: item.OptionText, adminAnswer: item.AdminAnswer });
                     }
                     return acc;
                 }, []);
@@ -256,7 +263,7 @@ export default function AddExam() {
                                         <td data-label="User ID" className="px-4 py-2 text-center">{item.value}</td>
                                         <td data-label="Password" className="px-4 py-2 text-center">{item.password}</td>
                                         <td data-label="Organization" className="px-4 py-2 text-center">{item.org}</td>
-                                        <td data-label="Salary" className="px-4 py-2 text-center">$ {item.salary}</td>
+                                        <td data-label="Salary" className="px-4 py-2 text-center">৳ {item.salary}</td>
                                         <td data-label="Notice Period" className="px-4 py-2 text-center">{item.noticePeriod}</td>
                                         <td data-label="Actions" className="px-4 py-2 text-center">
                                             <div className="flex justify-center gap-3">
@@ -304,7 +311,7 @@ export default function AddExam() {
                                     <p className="text-sm text-gray-700 mt-1">
                                         {/* <span className="font-medium">User ID:</span> {participateQuestionPaper[0].userInfo.userId} |{" "} */}
                                         <span className="font-medium">Current Organization:</span> {participateQuestionPaper[0].userInfo.org} |{" "}
-                                        <span className="font-medium">Current Salary:</span> {participateQuestionPaper[0].userInfo.salary} |{" "}
+                                        <span className="font-medium">Current Salary:</span>৳ {participateQuestionPaper[0].userInfo.salary} |{" "}
                                         <span className="font-medium">Notice Period:</span> {participateQuestionPaper[0].userInfo.noticePeriod} days
                                     </p>
                                 </div>
@@ -327,24 +334,29 @@ export default function AddExam() {
                                                 </div>
                                             </div>
 
-                                            {/* Optional Sketch / Image */}
-                                            {q.sketch && (
-                                                <div className="mb-2">
-                                                    <img src={q.sketch} alt="Question Sketch" className="max-w-full rounded" />
-                                                </div>
-                                            )}
-
                                             {/* MCQ Options */}
                                             {q.qnType === "MCQ" && (
                                                 <ul className="ml-4 space-y-1">
-                                                    {q.options.map((opt, i) => (
-                                                        <li
-                                                            key={i}
-                                                            className={`p-2 rounded text-sm ${q.participateAns === opt ? "bg-green-100 text-green-800 font-medium" : "text-gray-700"}`}
-                                                        >
-                                                            <span className="font-medium">{String.fromCharCode(65 + i)}.</span> {opt}
-                                                        </li>
-                                                    ))}
+                                                    {q.options.map((opt, i) => {
+                                                        const isSelected = q.participateAns === opt.text;
+                                                        const isCorrect = opt.adminAnswer;
+
+                                                        return (
+                                                            <li
+                                                                key={i}
+                                                                className={`p-2 rounded text-sm items-center ${isSelected
+                                                                    ? isCorrect
+                                                                        ? "bg-green-100 text-green-800 font-medium"
+                                                                        : "bg-red-100 text-red-800 font-medium"
+                                                                    : "text-gray-700"
+                                                                    }`}
+                                                            >
+                                                                <span className="font-medium">{String.fromCharCode(65 + i)}.</span> {opt.text}
+                                                                {/* {isSelected && !isCorrect && <span className="ml-2 text-red-600 font-bold">❌</span>}
+                                                                {isCorrect && <span className="ml-2 text-green-600 font-bold">✅</span>} */}
+                                                            </li>
+                                                        );
+                                                    })}
                                                 </ul>
                                             )}
 
@@ -355,12 +367,10 @@ export default function AddExam() {
                                                     <span className="text-blue-700">{q.participateAns || "No Answer Provided"}</span>
                                                 </div>
                                             )}
-
-
                                         </div>
-
                                     ))}
                                 </div>
+
                             </>
                         ) : (
                             <p className="text-center text-gray-500 py-12 text-lg">No questions found.</p>
