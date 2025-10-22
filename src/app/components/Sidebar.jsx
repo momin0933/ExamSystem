@@ -14,6 +14,9 @@ import { MdOutlineQuiz, MdSubject } from "react-icons/md";
 import { BsPatchQuestion } from "react-icons/bs";
 import { RiStackLine } from "react-icons/ri"
 import { FaUserPlus } from "react-icons/fa";
+import { MdOutlineAssignmentTurnedIn } from "react-icons/md";
+import { MdManageAccounts } from "react-icons/md";
+
 
 const Sidebar = () => {
   const { loginData, logout } = useContext(AuthContext);
@@ -38,11 +41,10 @@ const Sidebar = () => {
 
   // Active link style helper
   const getLinkClasses = (href, baseClasses = "") => {
-    return `${baseClasses} ${
-      pathname === href
+    return `${baseClasses} ${pathname === href
         ? "bg-gray-50/25 text-[#1cefff]"
         : "text-gray-100 hover:text-[#1cefff] hover:bg-gray-50/25"
-    }`;
+      }`;
   };
 
   return (
@@ -75,104 +77,132 @@ const Sidebar = () => {
 
       {/* Navigation */}
       <nav
-  className={`flex-1 mt-4 space-y-2 ${
-    isCollapsed ? "flex flex-col items-center" : ""
-  }`}
->
-  {/* Dashboard */}
-  <Link
-    href="/homepage"
-    prefetch={true}
-    className={`flex items-center gap-3 px-4 py-2 rounded-md text-gray-700 hover:bg-gray-200 transition ${
-      isCollapsed ? "justify-center" : ""
-    }`}
-  >
-    <AiOutlineDashboard className="w-5 h-5" />
-    {!isCollapsed && (
-      <span className="text-[0.9rem] font-medium">Dashboard</span>
-    )}
-  </Link>
-
-  {/* Management */}
-  {loginData?.UserRole !== "Client" && (
-    <div>
-      <button
-        onClick={() => toggleDropdown(2)}
-        className={`flex items-center justify-between w-full px-4 py-2 rounded-md text-gray-700 hover:bg-gray-200 transition ${
-          isCollapsed ? "justify-center" : ""
-        }`}
+        className={`flex-1 mt-4 space-y-2 ${isCollapsed ? "flex flex-col items-center" : ""
+          }`}
       >
-        <div className="flex items-center gap-3">
-          <GrProjects className="w-5 h-5" />
-          {!isCollapsed && (
-            <span className="text-[0.9rem] font-medium">Management</span>
-          )}
-        </div>
-        {!isCollapsed && (
-          <FaChevronDown
-            className={`text-xs transition-transform ${
-              activeDropdown === 2 ? "rotate-180" : ""
+        {/* Dashboard */}
+        <Link
+          href="/homepage"
+          prefetch={true}
+          className={`flex items-center gap-3 px-4 py-2 rounded-md text-gray-700 hover:bg-gray-200 transition ${isCollapsed ? "justify-center" : ""
             }`}
-          />
+        >
+          <AiOutlineDashboard className="w-5 h-5" />
+          {!isCollapsed && (
+            <span className="text-[0.9rem] font-medium">Dashboard</span>
+          )}
+        </Link>
+
+        {/* Management */}
+        {loginData?.UserRole !== "Client" && (
+          <div className="mb-3">
+            <button
+              onClick={() => toggleDropdown(2)}
+              className={`flex items-center justify-between w-full px-4 py-3 rounded-lg bg-gradient-to-r from-blue-50 to-white shadow hover:shadow-md transition-all duration-300 ${isCollapsed ? "justify-center" : ""
+                }`}
+            >
+              <div className="flex items-center gap-3">
+                <MdManageAccounts  className="w-5 h-5 text-blue-500" />
+                {!isCollapsed && (
+                  <span className="text-sm font-semibold text-blue-700">Management</span>
+                )}
+              </div>
+              {!isCollapsed && (
+                <FaChevronDown
+                  className={`text-sm text-blue-500 transition-transform ${activeDropdown === 2 ? "rotate-180" : ""
+                    }`}
+                />
+              )}
+            </button>
+
+            {!isCollapsed && activeDropdown === 2 && (
+              <div className="ml-8 mt-2 space-y-1 border-l-2 border-blue-100 pl-3">
+                {[
+                  { href: "/addSubject", label: "Add Subject", icon: <MdSubject /> },
+                  { href: "/addQuestion", label: "Add Question", icon: <BsPatchQuestion /> },
+                  { href: "/addSet", label: "Add Set", icon: <RiStackLine /> },
+                  { href: "/addExam", label: "Add Exam", icon: <MdOutlineQuiz /> },
+                  { href: "/addCandidate", label: "Add Candidate", icon: <FaUserPlus /> },
+                ].map((item) => (
+                  <Link
+                    key={item.href}
+                    href={item.href}
+                    prefetch={true}
+                    className="flex items-center gap-2 text-sm text-gray-700 hover:text-blue-600 hover:bg-blue-50 px-2 py-1 rounded transition-colors duration-200"
+                  >
+                    <span className="text-blue-400 w-4 h-4">{item.icon}</span>
+                    {item.label}
+                  </Link>
+                ))}
+              </div>
+            )}
+          </div>
         )}
-      </button>
 
-      {!isCollapsed && activeDropdown === 2 && (
-       <div className="ml-10 mt-1 space-y-1">
-          <Link
-            href="/addSubject"
-            prefetch={true}
-            className="flex items-center gap-2 text-sm text-gray-600 hover:text-black"
-          >
-            <MdSubject className="w-4 h-4" /> Add Subject
-          </Link>
-          <Link
-            href="/addQuestion"
-            prefetch={true}
-            className="flex items-center gap-2 text-sm text-gray-600 hover:text-black"
-          >
-            <BsPatchQuestion className="w-4 h-4" /> Add Question
-          </Link>
-          <Link
-            href="/addSet"
-            prefetch={true}
-            className="flex items-center gap-2 text-sm text-gray-600 hover:text-black"
-          >
-            <RiStackLine className="w-4 h-4" /> Add Set
-          </Link>
-          <Link
-            href="/addExam"
-            prefetch={true}
-            className="flex items-center gap-2 text-sm text-gray-600 hover:text-black"
-          >
-            <MdOutlineQuiz className="w-4 h-4" /> Add Exam
-          </Link>
-
-          <Link
-            href="/addCandidate"
-            prefetch={true}
-            className="flex items-center gap-2 text-sm text-gray-600 hover:text-black"
-          >
-            <FaUserPlus  className="w-4 h-4" /> Add Candidate
-          </Link>
-        </div>
+        {/* Result */}
+{loginData?.UserRole !== "Client" && (
+  <div className="mb-3">
+    <button
+      onClick={() => toggleDropdown(3)}
+      className={`flex items-center justify-between w-full px-4 py-3 rounded-lg bg-gradient-to-r from-green-50 to-white shadow hover:shadow-md transition-all duration-300 ${
+        isCollapsed ? "justify-center" : ""
+      }`}
+    >
+      <div className="flex items-center gap-3">
+        <MdOutlineAssignmentTurnedIn className="w-5 h-5 text-green-500" />
+        {!isCollapsed && (
+          <span className="text-sm font-semibold text-green-700">
+            Result
+          </span>
+        )}
+      </div>
+      {!isCollapsed && (
+        <FaChevronDown
+          className={`text-sm text-green-500 transition-transform ${
+            activeDropdown === 3 ? "rotate-180" : ""
+          }`}
+        />
       )}
-    </div>
-  )}
-</nav>
+    </button>
 
-{/* Footer */}
-<div className="mt-auto mb-6">
-  <button
-    onClick={handleLogout}
-    className={`flex items-center gap-3 px-4 py-2 rounded-md w-full text-gray-700 hover:bg-red-100 hover:text-red-600 transition ${
-      isCollapsed ? "justify-center" : ""
-    }`}
-  >
-    <AiOutlineLogout className="w-5 h-5" />
-    {!isCollapsed && <span>Log Out</span>}
-  </button>
-</div>
+    {!isCollapsed && activeDropdown === 3 && (
+      <div className="ml-8 mt-2 space-y-1 border-l-2 border-green-100 pl-3">
+        {[
+          {
+            href: "/participantsList",
+            label: "Participate List",
+            icon: <MdSubject />,
+          },
+        ].map((item) => (
+          <Link
+            key={item.href}
+            href={item.href}
+            prefetch={true}
+            className="flex items-center gap-2 text-sm text-gray-700 hover:text-green-600 hover:bg-green-50 px-2 py-1 rounded transition-colors duration-200"
+          >
+            <span className="w-4 h-4 text-green-400">{item.icon}</span>
+            {item.label}
+          </Link>
+        ))}
+      </div>
+    )}
+  </div>
+)}
+
+
+      </nav>
+
+      {/* Footer */}
+      <div className="mt-auto mb-6">
+        <button
+          onClick={handleLogout}
+          className={`flex items-center gap-3 px-4 py-2 rounded-md w-full text-gray-700 hover:bg-red-100 hover:text-red-600 transition ${isCollapsed ? "justify-center" : ""
+            }`}
+        >
+          <AiOutlineLogout className="w-5 h-5" />
+          {!isCollapsed && <span>Log Out</span>}
+        </button>
+      </div>
 
     </div>
   );
