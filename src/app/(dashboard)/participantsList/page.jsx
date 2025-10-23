@@ -10,7 +10,7 @@ import DeleteConfirmModal from '../../components/DeleteConfirmModal';
 import AOS from 'aos';
 import 'aos/dist/aos.css';
 import Select from 'react-select';
-import { FiCheck, FiX, FiEye } from "react-icons/fi";
+import { FiEye, FiEdit, FiCheck, FiX } from "react-icons/fi";
 
 export default function AddExam() {
     const { loginData } = useContext(AuthContext);
@@ -20,6 +20,7 @@ export default function AddExam() {
     const [participateList, setParticipateList] = useState([]);
     const [participateQuestionPaper, setParticipateQuestionPaper] = useState([]);
     const [showQuestionModal, setShowQuestionModal] = useState(false);
+    const [isEditMode, setIsEditMode] = useState(false);
     // const [formData, setFormData] = useState({
     //     id: 0,
     //     name: "",
@@ -52,7 +53,7 @@ export default function AddExam() {
             });
 
             const data = await response.json();
-            console.log("Participate List", data);
+            // console.log("Participate List", data);
 
             if (Array.isArray(data)) {
                 const formatted = data.map(item => ({
@@ -90,15 +91,18 @@ export default function AddExam() {
                     parameters: { QueryChecker: 2, ParticipateId: participateId },
                 }),
             });
-
+            console.log("Question Paper Response",response)
             const data = await response.json();
             console.log("Participate Question Paper", data);
 
             if (Array.isArray(data)) {
+               debugger;
                 const groupedData = data.reduce((acc, item) => {
                     let existing = acc.find(q => q.qnId === item.QnId);
                     if (!existing) {
                         acc.push({
+                            id: item.Id,
+                            participateId: item.ParticipateId,
                             qnId: item.QnId,
                             question: item.Question,
                             qnType: item.QnType,
@@ -127,7 +131,7 @@ export default function AddExam() {
                     }
                     return acc;
                 }, []);
-                console.log("participate ans paper", groupedData)
+                console.log("participate Group Data", groupedData)
                 setParticipateQuestionPaper(groupedData);
             }
         } catch (error) {
@@ -135,6 +139,52 @@ export default function AddExam() {
             toast.error("Failed to load participate question paper");
         }
     };
+
+    const handleSaveMarks = async (e) => {
+        debugger;
+    e.preventDefault();
+    // setLoading(true);
+
+    try {
+    debugger;
+        const payload = participateQuestionPaper.map((q) => ({
+            Id: q.id,
+            ParticipateId: q.participateId,
+            QnId: q.qnId,
+            Answer: q.participateAns || "NA",
+            QnMark: q.qnMark || 0,
+            AnsMark: parseFloat(q.ansMark) || 0,
+            Remarks: null,
+            UpdateBy: loginData?.UserId,
+            UpdateDate: new Date().toISOString(),
+            IsActive: true,
+        }));
+
+        console.log("Saving Evaluation Payload:", payload);
+
+        const response = await fetch(`${config.API_BASE_URL}api/Participate/UpdateMarks`, {
+            method: "PUT",
+            headers: {
+                "Content-Type": "application/json",
+                TenantId: loginData?.tenantId,
+            },
+            body: JSON.stringify(payload),
+        });
+
+        if (!response.ok) {
+            const text = await response.text();
+            throw new Error(text || "Failed to update marks");
+        }
+
+        toast.success("Evaluation saved successfully!");
+        setIsEditMode(false);
+    } catch (err) {
+        console.error("Error saving evaluation:", err);
+        toast.error(err.message || "Error saving evaluation");
+    } finally {
+        // setLoading(false);
+    }
+};
 
 
     // useEffect(() => {
@@ -264,6 +314,16 @@ export default function AddExam() {
                                         <td data-label="Notice Period" className="px-4 py-2 text-center">{item.noticePeriod}</td>
                                         <td data-label="Actions" className="px-4 py-2 text-center">
                                             <div className="flex justify-center gap-3">
+                                                {/* <button
+                                                    onClick={async () => {
+                                                        await fetchParticipateQuestionPaper(item.id);
+                                                        setShowQuestionModal(true);
+                                                    }}
+                                                    className="flex items-center gap-1 px-3 py-1.5 text-sm font-medium border border-blue-500 text-blue-500 rounded hover:bg-blue-500 hover:text-white transition-colors duration-200"
+                                                >
+                                                    <FiEye className="text-base" />
+                                                </button> */}
+
                                                 <button
                                                     onClick={async () => {
                                                         await fetchParticipateQuestionPaper(item.id);
@@ -272,6 +332,17 @@ export default function AddExam() {
                                                     className="flex items-center gap-1 px-3 py-1.5 text-sm font-medium border border-blue-500 text-blue-500 rounded hover:bg-blue-500 hover:text-white transition-colors duration-200"
                                                 >
                                                     <FiEye className="text-base" />
+                                                </button>
+
+                                                <button
+                                                    onClick={async () => {
+                                                        await fetchParticipateQuestionPaper(item.id);
+                                                        setIsEditMode(true);
+                                                        setShowQuestionModal(true);
+                                                    }}
+                                                    className="flex items-center gap-1 px-3 py-1.5 text-sm font-medium border border-green-500 text-green-500 rounded hover:bg-green-500 hover:text-white transition-colors duration-200"
+                                                >
+                                                    <FiEdit className="text-base" />
                                                 </button>
 
                                             </div>
@@ -348,8 +419,6 @@ export default function AddExam() {
                                                                     }`}
                                                             >
                                                                 <span className="font-medium">{String.fromCharCode(65 + i)}.</span> {opt.text}
-                                                                {/* {isSelected && !isCorrect && <span className="ml-2 text-red-600 font-bold">❌</span>}
-                                                                {isCorrect && <span className="ml-2 text-green-600 font-bold">✅</span>} */}
                                                                 {isSelected && !isCorrect && (
                                                                     <FiX className="ml-2 text-red-600 w-5 h-5 inline" />
                                                                 )}
@@ -373,12 +442,47 @@ export default function AddExam() {
                                                 </div>
                                             )}
                                             {/* Descriptive / Non-MCQ Answer */}
-                                            {q.qnType !== "MCQ" && (
+                                            {/* {q.qnType !== "MCQ" && (
                                                 <div className="mt-2 ml-2 text-sm text-gray-700 pl-2">
                                                     <span className="font-medium">Answer:</span>{" "}
                                                     <span className="text-blue-700">{q.participateAns || "No Answer Provided"}</span>
                                                 </div>
+                                            )} */}
+                                            {q.qnType !== "MCQ" && (
+                                                <div className="mt-2 ml-2 text-sm text-gray-700 pl-2">
+                                                    <span className="font-medium">Answer:</span>{" "}
+                                                    <span className="text-blue-700">{q.participateAns || "No Answer Provided"}</span>
+
+                                                    {/* Editable AnsMark field when in edit mode */}
+                                                    {isEditMode ? (
+                                                        <div className="mt-2">
+                                                            <label className="font-medium text-gray-700">Score:</label>
+                                                            <input
+                                                                type="number"
+                                                                step="0.1"
+                                                                value={q.ansMark || ""}
+                                                                onChange={(e) => {
+                                                                    const newValue = e.target.value;
+                                                                    setParticipateQuestionPaper((prev) =>
+                                                                        prev.map((pq) =>
+                                                                            pq.qnId === q.qnId ? { ...pq, ansMark: newValue } : pq
+                                                                        )
+                                                                    );
+                                                                }}
+                                                                className="ml-2 border border-gray-300 rounded px-2 py-1 w-24 focus:ring-2 focus:ring-blue-500 outline-none"
+                                                            />
+                                                            <span className="ml-2 text-gray-500 text-sm">/ {q.qnMark}</span>
+                                                        </div>
+                                                    ) : (
+                                                        <div className="mt-1">
+                                                            {/* <span className="font-medium text-gray-700">Score:</span>{" "}
+                                                            <span className="text-green-700">{q.ansMark ?? 0}</span>
+                                                            <span className="text-gray-500 text-sm"> / {q.qnMark}</span> */}
+                                                        </div>
+                                                    )}
+                                                </div>
                                             )}
+
                                         </div>
                                     ))}
                                 </div>
@@ -388,11 +492,32 @@ export default function AddExam() {
                             <p className="text-center text-gray-500 py-12 text-lg">No questions found.</p>
                         )}
 
-                        <div className="flex justify-end space-x-2 pt-4">
+                        {/* <div className="flex justify-end space-x-2 pt-4">
                             <button type="button" onClick={() => setShowQuestionModal(false)} className="px-3 py-1 bg-gray-500 text-white rounded hover:bg-gray-600">
                                 Cancel
                             </button>
+                        </div> */}
+
+                        <div className="flex justify-end space-x-2 pt-4">
+                            <button
+                                type="button"
+                                onClick={() => setShowQuestionModal(false)}
+                                className="px-3 py-1 bg-gray-500 text-white rounded hover:bg-gray-600"
+                            >
+                                Cancel
+                            </button>
+
+                            {isEditMode && (
+                                <button
+                                    type="button"
+                                    onClick={handleSaveMarks}
+                                    className="px-3 py-1 bg-green-600 text-white rounded hover:bg-green-700"
+                                >
+                                    Save Evaluation
+                                </button>
+                            )}
                         </div>
+
                     </div>
                 </div>
             )}
