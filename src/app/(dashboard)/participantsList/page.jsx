@@ -10,16 +10,13 @@ import DeleteConfirmModal from '../../components/DeleteConfirmModal';
 import AOS from 'aos';
 import 'aos/dist/aos.css';
 import Select from 'react-select';
-import { FiEdit, FiTrash2, FiEye } from "react-icons/fi";
+import { FiCheck, FiX, FiEye } from "react-icons/fi";
 
 export default function AddExam() {
     const { loginData } = useContext(AuthContext);
 
     // State declarations
     const [searchQuery, setSearchQuery] = useState('');
-    const [showModal, setShowModal] = useState(false);
-    const [setData, setSetData] = useState([]);
-    const [filteredSet, setFilteredSet] = useState([]);
     const [participateList, setParticipateList] = useState([]);
     const [participateQuestionPaper, setParticipateQuestionPaper] = useState([]);
     const [showQuestionModal, setShowQuestionModal] = useState(false);
@@ -340,7 +337,6 @@ export default function AddExam() {
                                                     {q.options.map((opt, i) => {
                                                         const isSelected = q.participateAns === opt.text;
                                                         const isCorrect = opt.adminAnswer;
-
                                                         return (
                                                             <li
                                                                 key={i}
@@ -354,12 +350,28 @@ export default function AddExam() {
                                                                 <span className="font-medium">{String.fromCharCode(65 + i)}.</span> {opt.text}
                                                                 {/* {isSelected && !isCorrect && <span className="ml-2 text-red-600 font-bold">❌</span>}
                                                                 {isCorrect && <span className="ml-2 text-green-600 font-bold">✅</span>} */}
+                                                                {isSelected && !isCorrect && (
+                                                                    <FiX className="ml-2 text-red-600 w-5 h-5 inline" />
+                                                                )}
+
+                                                                {isCorrect && (
+                                                                    <FiCheck className="ml-2 text-green-600 w-5 h-5 inline" />
+                                                                )}
                                                             </li>
                                                         );
                                                     })}
                                                 </ul>
                                             )}
-
+                                            {q.qnImage && (
+                                                <div className="mb-2 flex justify-start">
+                                                    <img
+                                                        src={q.qnImage}
+                                                        alt="Question Image"
+                                                        className="rounded-md object-contain"
+                                                        style={{ maxHeight: "150px" }}
+                                                    />
+                                                </div>
+                                            )}
                                             {/* Descriptive / Non-MCQ Answer */}
                                             {q.qnType !== "MCQ" && (
                                                 <div className="mt-2 ml-2 text-sm text-gray-700 pl-2">
