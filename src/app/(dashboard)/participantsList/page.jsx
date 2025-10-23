@@ -4,13 +4,16 @@ import React, { useContext, useEffect, useState } from 'react';
 import { FaFileExcel } from 'react-icons/fa';
 import { AuthContext } from '../../provider/AuthProvider';
 import Link from 'next/link';
-import { IoMdAddCircle } from 'react-icons/io';
+import jsPDF from "jspdf";
+import autoTable from "jspdf-autotable";
 import toast from 'react-hot-toast';
 import DeleteConfirmModal from '../../components/DeleteConfirmModal';
 import AOS from 'aos';
 import 'aos/dist/aos.css';
-import Select from 'react-select';
-import { FiEye, FiEdit, FiCheck, FiX } from "react-icons/fi";
+import { FiEye, FiCheckCircle, FiCheck, FiX } from "react-icons/fi";
+
+
+
 
 export default function AddExam() {
     const { loginData } = useContext(AuthContext);
@@ -21,16 +24,7 @@ export default function AddExam() {
     const [participateQuestionPaper, setParticipateQuestionPaper] = useState([]);
     const [showQuestionModal, setShowQuestionModal] = useState(false);
     const [isEditMode, setIsEditMode] = useState(false);
-    // const [formData, setFormData] = useState({
-    //     id: 0,
-    //     name: "",
-    //     setId: "",
-    //     totalMark: 0,
-    //     examTime: "00:00",
-    //     entryBy: loginData?.UserId,
-    //     isActive: true,
-    // });
-
+    const [filteredSet, setFilteredSet] = useState([]);
     // Initialize AOS animations
     useEffect(() => {
         AOS.init({ duration: 800, once: true });
@@ -53,18 +47,21 @@ export default function AddExam() {
             });
 
             const data = await response.json();
-            // console.log("Participate List", data);
+            console.log("Participate List", data);
 
             if (Array.isArray(data)) {
                 const formatted = data.map(item => ({
                     id: item.Id,
                     value: item.UserId,
+                    examName:item.ExamName,
                     label: item.Name,
                     password: item.Password,
                     org: item.CurrentOrg,
                     salary: item.CurrentSalary,
                     noticePeriod: item.NoticePeriod,
                 }));
+                console.log("Participate formatted  List", formatted);
+
                 setParticipateList(formatted);
             } else {
                 toast.error("Invalid participate data format");
@@ -91,12 +88,12 @@ export default function AddExam() {
                     parameters: { QueryChecker: 2, ParticipateId: participateId },
                 }),
             });
-            console.log("Question Paper Response",response)
+            console.log("Question Paper Response", response)
             const data = await response.json();
             console.log("Participate Question Paper", data);
 
             if (Array.isArray(data)) {
-               debugger;
+                debugger;
                 const groupedData = data.reduce((acc, item) => {
                     let existing = acc.find(q => q.qnId === item.QnId);
                     if (!existing) {
@@ -141,65 +138,66 @@ export default function AddExam() {
     };
 
     const handleSaveMarks = async (e) => {
-        debugger;
-    e.preventDefault();
-    // setLoading(true);
+  
+        e.preventDefault();
+        // setLoading(true);
+        try {
+         
+            const payload = participateQuestionPaper.map((q) => ({
+                Id: q.id,
+                ParticipateId: q.participateId,
+                QnId: q.qnId,
+                Answer: q.participateAns || "NA",
+                QnMark: q.qnMark || 0,
+                AnsMark: parseFloat(q.ansMark) || 0,
+                Remarks: null,
+                UpdateBy: loginData?.UserId,
+                UpdateDate: new Date().toISOString(),
+                IsActive: true,
+            }));
 
-    try {
-    debugger;
-        const payload = participateQuestionPaper.map((q) => ({
-            Id: q.id,
-            ParticipateId: q.participateId,
-            QnId: q.qnId,
-            Answer: q.participateAns || "NA",
-            QnMark: q.qnMark || 0,
-            AnsMark: parseFloat(q.ansMark) || 0,
-            Remarks: null,
-            UpdateBy: loginData?.UserId,
-            UpdateDate: new Date().toISOString(),
-            IsActive: true,
-        }));
+            console.log("Saving Evaluation Payload:", payload);
 
-        console.log("Saving Evaluation Payload:", payload);
+            const response = await fetch(`${config.API_BASE_URL}api/Participate/UpdateMarks`, {
+                method: "PUT",
+                headers: {
+                    "Content-Type": "application/json",
+                    TenantId: loginData?.tenantId,
+                },
+                body: JSON.stringify(payload),
+            });
 
-        const response = await fetch(`${config.API_BASE_URL}api/Participate/UpdateMarks`, {
-            method: "PUT",
-            headers: {
-                "Content-Type": "application/json",
-                TenantId: loginData?.tenantId,
-            },
-            body: JSON.stringify(payload),
-        });
+            if (!response.ok) {
+                const text = await response.text();
+                throw new Error(text || "Failed to update marks");
+            }
 
-        if (!response.ok) {
-            const text = await response.text();
-            throw new Error(text || "Failed to update marks");
+            toast.success("Evaluation saved successfully!");
+            setIsEditMode(false);
+        } catch (err) {
+            console.error("Error saving evaluation:", err);
+            toast.error(err.message || "Error saving evaluation");
+        } finally {
+            // setLoading(false);
         }
+    };
 
-        toast.success("Evaluation saved successfully!");
-        setIsEditMode(false);
-    } catch (err) {
-        console.error("Error saving evaluation:", err);
-        toast.error(err.message || "Error saving evaluation");
-    } finally {
-        // setLoading(false);
+    useEffect(() => {
+    
+    let searchData = participateList;
+    if (searchQuery.trim() !== '') {
+        const query = searchQuery.toLowerCase();
+        searchData = searchData.filter(item =>
+            item.label.toLowerCase().includes(query)||
+            item.examName.toLowerCase().includes(query)||
+            item.value.toLowerCase().includes(query)||
+            item.org.toLowerCase().includes(query) ||
+            item.password.toLowerCase().includes(query)||
+            item.salary.toString().toLowerCase().includes(query)
+        );
     }
-};
-
-
-    // useEffect(() => {
-    //     let participateList = setData;
-
-    //     if (searchQuery.trim() !== '') {
-    //         const query = searchQuery.toLowerCase();
-    //         participateList = participateList.filter(set =>
-    //             set.name.toLowerCase().includes(query) ||
-    //             set.examName.toLowerCase().includes(query)
-    //         );
-    //     }
-
-    //     setFilteredSet(filteredData);
-    // }, [searchQuery, setData]);
+    setFilteredSet(searchData);
+}, [searchQuery, participateList]);
 
     useEffect(() => {
         if (loginData?.tenantId) {
@@ -208,6 +206,178 @@ export default function AddExam() {
 
         }
     }, [loginData?.tenantId]);
+
+    const handleDownload = async () => {
+    if (!participateQuestionPaper || participateQuestionPaper.length === 0) return;
+
+    const doc = new jsPDF({
+        orientation: "portrait",
+        unit: "mm",
+        format: "a4",
+    });
+
+    const pageWidth = 210;
+    const pageHeight = 297; 
+    const margin = 14;
+    const topMargin = 14;
+    const bottomMargin = 14;
+    const usableWidth = pageWidth - 2 * margin;
+    let y = topMargin;
+
+    // Title - Candidate Name
+    doc.setFontSize(12);
+    doc.setFont("times", "bold");
+    doc.text(`${participateQuestionPaper[0].userInfo.name}`, pageWidth / 2, y, { align: "center" });
+
+    // Total Score - Top Right
+    const totalScore = participateQuestionPaper.reduce((sum, q) => sum + (parseFloat(q.ansMark) || 0), 0);
+    const totalMark = participateQuestionPaper.reduce((sum, q) => sum + (parseFloat(q.qnMark) || 0), 0);
+    doc.setFontSize(12);
+    doc.setFont("times", "bold");
+    doc.text(`Total Scored: ${totalScore} / ${totalMark}`, pageWidth - margin, y, { align: "right" });
+    y += 10;
+
+    // Candidate Info
+    const infoText = `Current Organization: ${participateQuestionPaper[0].userInfo.org} |Current Salary: ${participateQuestionPaper[0].userInfo.salary} | Notice Period: ${participateQuestionPaper[0].userInfo.noticePeriod} days`;
+    const infoLines = doc.splitTextToSize(infoText, usableWidth);
+    infoLines.forEach(line => {
+        doc.text(line, pageWidth / 2, y, { align: "center" });
+        y += 6;
+    });
+    y += 4;
+
+    // Helper: Convert image URL to Base64
+    const getBase64FromUrl = (url) => {
+        return new Promise((resolve, reject) => {
+            const img = new Image();
+            img.crossOrigin = 'Anonymous';
+            img.src = url;
+            img.onload = function () {
+                const canvas = document.createElement('canvas');
+                canvas.width = img.width;
+                canvas.height = img.height;
+                const ctx = canvas.getContext('2d');
+                ctx.drawImage(img, 0, 0);
+                resolve(canvas.toDataURL('image/jpeg'));
+            };
+            img.onerror = function (err) {
+                reject(err);
+            };
+        });
+    };
+
+    // Questions Loop
+    for (const [index, q] of participateQuestionPaper.entries()) {
+         if (y + 10 > pageHeight - bottomMargin) {
+            doc.addPage();
+            y = topMargin;
+        }
+
+        // Question text (Bold, consistent font size)
+        doc.setFontSize(10);
+        doc.setFont("times", "bold");
+        const questionLines = doc.splitTextToSize(`${index + 1}. ${q.question}`, usableWidth - 50);
+        questionLines.forEach((line, i) => {
+            doc.text(line, margin, y);
+
+            if (i === 0) {
+                
+                doc.setFont("times", "bold");
+                doc.setFontSize(10);
+                const markText = `Mark: ${q.qnMark} | Score: ${q.ansMark || 0}`;
+                doc.text(markText, pageWidth - margin, y, { align: "right" });
+            }
+            y += 6;
+        });
+
+        // Question image
+        if (q.qnImage) {
+            try {
+                const imgBase64 = await getBase64FromUrl(q.qnImage);
+                const imgProps = doc.getImageProperties(imgBase64);
+                const imgWidth = 50;
+                const imgHeight = (imgProps.height * imgWidth) / imgProps.width;
+
+                if (y + imgHeight > pageHeight - bottomMargin) {
+                    doc.addPage();
+                    y = topMargin;
+                }
+
+                doc.addImage(imgBase64, 'JPEG', margin, y, imgWidth, imgHeight);
+                y += imgHeight + 5;
+            } catch (err) {
+                console.error("Failed to add image", err);
+            }
+        }
+
+        // MCQ options with symbol
+        if (q.qnType === "MCQ" && q.options.length > 0) {
+            doc.setFontSize(8);
+            doc.setFont("times", "normal");
+            q.options.forEach((opt, i) => {
+                const prefix = String.fromCharCode(65 + i) + ". ";
+                let symbol = "";
+
+                if (opt.adminAnswer) symbol = "(Correct Ans)";
+                else if (q.participateAns === opt.text) symbol = "(Applicant Ans)";
+
+                const optionText = `${prefix}${opt.text}${symbol ? " " + symbol : ""}`;
+                const optionLines = doc.splitTextToSize(optionText, usableWidth - 4);
+
+                optionLines.forEach(line => {
+                      if (y + 5 > pageHeight - bottomMargin) {
+                        doc.addPage();
+                        y = topMargin;
+                    }
+                    doc.text(line, margin + 4, y);
+                    y += 5;
+                });
+            });
+        }
+
+        // Descriptive Answer - Justified
+        if (q.qnType !== "MCQ") {
+            doc.setFontSize(8);
+            // ensure sentence has spaces between words
+            let rawText = q.participateAns || "No Answer Provided";
+            rawText = rawText.replace(/([a-z])([A-Z])/g, '$1 $2').replace(/\s+/g, ' ').trim();
+
+            const text = `Answer: ${rawText}`;
+            const words = text.split(" ");
+
+            // Bold "Answer:" only
+            doc.setFont("times", "bold");
+            doc.text("Answer:", margin, y);
+            const answerLabelWidth = doc.getTextWidth("Answer: ");
+            doc.setFont("times", "normal");
+
+            let x = margin + answerLabelWidth;
+            const lineHeight = 5;
+
+            words.slice(1).forEach(word => {
+                const wordWidth = doc.getTextWidth(word + " ");
+                  if (x + wordWidth > margin + usableWidth) {
+                    y += lineHeight;
+                    if (y + lineHeight > pageHeight - bottomMargin) {
+                        doc.addPage();
+                        y = topMargin;
+                    }
+                    x = margin;
+                }
+                doc.text(word, x, y);
+                x += wordWidth;
+            });
+
+            y += 8;
+        }
+
+        y += 6; // spacing after each question
+    }
+
+    // Save PDF
+    doc.save(`${participateQuestionPaper[0].userInfo.name}_answers.pdf`);
+};
+
 
 
     return (
@@ -286,47 +456,41 @@ export default function AddExam() {
                     <table className="min-w-full text-sm text-left text-gray-600">
                         <thead className="bg-gray-100 text-xs uppercase text-gray-700">
                             <tr className="border-b">
-                                <th className="px-4 py-2 text-center">SL</th>
-                                <th className="px-4 py-2 text-center">Name</th>
-                                <th className="px-4 py-2 text-center">User ID</th>
-                                <th className="px-4 py-2 text-center">Password</th>
-                                <th className="px-4 py-2 text-center">Organization</th>
-                                <th className="px-4 py-2 text-center">Salary</th>
+                                <th className="px-4 py-2">SL</th>
+                                <th className="px-4 py-2">Exam Name</th>
+                                <th className="px-4 py-2">Name</th>
+                                <th className="px-4 py-2">User ID</th>
+                                <th className="px-4 py-2">Password</th>
+                                <th className="px-4 py-2">Organization</th>
+                                <th className="px-4 py-2">Salary</th>
                                 <th className="px-4 py-2 text-center">Notice Period (days)</th>
                                 <th className="px-4 py-2 text-center">Exam Paper</th>
                             </tr>
                         </thead>
 
                         <tbody className="bg-white text-xs text-gray-700">
-                            {participateList.length === 0 ? (
+                            {filteredSet.length === 0 ? (
                                 <tr key="no-participants">
                                     <td colSpan="7" className="text-center py-4">No participants found</td>
                                 </tr>
                             ) : (
-                                participateList.map((item, index) => (
+                                filteredSet.map((item, index) => (
                                     <tr key={`${item.value}-${index}`} className="border-b border-gray-300 hover:bg-gray-50">
-                                        <td data-label="SL" className="px-4 py-2 text-center">{index + 1}</td>
-                                        <td data-label="Name" className="px-4 py-2 text-center">{item.label}</td>
-                                        <td data-label="User ID" className="px-4 py-2 text-center">{item.value}</td>
-                                        <td data-label="Password" className="px-4 py-2 text-center">{item.password}</td>
-                                        <td data-label="Organization" className="px-4 py-2 text-center">{item.org}</td>
-                                        <td data-label="Salary" className="px-4 py-2 text-center">৳ {item.salary}</td>
+                                        <td data-label="SL" className="px-4 py-2">{index + 1}</td>
+                                        <td data-label="Name" className="px-4 py-2">{item.examName}</td>
+                                        <td data-label="Name" className="px-4 py-2">{item.label}</td>
+                                        <td data-label="User ID" className="px-4 py-2">{item.value}</td>
+                                        <td data-label="Password" className="px-4 py-2">{item.password}</td>
+                                        <td data-label="Organization" className="px-4 py-2">{item.org}</td>
+                                        <td data-label="Salary" className="px-4 py-2">৳ {item.salary}</td>
                                         <td data-label="Notice Period" className="px-4 py-2 text-center">{item.noticePeriod}</td>
                                         <td data-label="Actions" className="px-4 py-2 text-center">
                                             <div className="flex justify-center gap-3">
-                                                {/* <button
-                                                    onClick={async () => {
-                                                        await fetchParticipateQuestionPaper(item.id);
-                                                        setShowQuestionModal(true);
-                                                    }}
-                                                    className="flex items-center gap-1 px-3 py-1.5 text-sm font-medium border border-blue-500 text-blue-500 rounded hover:bg-blue-500 hover:text-white transition-colors duration-200"
-                                                >
-                                                    <FiEye className="text-base" />
-                                                </button> */}
 
                                                 <button
                                                     onClick={async () => {
                                                         await fetchParticipateQuestionPaper(item.id);
+                                                        setIsEditMode(false);
                                                         setShowQuestionModal(true);
                                                     }}
                                                     className="flex items-center gap-1 px-3 py-1.5 text-sm font-medium border border-blue-500 text-blue-500 rounded hover:bg-blue-500 hover:text-white transition-colors duration-200"
@@ -342,7 +506,7 @@ export default function AddExam() {
                                                     }}
                                                     className="flex items-center gap-1 px-3 py-1.5 text-sm font-medium border border-green-500 text-green-500 rounded hover:bg-green-500 hover:text-white transition-colors duration-200"
                                                 >
-                                                    <FiEdit className="text-base" />
+                                                    <FiCheckCircle className="text-base" />
                                                 </button>
 
                                             </div>
@@ -363,7 +527,10 @@ export default function AddExam() {
                     <div className="bg-white rounded-xl p-6 w-full max-w-4xl mt-10 relative">
                         {/* Close button */}
                         <button
-                            onClick={() => setShowQuestionModal(false)}
+                            onClick={() => {
+                                setShowQuestionModal(false);
+                                setIsEditMode(false);
+                            }}
                             className="absolute top-4 right-4 text-gray-500 hover:text-gray-800 text-lg font-bold"
                         >
                             ✕
@@ -372,10 +539,22 @@ export default function AddExam() {
                         {participateQuestionPaper.length > 0 ? (
                             <>
                                 {/* Candidate Info */}
-                                <div className="mb-8 p-4 bg-blue-50 rounded-lg text-center">
-                                    <h2 className="text-2xl font-semibold text-blue-700">
-                                        {participateQuestionPaper[0].userInfo.name}
-                                    </h2>
+                                <div className="mb-8 p-4 bg-blue-50 rounded-lg text-center mt-5">
+                                    <div className="relative ">
+                                        {/* Name - centered */}
+                                        <h2 className="text-2xl font-semibold text-blue-700 text-center">
+                                            {participateQuestionPaper[0]?.userInfo.name}
+                                        </h2>
+
+                                        {/* Total Score - right aligned */}
+                                        <div className="absolute top-1/2 right-4 -translate-y-1/2 font-semibold text-gray-800 border-3 border-black-400 rounded-lg p-2">
+                                            Total Scored:{" "}
+                                            {participateQuestionPaper.reduce((sum, q) => sum + (parseFloat(q.ansMark) || 0), 0)}{" "}
+                                            /{" "}
+                                            {participateQuestionPaper.reduce((sum, q) => sum + (parseFloat(q.qnMark) || 0), 0)}
+                                        </div>
+                                    </div>
+
                                     <p className="text-sm text-gray-700 mt-1">
                                         {/* <span className="font-medium">User ID:</span> {participateQuestionPaper[0].userInfo.userId} |{" "} */}
                                         <span className="font-medium">Current Organization:</span> {participateQuestionPaper[0].userInfo.org} |{" "}
@@ -387,7 +566,7 @@ export default function AddExam() {
                                 {/* Question List */}
                                 <div className="space-y-4">
                                     {participateQuestionPaper.map((q, index) => (
-                                        <div key={q.qnId} className="p-4 bg-gray-50 rounded-lg">
+                                        <div key={q.qnId} className="p-4">
                                             {/* Question Header + Marks */}
                                             <div className="flex justify-between items-start mb-2">
                                                 <div>
@@ -418,7 +597,9 @@ export default function AddExam() {
                                                                     : "text-gray-700"
                                                                     }`}
                                                             >
-                                                                <span className="font-medium">{String.fromCharCode(65 + i)}.</span> {opt.text}
+                                                                {/* <span className="font-medium">{String.fromCharCode(65 + i)}.</span> {opt.text} */}
+                                                                <span className="font-medium mr-1">{String.fromCharCode(65 + i)}.</span>{opt.text}
+
                                                                 {isSelected && !isCorrect && (
                                                                     <FiX className="ml-2 text-red-600 w-5 h-5 inline" />
                                                                 )}
@@ -441,17 +622,13 @@ export default function AddExam() {
                                                     />
                                                 </div>
                                             )}
-                                            {/* Descriptive / Non-MCQ Answer */}
-                                            {/* {q.qnType !== "MCQ" && (
-                                                <div className="mt-2 ml-2 text-sm text-gray-700 pl-2">
-                                                    <span className="font-medium">Answer:</span>{" "}
-                                                    <span className="text-blue-700">{q.participateAns || "No Answer Provided"}</span>
-                                                </div>
-                                            )} */}
                                             {q.qnType !== "MCQ" && (
-                                                <div className="mt-2 ml-2 text-sm text-gray-700 pl-2">
-                                                    <span className="font-medium">Answer:</span>{" "}
-                                                    <span className="text-blue-700">{q.participateAns || "No Answer Provided"}</span>
+                                                <div className="mt-2 ml-2 text-sm pl-2">
+                                                    <span className="font-bold">Answer:</span>{" "}
+                                                    {/* <span >{q.participateAns || "No Answer Provided"}</span> */}
+                                                    <span style={{ textAlign: "justify", display: "block" }}>
+                                                        {q.participateAns || "No Answer Provided"}
+                                                    </span>
 
                                                     {/* Editable AnsMark field when in edit mode */}
                                                     {isEditMode ? (
@@ -499,9 +676,21 @@ export default function AddExam() {
                         </div> */}
 
                         <div className="flex justify-end space-x-2 pt-4">
+                            {!isEditMode && (
+                                <button
+                                    type="button"
+                                    onClick={handleDownload}
+                                    className="px-3 py-1 bg-blue-600 text-white rounded hover:bg-blue-700"
+                                >
+                                    Download
+                                </button>
+                            )}
                             <button
                                 type="button"
-                                onClick={() => setShowQuestionModal(false)}
+                                onClick={() => {
+                                    setShowQuestionModal(false);
+                                    setIsEditMode(false);
+                                }}
                                 className="px-3 py-1 bg-gray-500 text-white rounded hover:bg-gray-600"
                             >
                                 Cancel

@@ -9,6 +9,8 @@
   },
   "dependencies": {
     "aos": "^2.3.4",
+    "jspdf": "^3.0.3",
+    "jspdf-autotable": "^5.0.2",
     "next": "15.5.4",
     "react": "19.1.0",
     "react-dom": "19.1.0",
