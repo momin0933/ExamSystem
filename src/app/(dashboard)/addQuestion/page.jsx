@@ -29,12 +29,9 @@ export default function AddQuestion() {
     const [subjectData, setSubjectData] = useState([]);
     const [isViewModalOpen, setIsViewModalOpen] = useState(false);
     const [viewData, setViewData] = useState(null);
-    const [questionImage, setQuestionImage] = useState(null);
-    const [isUploading, setIsUploading] = useState(false);
-    const [existingImage, setExistingImage] = useState(null);
     const [selectedSubject, setSelectedSubject] = useState("");
-
-    const [formData, setFormData] = useState({
+    const [previewQuestions, setPreviewQuestions] = useState([]);
+    const initialFormData = {
         id: 0,
         subId: "",
         qnTypeId: "",
@@ -43,7 +40,12 @@ export default function AddQuestion() {
         remarks: "",
         sketch: null,
         options: [{ optionText: "", isCorrect: false }],
-    });
+    };
+    const [formData, setFormData] = useState({ ...initialFormData });
+    const [questionImage, setQuestionImage] = useState(null);
+    const [existingImage, setExistingImage] = useState(null);
+    const [descriptiveMode, setDescriptiveMode] = useState("");
+    const [isUploading, setIsUploading] = useState(false);
 
     useEffect(() => {
         AOS.init({ duration: 800, once: true });
@@ -143,7 +145,28 @@ export default function AddQuestion() {
         setQuestionImage(null);
         setExistingImage(null);
     };
+    const handleExcelUpload = (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
 
+        const reader = new FileReader();
+        reader.onload = (evt) => {
+            const data = evt.target.result;
+            const workbook = XLSX.read(data, { type: "binary" });
+            const sheetName = workbook.SheetNames[0];
+            const worksheet = workbook.Sheets[sheetName];
+            const json = XLSX.utils.sheet_to_json(worksheet);
+        
+            const questions = json.map((row) => ({
+                question: row.Question || "No Question Text",
+                mark: row.Mark || 1,
+                image: row.Image || null,
+            }));
+
+            setPreviewQuestions(questions);
+        };
+        reader.readAsBinaryString(file);
+    };
     const handleChange = (e) => {
         const { name, value, type } = e.target;
         setFormData((prev) => ({
@@ -228,88 +251,197 @@ export default function AddQuestion() {
         }));
     };
 
-    const handleSubmit = async (e) => {
-        e.preventDefault();
-        setLoading(true);
+    // const handleSubmit = async (e) => {
+    //     e.preventDefault();
+    //     setLoading(true);
 
+    //     try {
+    //         if (!formData.subId) throw new Error("Please select a subject.");
+    //         if (!formData.qnTypeId) throw new Error("Please select a question type.");
+    //         if (!formData.name.trim()) throw new Error("Question text cannot be empty.");
+    //         if (!formData.mark) throw new Error("Question Mark cannot be empty.");
+
+    //         if (formData.qnTypeId === "2" && formData.options.length < 2)
+    //             throw new Error("MCQ must have at least 2 options.");
+
+    //         // FIX: Consistent path handling for new images
+    //         let sketchPath = null;
+    //         if (formData.sketch) {
+    //             sketchPath = `/images/questionImage/${formData.sketch}`;
+    //         }
+
+    //         const payload = {
+    //             SubId: Number(formData.subId),
+    //             Name: formData.name.trim(),
+    //             QnType: formData.qnTypeId === "1" ? "Descriptive" : "MCQ",
+    //             Mark: formData.mark ?? 0,
+    //             Remarks: formData.remarks ?? "",
+    //             EntryBy: loginData?.UserId,
+    //             Sketch: sketchPath, // Use the consistent path
+    //             Options: formData.qnTypeId === "2"
+    //                 ? formData.options
+    //                     .filter(opt => opt.optionText && opt.optionText.trim() !== "")
+    //                     .map(opt => ({
+    //                         OptionText: opt.optionText.trim(),
+    //                         Answer: opt.isCorrect ?? false
+    //                     }))
+    //                 : null
+    //         };
+
+    //         console.log("Add Payload:", payload);
+
+    //         const response = await fetch(`${config.API_BASE_URL}api/Question/Add`, {
+    //             method: "POST",
+    //             headers: {
+    //                 'Content-Type': 'application/json',
+    //                 TenantId: loginData.tenantId,
+    //             },
+    //             body: JSON.stringify(payload),
+    //         });
+
+    //         const result = await response.json();
+    //         if (!response.ok) throw new Error(result?.error || "Insert failed");
+
+    //         toast.success("Question added successfully");
+
+    //         // Reset form and refresh data
+    //         setFormData({
+    //             id: 0,
+    //             subId: "",
+    //             qnTypeId: "",
+    //             name: "",
+    //             mark: 0,
+    //             remarks: "",
+    //             sketch: null,
+    //             options: [{ optionText: "", isCorrect: false }],
+    //         });
+    //         setQuestionImage(null);
+    //         //fetchQuestionsBySubject();
+    //         if (selectedSubject && selectedSubject !== "") {
+
+    //             await fetchQuestionsBySubject(selectedSubject);
+    //         } else {
+
+    //             await fetchQuestionsBySubject();
+    //         }
+
+    //     } catch (err) {
+    //         console.error(err);
+    //         toast.error(err.message);
+    //     } finally {
+    //         setLoading(false);
+    //         setShowModal(false);
+    //     }
+    // };
+
+    const handleSubmit = async ({ isBulk = false }) => {
         try {
-            if (!formData.subId) throw new Error("Please select a subject.");
-            if (!formData.qnTypeId) throw new Error("Please select a question type.");
-            if (!formData.name.trim()) throw new Error("Question text cannot be empty.");
-            if (!formData.mark) throw new Error("Question Mark cannot be empty.");
+            setLoading(true);
 
-            if (formData.qnTypeId === "2" && formData.options.length < 2)
-                throw new Error("MCQ must have at least 2 options.");
+            let questionsToSave = [];
 
-            // FIX: Consistent path handling for new images
-            let sketchPath = null;
-            if (formData.sketch) {
-                sketchPath = `/images/questionImage/${formData.sketch}`;
+            if (isBulk) {
+                // Bulk mode: use previewQuestions
+                if (!previewQuestions || previewQuestions.length === 0) {
+                    throw new Error("No questions to save in bulk mode");
+                }
+
+                questionsToSave = previewQuestions.map(q => {
+                    const sketchPath = q.sketch ? `/images/questionImage/${q.sketch}` : null;
+                    return {
+                        SubId: Number(q.subId),
+                        Name: q.name?.trim(),
+                        QnType: q.qnTypeId === "1" ? "Descriptive" : "MCQ",
+                        Mark: q.mark ?? 0,
+                        Remarks: q.remarks ?? "",
+                        EntryBy: loginData?.UserId,
+                        Sketch: sketchPath,
+                        Options:
+                            q.qnTypeId === "2"
+                                ? q.options
+                                    .filter(opt => opt.optionText && opt.optionText.trim() !== "")
+                                    .map(opt => ({
+                                        OptionText: opt.optionText.trim(),
+                                        Answer: opt.isCorrect ?? false,
+                                    }))
+                                : null,
+                    };
+                });
+            } else {
+                // Single question: manual mode
+                if (!formData.subId) throw new Error("Please select a subject.");
+                if (!formData.qnTypeId) throw new Error("Please select a question type.");
+                if (!formData.name.trim()) throw new Error("Question text cannot be empty.");
+                if (!formData.mark) throw new Error("Question Mark cannot be empty.");
+
+                if (formData.qnTypeId === "2" && formData.options.length < 2)
+                    throw new Error("MCQ must have at least 2 options.");
+
+                const sketchPath = formData.sketch ? `/images/questionImage/${formData.sketch}` : null;
+
+                questionsToSave = [
+                    {
+                        SubId: Number(formData.subId),
+                        Name: formData.name.trim(),
+                        QnType: formData.qnTypeId === "1" ? "Descriptive" : "MCQ",
+                        Mark: formData.mark ?? 0,
+                        Remarks: formData.remarks ?? "",
+                        EntryBy: loginData?.UserId,
+                        Sketch: sketchPath,
+                        Options:
+                            formData.qnTypeId === "2"
+                                ? formData.options
+                                    .filter(opt => opt.optionText && opt.optionText.trim() !== "")
+                                    .map(opt => ({
+                                        OptionText: opt.optionText.trim(),
+                                        Answer: opt.isCorrect ?? false,
+                                    }))
+                                : null,
+                    },
+                ];
             }
 
-            const payload = {
-                SubId: Number(formData.subId),
-                Name: formData.name.trim(),
-                QnType: formData.qnTypeId === "1" ? "Descriptive" : "MCQ",
-                Mark: formData.mark ?? 0,
-                Remarks: formData.remarks ?? "",
-                EntryBy: loginData?.UserId,
-                Sketch: sketchPath, // Use the consistent path
-                Options: formData.qnTypeId === "2"
-                    ? formData.options
-                        .filter(opt => opt.optionText && opt.optionText.trim() !== "")
-                        .map(opt => ({
-                            OptionText: opt.optionText.trim(),
-                            Answer: opt.isCorrect ?? false
-                        }))
-                    : null
-            };
+            const endpoint = isBulk
+                ? `${config.API_BASE_URL}api/Question/SaveBulk`
+                : `${config.API_BASE_URL}api/Question/Add`;
 
-            console.log("Add Payload:", payload);
-
-            const response = await fetch(`${config.API_BASE_URL}api/Question/Add`, {
+            const response = await fetch(endpoint, {
                 method: "POST",
                 headers: {
-                    'Content-Type': 'application/json',
+                    "Content-Type": "application/json",
                     TenantId: loginData.tenantId,
                 },
-                body: JSON.stringify(payload),
+                body: JSON.stringify(questionsToSave),
             });
 
             const result = await response.json();
-            if (!response.ok) throw new Error(result?.error || "Insert failed");
+            if (!response.ok) throw new Error(result?.error || "Failed to save questions");
 
-            toast.success("Question added successfully");
+            toast.success(isBulk ? "Questions saved successfully!" : "Question added successfully!");
 
-            // Reset form and refresh data
-            setFormData({
-                id: 0,
-                subId: "",
-                qnTypeId: "",
-                name: "",
-                mark: 0,
-                remarks: "",
-                sketch: null,
-                options: [{ optionText: "", isCorrect: false }],
-            });
-            setQuestionImage(null);
-            //fetchQuestionsBySubject();
-            if (selectedSubject && selectedSubject !== "") {
-
-                await fetchQuestionsBySubject(selectedSubject);
+            // Reset form and preview
+            if (!isBulk) {
+                setFormData({ ...initialFormData });
+                setQuestionImage(null);
+                setShowModal(false);
             } else {
-
-                await fetchQuestionsBySubject();
+                setPreviewQuestions([]);
             }
 
+            // Refresh questions list
+            if (selectedSubject && selectedSubject !== "") {
+                await fetchQuestionsBySubject(selectedSubject);
+            } else {
+                await fetchQuestionsBySubject();
+            }
         } catch (err) {
             console.error(err);
             toast.error(err.message);
         } finally {
             setLoading(false);
-            setShowModal(false);
         }
     };
+
 
     const openEditModal = async (question) => {
         if (!question?.QuestionId) return console.error("Invalid question ID");
@@ -791,7 +923,21 @@ export default function AddQuestion() {
             {showModal && (
                 <div className="fixed inset-0 bg-black/20 bg-opacity-40 z-50 flex items-center justify-center">
                     <div data-aos="zoom-in" className="bg-white rounded-lg shadow-md  w-full max-w-xl relative overflow-y-auto max-h-[90vh] p-6">
-                        <button onClick={() => setShowModal(false)} className="btn btn-sm btn-circle btn-ghost absolute right-2 top-2">✕</button>
+                        <button
+                            onClick={() => {
+                               
+                                setFormData({ ...initialFormData });
+                                setQuestionImage(null);
+                                setExistingImage(null);
+                                setDescriptiveMode("");
+                                setIsUploading(false);
+                                setShowModal(false); 
+                            }}
+                            className="btn btn-sm btn-circle btn-ghost absolute right-2 top-2"
+                        >
+                            ✕
+                        </button>
+
 
                         <div className="border-b border-gray-300 pb-2 mb-4">
                             <h3 className="font-bold text-lg"> {isEdit ? "Update Question" : "Question Entry"}</h3>
@@ -820,7 +966,7 @@ export default function AddQuestion() {
                                 </select>
                             </div>
 
-                            {formData.qnTypeId === "1" && (
+                            {/* {formData.qnTypeId === "1" && (
                                 <>
                                     <div className="flex items-center gap-2 mt-2">
                                         <label className="w-1/3 text-sm font-semibold text-gray-700">Question</label>
@@ -880,7 +1026,170 @@ export default function AddQuestion() {
 
                                     {isUploading && <p className="text-xs text-gray-500 mt-1">Uploading...</p>}
                                 </>
+                            )} */}
+
+                            {formData.qnTypeId === "1" && (
+                                <div className="flex items-center gap-2 mt-2">
+                                    <label className="w-1/3 text-sm font-semibold text-gray-700">Add Mode</label>
+                                    <select
+                                        value={descriptiveMode}
+                                        onChange={(e) => setDescriptiveMode(e.target.value)}
+                                        className="w-full border rounded p-2"
+                                    >
+                                        <option value="">-- Select Mode --</option>
+                                        <option value="manual">Add Manual Question</option>
+                                        <option value="excel">Upload Excel File</option>
+                                    </select>
+                                </div>
                             )}
+
+                            {/* --- Manual Question Mode --- */}
+                            {descriptiveMode === "manual" && (
+                                <div className="mt-2 space-y-2">
+                                    {/* Question Text */}
+                                    <div className="flex items-center gap-2">
+                                        <label className="w-1/3 text-sm font-semibold text-gray-700">Question</label>
+                                        <textarea
+                                            name="name"
+                                            value={formData.name}
+                                            onChange={handleChange}
+                                            className="w-full border px-3 py-2 rounded"
+                                            rows={3}
+                                            required
+                                        />
+                                    </div>
+
+                                    {/* Mark */}
+                                    <div className="flex items-center gap-2">
+                                        <label className="w-1/3 text-sm font-semibold text-gray-700">Mark</label>
+                                        <input
+                                            type="number"
+                                            name="mark"
+                                            value={formData.mark ?? ""}
+                                            onChange={handleChange}
+                                            className="w-full border px-3 py-2 rounded"
+                                            required
+                                            min="0"
+                                            step="0.1"
+                                        />
+                                    </div>
+
+                                    {/* Image Upload */}
+                                    {/* <div className="flex flex-col gap-2">
+                                        {existingImage && (
+                                            <div className="relative">
+                                                <img src={existingImage} alt="Existing Question" className="w-32 h-32 object-cover rounded" />
+                                                <button
+                                                    type="button"
+                                                    className="absolute top-0 right-0 bg-red-500 text-white px-1 rounded"
+                                                    onClick={() => setExistingImage(null)}
+                                                >
+                                                    X
+                                                </button>
+                                            </div>
+                                        )}
+
+                                        {questionImage && (
+                                            <div className="relative">
+                                                <img src={URL.createObjectURL(questionImage)} alt="Preview" className="w-32 h-32 object-cover rounded" />
+                                                <button
+                                                    type="button"
+                                                    className="absolute top-0 right-0 bg-red-500 text-white px-1 rounded"
+                                                    onClick={() => setQuestionImage(null)}
+                                                >
+                                                    X
+                                                </button>
+                                            </div>
+                                        )}
+
+                                        <input
+                                            type="file"
+                                            accept="image/*"
+                                            onChange={(e) => setQuestionImage(e.target.files[0])}
+                                            className="border p-1 rounded"
+                                        />
+                                    </div> */}
+
+                                    <div className="w-full h-40 rounded-lg border border-gray-300 flex flex-col items-center justify-center overflow-hidden relative">
+                                        {questionImage ? (
+                                            <img
+                                                src={questionImage}
+                                                alt="Question Preview"
+                                                className="object-cover w-full h-full"
+                                            />
+                                        ) : existingImage ? (
+                                            <img
+                                                src={existingImage}
+                                                alt="Existing Question Image"
+                                                className="object-cover w-full h-full"
+                                            />
+                                        ) : (
+                                            <span className="text-gray-400 text-sm">Select Question Image</span>
+                                        )}
+
+                                        <input
+                                            type="file"
+                                            accept="image/*"
+                                            className="absolute inset-0 opacity-0 cursor-pointer"
+                                            onChange={handleQuestionImageChange}
+                                            disabled={isUploading}
+                                        />
+                                    </div>
+
+                                    <div className="flex items-center space-x-4 mt-2">
+                                        <button
+                                            type="button"
+                                            onClick={() => document.querySelector('input[type="file"]').click()}
+                                            className={`px-3 py-1 rounded bg-blue-600 text-white text-sm hover:bg-blue-700`}
+                                        >
+                                            {questionImage || existingImage ? "Change" : "Upload"}
+                                        </button>
+
+                                        {(questionImage || existingImage) && (
+                                            <button
+                                                type="button"
+                                                onClick={handleRemoveQuestionImage}
+                                                className="text-gray-600 text-sm hover:text-red-500"
+                                            >
+                                                Remove
+                                            </button>
+                                        )}
+                                    </div>
+                                </div>
+                            )}
+
+                            {/* --- Excel Upload Mode --- */}
+                            {descriptiveMode === "excel" && (
+                                <div className="mt-4 space-y-2">
+                                    <label className="w-full text-sm font-semibold text-gray-700">Upload Excel File</label>
+                                    <input
+                                        type="file"
+                                        accept=".xlsx, .xls"
+                                        onChange={handleExcelUpload}
+                                        className="border p-2 rounded w-full"
+                                    />
+
+                                    {previewQuestions.length > 0 && (
+                                        <div className="mt-2">
+                                            <h5 className="font-semibold text-gray-700 mb-1">Preview Questions</h5>
+                                            <div className="space-y-2">
+                                                {previewQuestions.map((q, idx) => (
+                                                    <div key={idx} className="p-2 border rounded bg-gray-50">
+                                                        <div className="flex justify-between items-start">
+                                                            <p>{idx + 1}. {q.question}</p>
+                                                            <span className="text-gray-600 font-semibold">Mark: {q.mark}</span>
+                                                        </div>
+                                                        {q.image && (
+                                                            <img src={q.image} alt="Question" className="mt-1 w-full h-32 object-cover rounded" />
+                                                        )}
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        </div>
+                                    )}
+                                </div>
+                            )}
+
 
                             {formData.qnTypeId === "2" && (
                                 <>
@@ -971,7 +1280,18 @@ export default function AddQuestion() {
 
                             {formData.qnTypeId && (
                                 <div className="flex justify-end space-x-2 pt-4">
-                                    <button type="button" onClick={() => setShowModal(false)} className="px-3 py-1 bg-gray-500 text-white rounded hover:bg-gray-600">
+                                    <button
+                                        type="button"
+                                        onClick={() => {
+
+                                            setFormData({ ...initialFormData });
+                                            setQuestionImage(null);
+                                            setExistingImage(null);
+                                            setDescriptiveMode("");
+                                            setShowModal(false);
+                                        }}
+                                        className="px-3 py-1 bg-gray-500 text-white rounded hover:bg-gray-600"
+                                    >
                                         Cancel
                                     </button>
                                     <button type="submit" className="px-3 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">
