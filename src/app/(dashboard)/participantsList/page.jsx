@@ -53,7 +53,7 @@ export default function AddExam() {
                 const formatted = data.map(item => ({
                     id: item.Id,
                     value: item.UserId,
-                    examName:item.ExamName,
+                    examName: item.ExamName,
                     label: item.Name,
                     password: item.Password,
                     org: item.CurrentOrg,
@@ -88,12 +88,11 @@ export default function AddExam() {
                     parameters: { QueryChecker: 2, ParticipateId: participateId },
                 }),
             });
-            console.log("Question Paper Response", response)
             const data = await response.json();
             console.log("Participate Question Paper", data);
 
             if (Array.isArray(data)) {
-                debugger;
+
                 const groupedData = data.reduce((acc, item) => {
                     let existing = acc.find(q => q.qnId === item.QnId);
                     if (!existing) {
@@ -103,6 +102,7 @@ export default function AddExam() {
                             qnId: item.QnId,
                             question: item.Question,
                             qnType: item.QnType,
+                            examName: item.ExamName,
                             // options: item.OptionText ? [item.OptionText] : [],
                             options: item.OptionText ? [{ text: item.OptionText, adminAnswer: item.AdminAnswer }] : [],
                             participateAns: item.ParticipateAns,
@@ -138,11 +138,11 @@ export default function AddExam() {
     };
 
     const handleSaveMarks = async (e) => {
-  
+
         e.preventDefault();
         // setLoading(true);
         try {
-         
+
             const payload = participateQuestionPaper.map((q) => ({
                 Id: q.id,
                 ParticipateId: q.participateId,
@@ -183,21 +183,21 @@ export default function AddExam() {
     };
 
     useEffect(() => {
-    
-    let searchData = participateList;
-    if (searchQuery.trim() !== '') {
-        const query = searchQuery.toLowerCase();
-        searchData = searchData.filter(item =>
-            item.label.toLowerCase().includes(query)||
-            item.examName.toLowerCase().includes(query)||
-            item.value.toLowerCase().includes(query)||
-            item.org.toLowerCase().includes(query) ||
-            item.password.toLowerCase().includes(query)||
-            item.salary.toString().toLowerCase().includes(query)
-        );
-    }
-    setFilteredSet(searchData);
-}, [searchQuery, participateList]);
+
+        let searchData = participateList;
+        if (searchQuery.trim() !== '') {
+            const query = searchQuery.toLowerCase();
+            searchData = searchData.filter(item =>
+                item.label.toLowerCase().includes(query) ||
+                item.examName.toLowerCase().includes(query) ||
+                item.value.toLowerCase().includes(query) ||
+                item.org.toLowerCase().includes(query) ||
+                item.password.toLowerCase().includes(query) ||
+                item.salary.toString().toLowerCase().includes(query)
+            );
+        }
+        setFilteredSet(searchData);
+    }, [searchQuery, participateList]);
 
     useEffect(() => {
         if (loginData?.tenantId) {
@@ -208,175 +208,178 @@ export default function AddExam() {
     }, [loginData?.tenantId]);
 
     const handleDownload = async () => {
-    if (!participateQuestionPaper || participateQuestionPaper.length === 0) return;
+        if (!participateQuestionPaper || participateQuestionPaper.length === 0) return;
 
-    const doc = new jsPDF({
-        orientation: "portrait",
-        unit: "mm",
-        format: "a4",
-    });
-
-    const pageWidth = 210;
-    const pageHeight = 297; 
-    const margin = 14;
-    const topMargin = 14;
-    const bottomMargin = 14;
-    const usableWidth = pageWidth - 2 * margin;
-    let y = topMargin;
-
-    // Title - Candidate Name
-    doc.setFontSize(12);
-    doc.setFont("times", "bold");
-    doc.text(`${participateQuestionPaper[0].userInfo.name}`, pageWidth / 2, y, { align: "center" });
-
-    // Total Score - Top Right
-    const totalScore = participateQuestionPaper.reduce((sum, q) => sum + (parseFloat(q.ansMark) || 0), 0);
-    const totalMark = participateQuestionPaper.reduce((sum, q) => sum + (parseFloat(q.qnMark) || 0), 0);
-    doc.setFontSize(12);
-    doc.setFont("times", "bold");
-    doc.text(`Total Scored: ${totalScore} / ${totalMark}`, pageWidth - margin, y, { align: "right" });
-    y += 10;
-
-    // Candidate Info
-    const infoText = `Current Organization: ${participateQuestionPaper[0].userInfo.org} |Current Salary: ${participateQuestionPaper[0].userInfo.salary} | Notice Period: ${participateQuestionPaper[0].userInfo.noticePeriod} days`;
-    const infoLines = doc.splitTextToSize(infoText, usableWidth);
-    infoLines.forEach(line => {
-        doc.text(line, pageWidth / 2, y, { align: "center" });
-        y += 6;
-    });
-    y += 4;
-
-    // Helper: Convert image URL to Base64
-    const getBase64FromUrl = (url) => {
-        return new Promise((resolve, reject) => {
-            const img = new Image();
-            img.crossOrigin = 'Anonymous';
-            img.src = url;
-            img.onload = function () {
-                const canvas = document.createElement('canvas');
-                canvas.width = img.width;
-                canvas.height = img.height;
-                const ctx = canvas.getContext('2d');
-                ctx.drawImage(img, 0, 0);
-                resolve(canvas.toDataURL('image/jpeg'));
-            };
-            img.onerror = function (err) {
-                reject(err);
-            };
+        const doc = new jsPDF({
+            orientation: "portrait",
+            unit: "mm",
+            format: "a4",
         });
-    };
 
-    // Questions Loop
-    for (const [index, q] of participateQuestionPaper.entries()) {
-         if (y + 10 > pageHeight - bottomMargin) {
-            doc.addPage();
-            y = topMargin;
-        }
+        const pageWidth = 210;
+        const pageHeight = 297;
+        const margin = 14;
+        const topMargin = 14;
+        const bottomMargin = 14;
+        const usableWidth = pageWidth - 2 * margin;
+        let y = topMargin;
 
-        // Question text (Bold, consistent font size)
-        doc.setFontSize(10);
+        // Title - Candidate Name
+        doc.setFontSize(12);
         doc.setFont("times", "bold");
-        const questionLines = doc.splitTextToSize(`${index + 1}. ${q.question}`, usableWidth - 50);
-        questionLines.forEach((line, i) => {
-            doc.text(line, margin, y);
+        doc.text(`${participateQuestionPaper[0].userInfo.name}`, pageWidth / 2, y, { align: "center" });
+        y += 6;
+        doc.text(`Exam Name: ${participateQuestionPaper[0].examName}`, pageWidth / 2, y, { align: "center" });
 
-            if (i === 0) {
-                
-                doc.setFont("times", "bold");
-                doc.setFontSize(10);
-                const markText = `Mark: ${q.qnMark} | Score: ${q.ansMark || 0}`;
-                doc.text(markText, pageWidth - margin, y, { align: "right" });
-            }
+
+        // Total Score - Top Right
+        const totalScore = participateQuestionPaper.reduce((sum, q) => sum + (parseFloat(q.ansMark) || 0), 0);
+        const totalMark = participateQuestionPaper.reduce((sum, q) => sum + (parseFloat(q.qnMark) || 0), 0);
+        doc.setFontSize(12);
+        doc.setFont("times", "bold");
+        doc.text(`Total Scored: ${totalScore} / ${totalMark}`, pageWidth - margin, y, { align: "right" });
+        y += 8;
+
+        // Candidate Info
+        const infoText = `Current Organization: ${participateQuestionPaper[0].userInfo.org} |Current Salary: ${participateQuestionPaper[0].userInfo.salary} | Notice Period: ${participateQuestionPaper[0].userInfo.noticePeriod} days`;
+        const infoLines = doc.splitTextToSize(infoText, usableWidth);
+        infoLines.forEach(line => {
+            doc.text(line, pageWidth / 2, y, { align: "center" });
             y += 6;
         });
+        y += 4;
 
-        // Question image
-        if (q.qnImage) {
-            try {
-                const imgBase64 = await getBase64FromUrl(q.qnImage);
-                const imgProps = doc.getImageProperties(imgBase64);
-                const imgWidth = 50;
-                const imgHeight = (imgProps.height * imgWidth) / imgProps.width;
+        // Helper: Convert image URL to Base64
+        const getBase64FromUrl = (url) => {
+            return new Promise((resolve, reject) => {
+                const img = new Image();
+                img.crossOrigin = 'Anonymous';
+                img.src = url;
+                img.onload = function () {
+                    const canvas = document.createElement('canvas');
+                    canvas.width = img.width;
+                    canvas.height = img.height;
+                    const ctx = canvas.getContext('2d');
+                    ctx.drawImage(img, 0, 0);
+                    resolve(canvas.toDataURL('image/jpeg'));
+                };
+                img.onerror = function (err) {
+                    reject(err);
+                };
+            });
+        };
 
-                if (y + imgHeight > pageHeight - bottomMargin) {
-                    doc.addPage();
-                    y = topMargin;
-                }
-
-                doc.addImage(imgBase64, 'JPEG', margin, y, imgWidth, imgHeight);
-                y += imgHeight + 5;
-            } catch (err) {
-                console.error("Failed to add image", err);
+        // Questions Loop
+        for (const [index, q] of participateQuestionPaper.entries()) {
+            if (y + 10 > pageHeight - bottomMargin) {
+                doc.addPage();
+                y = topMargin;
             }
-        }
 
-        // MCQ options with symbol
-        if (q.qnType === "MCQ" && q.options.length > 0) {
-            doc.setFontSize(8);
-            doc.setFont("times", "normal");
-            q.options.forEach((opt, i) => {
-                const prefix = String.fromCharCode(65 + i) + ". ";
-                let symbol = "";
-
-                if (opt.adminAnswer) symbol = "(Correct Ans)";
-                else if (q.participateAns === opt.text) symbol = "(Applicant Ans)";
-
-                const optionText = `${prefix}${opt.text}${symbol ? " " + symbol : ""}`;
-                const optionLines = doc.splitTextToSize(optionText, usableWidth - 4);
-
-                optionLines.forEach(line => {
-                      if (y + 5 > pageHeight - bottomMargin) {
-                        doc.addPage();
-                        y = topMargin;
-                    }
-                    doc.text(line, margin + 4, y);
-                    y += 5;
-                });
-            });
-        }
-
-        // Descriptive Answer - Justified
-        if (q.qnType !== "MCQ") {
-            doc.setFontSize(8);
-            // ensure sentence has spaces between words
-            let rawText = q.participateAns || "No Answer Provided";
-            rawText = rawText.replace(/([a-z])([A-Z])/g, '$1 $2').replace(/\s+/g, ' ').trim();
-
-            const text = `Answer: ${rawText}`;
-            const words = text.split(" ");
-
-            // Bold "Answer:" only
+            // Question text (Bold, consistent font size)
+            doc.setFontSize(10);
             doc.setFont("times", "bold");
-            doc.text("Answer:", margin, y);
-            const answerLabelWidth = doc.getTextWidth("Answer: ");
-            doc.setFont("times", "normal");
+            const questionLines = doc.splitTextToSize(`${index + 1}. ${q.question}`, usableWidth - 50);
+            questionLines.forEach((line, i) => {
+                doc.text(line, margin, y);
 
-            let x = margin + answerLabelWidth;
-            const lineHeight = 5;
+                if (i === 0) {
 
-            words.slice(1).forEach(word => {
-                const wordWidth = doc.getTextWidth(word + " ");
-                  if (x + wordWidth > margin + usableWidth) {
-                    y += lineHeight;
-                    if (y + lineHeight > pageHeight - bottomMargin) {
+                    doc.setFont("times", "bold");
+                    doc.setFontSize(10);
+                    const markText = `Mark: ${q.qnMark} | Score: ${q.ansMark || 0}`;
+                    doc.text(markText, pageWidth - margin, y, { align: "right" });
+                }
+                y += 6;
+            });
+
+            // Question image
+            if (q.qnImage) {
+                try {
+                    const imgBase64 = await getBase64FromUrl(q.qnImage);
+                    const imgProps = doc.getImageProperties(imgBase64);
+                    const imgWidth = 50;
+                    const imgHeight = (imgProps.height * imgWidth) / imgProps.width;
+
+                    if (y + imgHeight > pageHeight - bottomMargin) {
                         doc.addPage();
                         y = topMargin;
                     }
-                    x = margin;
-                }
-                doc.text(word, x, y);
-                x += wordWidth;
-            });
 
-            y += 8;
+                    doc.addImage(imgBase64, 'JPEG', margin, y, imgWidth, imgHeight);
+                    y += imgHeight + 5;
+                } catch (err) {
+                    console.error("Failed to add image", err);
+                }
+            }
+
+            // MCQ options with symbol
+            if (q.qnType === "MCQ" && q.options.length > 0) {
+                doc.setFontSize(8);
+                doc.setFont("times", "normal");
+                q.options.forEach((opt, i) => {
+                    const prefix = String.fromCharCode(65 + i) + ". ";
+                    let symbol = "";
+
+                    if (opt.adminAnswer) symbol = "(Correct Ans)";
+                    else if (q.participateAns === opt.text) symbol = "(Applicant Ans)";
+
+                    const optionText = `${prefix}${opt.text}${symbol ? " " + symbol : ""}`;
+                    const optionLines = doc.splitTextToSize(optionText, usableWidth - 4);
+
+                    optionLines.forEach(line => {
+                        if (y + 5 > pageHeight - bottomMargin) {
+                            doc.addPage();
+                            y = topMargin;
+                        }
+                        doc.text(line, margin + 4, y);
+                        y += 5;
+                    });
+                });
+            }
+
+            // Descriptive Answer - Justified
+            if (q.qnType !== "MCQ") {
+                doc.setFontSize(8);
+                // ensure sentence has spaces between words
+                let rawText = q.participateAns || "No Answer Provided";
+                rawText = rawText.replace(/([a-z])([A-Z])/g, '$1 $2').replace(/\s+/g, ' ').trim();
+
+                const text = `Answer: ${rawText}`;
+                const words = text.split(" ");
+
+                // Bold "Answer:" only
+                doc.setFont("times", "bold");
+                doc.text("Answer:", margin, y);
+                const answerLabelWidth = doc.getTextWidth("Answer: ");
+                doc.setFont("times", "normal");
+
+                let x = margin + answerLabelWidth;
+                const lineHeight = 5;
+
+                words.slice(1).forEach(word => {
+                    const wordWidth = doc.getTextWidth(word + " ");
+                    if (x + wordWidth > margin + usableWidth) {
+                        y += lineHeight;
+                        if (y + lineHeight > pageHeight - bottomMargin) {
+                            doc.addPage();
+                            y = topMargin;
+                        }
+                        x = margin;
+                    }
+                    doc.text(word, x, y);
+                    x += wordWidth;
+                });
+
+                y += 8;
+            }
+
+            y += 6; // spacing after each question
         }
 
-        y += 6; // spacing after each question
-    }
-
-    // Save PDF
-    doc.save(`${participateQuestionPaper[0].userInfo.name}_answers.pdf`);
-};
+        // Save PDF
+        doc.save(`${participateQuestionPaper[0].userInfo.name}_answers.pdf`);
+    };
 
 
 
@@ -538,15 +541,14 @@ export default function AddExam() {
 
                         {participateQuestionPaper.length > 0 ? (
                             <>
-                                {/* Candidate Info */}
+
                                 <div className="mb-8 p-4 bg-blue-50 rounded-lg text-center mt-5">
-                                    <div className="relative ">
-                                        {/* Name - centered */}
-                                        <h2 className="text-2xl font-semibold text-blue-700 text-center">
-                                            {participateQuestionPaper[0]?.userInfo.name}
+                                    <div className="relative ">                          
+                                        <h2 className="text-2xl font-semibold text-center flex flex-col items-center justify-center">
+                                            <span className="text-blue-700">{participateQuestionPaper[0]?.userInfo.name}</span>
+                                            <span className="text-black">Exam Name: {participateQuestionPaper[0]?.examName}</span>
                                         </h2>
 
-                                        {/* Total Score - right aligned */}
                                         <div className="absolute top-1/2 right-4 -translate-y-1/2 font-semibold text-gray-800 border-3 border-black-400 rounded-lg p-2">
                                             Total Scored:{" "}
                                             {participateQuestionPaper.reduce((sum, q) => sum + (parseFloat(q.ansMark) || 0), 0)}{" "}
