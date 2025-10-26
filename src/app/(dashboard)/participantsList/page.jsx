@@ -416,7 +416,6 @@ export default function AddExam() {
             <div className="rounded-md font-roboto overflow-hidden">
                 <div className="mb-6">
                     <h1 className="text-2xl font-bold text-gray-800">Participant Management</h1>
-                    <p className="text-gray-600 mt-2">View and manage participant exam papers</p>
                 </div>
                 <div className="bg-gradient-to-r from-[#2c3e50] to-[#3498db] sticky top-0 z-20 shadow-md">
 
