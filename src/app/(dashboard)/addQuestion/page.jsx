@@ -156,7 +156,7 @@ export default function AddQuestion() {
             const sheetName = workbook.SheetNames[0];
             const worksheet = workbook.Sheets[sheetName];
             const json = XLSX.utils.sheet_to_json(worksheet);
-        
+
             const questions = json.map((row) => ({
                 question: row.Question || "No Question Text",
                 mark: row.Mark || 1,
@@ -341,40 +341,33 @@ export default function AddQuestion() {
             let questionsToSave = [];
 
             if (isBulk) {
-                // Bulk mode: use previewQuestions
+                // Bulk mode: Excel upload
                 if (!previewQuestions || previewQuestions.length === 0) {
                     throw new Error("No questions to save in bulk mode");
                 }
 
-                questionsToSave = previewQuestions.map(q => {
+                questionsToSave = previewQuestions.map((q) => {
                     const sketchPath = q.sketch ? `/images/questionImage/${q.sketch}` : null;
+
                     return {
-                        SubId: Number(q.subId),
-                        Name: q.name?.trim(),
-                        QnType: q.qnTypeId === "1" ? "Descriptive" : "MCQ",
+                        SubId: Number(formData.subId), // fallback to selected subject if Excel does not have SubId
+                        Name: q.name?.trim() || q.question?.trim(), // map Excel question column to Name
+                        QnType: "Descriptive", // Excel mode only allows Descriptive
                         Mark: q.mark ?? 0,
                         Remarks: q.remarks ?? "",
                         EntryBy: loginData?.UserId,
                         Sketch: sketchPath,
-                        Options:
-                            q.qnTypeId === "2"
-                                ? q.options
-                                    .filter(opt => opt.optionText && opt.optionText.trim() !== "")
-                                    .map(opt => ({
-                                        OptionText: opt.optionText.trim(),
-                                        Answer: opt.isCorrect ?? false,
-                                    }))
-                                : null,
+                        Options: null, // Descriptive question has no options
                     };
                 });
             } else {
-                // Single question: manual mode
+                // Manual single question
                 if (!formData.subId) throw new Error("Please select a subject.");
                 if (!formData.qnTypeId) throw new Error("Please select a question type.");
-                if (!formData.name.trim()) throw new Error("Question text cannot be empty.");
-                if (!formData.mark) throw new Error("Question Mark cannot be empty.");
+                if (!formData.name?.trim()) throw new Error("Question text cannot be empty.");
+                if (formData.mark === undefined || formData.mark === null) throw new Error("Question Mark cannot be empty.");
 
-                if (formData.qnTypeId === "2" && formData.options.length < 2)
+                if (formData.qnTypeId.toString() === "2" && formData.options.length < 2)
                     throw new Error("MCQ must have at least 2 options.");
 
                 const sketchPath = formData.sketch ? `/images/questionImage/${formData.sketch}` : null;
@@ -383,16 +376,16 @@ export default function AddQuestion() {
                     {
                         SubId: Number(formData.subId),
                         Name: formData.name.trim(),
-                        QnType: formData.qnTypeId === "1" ? "Descriptive" : "MCQ",
+                        QnType: formData.qnTypeId.toString() === "1" ? "Descriptive" : "MCQ",
                         Mark: formData.mark ?? 0,
                         Remarks: formData.remarks ?? "",
                         EntryBy: loginData?.UserId,
                         Sketch: sketchPath,
                         Options:
-                            formData.qnTypeId === "2"
+                            formData.qnTypeId.toString() === "2"
                                 ? formData.options
-                                    .filter(opt => opt.optionText && opt.optionText.trim() !== "")
-                                    .map(opt => ({
+                                    .filter((opt) => opt.optionText && opt.optionText.trim() !== "")
+                                    .map((opt) => ({
                                         OptionText: opt.optionText.trim(),
                                         Answer: opt.isCorrect ?? false,
                                     }))
@@ -401,6 +394,7 @@ export default function AddQuestion() {
                 ];
             }
 
+            // Determine endpoint
             const endpoint = isBulk
                 ? `${config.API_BASE_URL}api/Question/SaveBulk`
                 : `${config.API_BASE_URL}api/Question/Add`;
@@ -414,7 +408,10 @@ export default function AddQuestion() {
                 body: JSON.stringify(questionsToSave),
             });
 
-            const result = await response.json();
+            let result = null;
+            const text = await response.text();
+            if (text) result = JSON.parse(text);
+
             if (!response.ok) throw new Error(result?.error || "Failed to save questions");
 
             toast.success(isBulk ? "Questions saved successfully!" : "Question added successfully!");
@@ -423,17 +420,14 @@ export default function AddQuestion() {
             if (!isBulk) {
                 setFormData({ ...initialFormData });
                 setQuestionImage(null);
+                setExistingImage(null);
                 setShowModal(false);
             } else {
                 setPreviewQuestions([]);
             }
 
             // Refresh questions list
-            if (selectedSubject && selectedSubject !== "") {
-                await fetchQuestionsBySubject(selectedSubject);
-            } else {
-                await fetchQuestionsBySubject();
-            }
+            await fetchQuestionsBySubject(selectedSubject || "");
         } catch (err) {
             console.error(err);
             toast.error(err.message);
@@ -441,6 +435,8 @@ export default function AddQuestion() {
             setLoading(false);
         }
     };
+
+
 
 
     const openEditModal = async (question) => {
@@ -925,13 +921,13 @@ export default function AddQuestion() {
                     <div data-aos="zoom-in" className="bg-white rounded-lg shadow-md  w-full max-w-xl relative overflow-y-auto max-h-[90vh] p-6">
                         <button
                             onClick={() => {
-                               
+
                                 setFormData({ ...initialFormData });
                                 setQuestionImage(null);
                                 setExistingImage(null);
                                 setDescriptiveMode("");
                                 setIsUploading(false);
-                                setShowModal(false); 
+                                setShowModal(false);
                             }}
                             className="btn btn-sm btn-circle btn-ghost absolute right-2 top-2"
                         >
@@ -943,7 +939,14 @@ export default function AddQuestion() {
                             <h3 className="font-bold text-lg"> {isEdit ? "Update Question" : "Question Entry"}</h3>
                         </div>
 
-                        <form onSubmit={isEdit ? handleUpdateSubmit : handleSubmit} className="space-y-4 text-sm">
+                        {/* <form onSubmit={isEdit ? handleUpdateSubmit : handleSubmit} className="space-y-4 text-sm"> */}
+                        <form
+                            onSubmit={(e) => {
+                                e.preventDefault();
+                                handleSubmit({ isBulk: descriptiveMode === "excel" });
+                            }}
+                            className="space-y-4 text-sm"
+                        >
                             <div className="flex items-center gap-2 mt-2">
                                 <label className="w-1/3 text-sm font-semibold text-gray-700">Subject Name</label>
                                 <Select
@@ -1161,13 +1164,19 @@ export default function AddQuestion() {
                             {/* --- Excel Upload Mode --- */}
                             {descriptiveMode === "excel" && (
                                 <div className="mt-4 space-y-2">
-                                    <label className="w-full text-sm font-semibold text-gray-700">Upload Excel File</label>
-                                    <input
-                                        type="file"
-                                        accept=".xlsx, .xls"
-                                        onChange={handleExcelUpload}
-                                        className="border p-2 rounded w-full"
-                                    />
+                                    <div className="flex items-center gap-2 mt-2">
+                                        <label className="w-1/3 text-sm font-semibold text-gray-700">
+                                            Upload Excel File
+                                        </label>
+                                        <input
+                                            type="file"
+                                            accept=".xlsx, .xls"
+                                            onChange={handleExcelUpload}
+                                            className="w-full border rounded p-2"
+                                        />
+                                    </div>
+
+
 
                                     {previewQuestions.length > 0 && (
                                         <div className="mt-2">
@@ -1180,7 +1189,11 @@ export default function AddQuestion() {
                                                             <span className="text-gray-600 font-semibold">Mark: {q.mark}</span>
                                                         </div>
                                                         {q.image && (
-                                                            <img src={q.image} alt="Question" className="mt-1 w-full h-32 object-cover rounded" />
+                                                            // <img src={q.image} alt="Question" className="mt-1 w-full h-32 object-cover rounded" />
+                                                            // <img src={`/images/${q.image}`} alt="Question" className="mt-1 w-full h-32 object-cover rounded" />
+                                                            <img src={`data:image/png;base64,${q.image}`} alt="Question" className="mt-1 w-full h-32 object-cover rounded" />
+
+
                                                         )}
                                                     </div>
                                                 ))}
