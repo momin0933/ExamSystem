@@ -33,14 +33,20 @@ export default function DeleteConfirmModal({ isOpen, onClose, onConfirm, statusM
         {statusMessage ? (
           <div
             className={`flex flex-col items-center gap-4 ${showAnimation
-                ? "opacity-100 scale-100 transition duration-500 ease-out"
-                : "opacity-0 scale-90"
+              ? "opacity-100 scale-100 transition duration-500 ease-out"
+              : "opacity-0 scale-90"
               }`}
           >
             <FiTrash2 className="text-red-600 text-4xl animate-bounce" />
-            <h2 className="text-lg font-semibold text-gray-800">
+            {/* <h2 className="text-lg font-semibold text-gray-800">
               {statusMessage.includes("Cannot delete") ? "Cannot Delete" : "Deleted!"}
+            </h2> */}
+            <h2 className="text-lg font-semibold text-gray-800">
+              {statusMessage.toLowerCase().includes("cannot") || statusMessage.toLowerCase().includes("used in a question set")
+                ? "Cannot Delete"
+                : "Deleted!"}
             </h2>
+
             <p className="text-sm text-gray-700 text-center">{statusMessage}</p>
           </div>
         ) : (

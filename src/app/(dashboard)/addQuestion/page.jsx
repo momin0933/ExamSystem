@@ -593,7 +593,6 @@ export default function AddQuestion() {
 
 
     const handleConfirmDelete = async () => {
-        debugger;
         if (!selectedId) return;
 
         try {
@@ -615,6 +614,8 @@ export default function AddQuestion() {
                     // Check for specific error messages
                     if (errorText.includes("used in a question set")) {
                         errorMessage = "This question cannot be deleted because it is already used in a question set.";
+                        setDeleteSuccessMsg(errorMessage);
+                        return;
                     } else if (errorText.includes("Question not found")) {
                         errorMessage = "Question not found.";
                     }
@@ -645,6 +646,12 @@ export default function AddQuestion() {
             setIsDeleteModalOpen(false);
         }
     };
+    useEffect(() => {
+        document.body.style.overflow = 'hidden';
+        return () => {
+            document.body.style.overflow = 'unset';
+        };
+    }, []);
 
     return (
         <div className="overflow-x-auto p-3">
@@ -677,7 +684,9 @@ export default function AddQuestion() {
                     .fixed-table td:last-child { border-bottom: none; }
                 }
             `}</style>
-
+            <div className="mb-4">
+                <h1 className="text-2xl font-bold text-gray-800">Question Bank</h1>
+            </div>
             <div className="rounded-md font-roboto overflow-hidden">
                 <div className="bg-gradient-to-r from-[#2c3e50] to-[#3498db] sticky top-0 z-20 shadow-md">
                     <div className="px-3 py-2 flex flex-wrap justify-between items-center gap-2">
@@ -739,59 +748,61 @@ export default function AddQuestion() {
                             <FaFileExcel onClick={handleDownloadExcel} className="text-lg cursor-pointer text-gray-50" />
                         </div>
                     </div>
-
-                    <table className="min-w-full text-sm text-left text-gray-600">
-                        <thead className="bg-gray-100 text-xs uppercase text-gray-700">
-                            <tr className="border-b">
-                                <th className="px-4 py-2 text-center">SL</th>
-                                <th className="px-4 py-2">Subject</th>
-                                <th className="px-4 py-2">Question</th>
-                                <th className="px-4 py-2">Type</th>
-                                <th className="px-4 py-2">Mark</th>
-                                <th className="px-4 py-2 text-center">Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody className="bg-white text-xs text-gray-700">
-                            {filteredQuestion.length === 0 ? (
-                                <tr>
-                                    <td colSpan="6" className="text-center py-4">No data found</td>
+                    <div className="border border-gray-300 rounded-b-md overflow-hidden max-h-[59vh] overflow-y-auto">
+                        <table className="min-w-full text-sm text-left text-gray-600">
+                            {/* <thead className="bg-gray-100 text-xs uppercase text-gray-700"> */}
+                            <thead className="bg-gray-100 text-xs uppercase text-gray-700 sticky top-0 z-10">
+                                <tr className="border-b">
+                                    <th className="px-4 py-2 text-center">SL</th>
+                                    <th className="px-4 py-2">Subject</th>
+                                    <th className="px-4 py-2">Question</th>
+                                    <th className="px-4 py-2">Type</th>
+                                    <th className="px-4 py-2">Mark</th>
+                                    <th className="px-4 py-2 text-center">Actions</th>
                                 </tr>
-                            ) : (
-                                filteredQuestion.map((question, index) => (
-                                    <tr key={index} className="border-b border-gray-300 hover:bg-gray-50">
-                                        <td data-label="SL" className="px-4 py-2 text-center">{index + 1}</td>
-                                        <td data-label="Subject" className="px-4 py-2">{question.SubjectName}</td>
-                                        <td data-label="Question" className="px-4 py-2">{question.Name}</td>
-                                        <td data-label="Type" className="px-4 py-2">{question.QnType}</td>
-                                        <td data-label="Mark" className="px-4 py-2">{question.Mark}</td>
-                                        <td data-label="Actions" className="px-4 py-2 text-center">
-                                            <div className="flex justify-center gap-3">
-                                                <button
-                                                    onClick={() => openViewModal(question)}
-                                                    className="flex items-center gap-1 px-3 py-1.5 text-sm font-medium border border-blue-500 text-blue-500 rounded hover:bg-blue-500 hover:text-white transition-colors duration-200"
-                                                >
-                                                    <FiEye className="text-base" />
-                                                </button>
-                                                <button
-                                                    onClick={() => openEditModal(question)}
-                                                    title="Edit"
-                                                    className="flex items-center gap-1 px-3 py-1.5 text-sm font-medium border border-[#00925a] text-[#00925a] rounded hover:bg-[#00925a] hover:text-white transition-colors duration-200"
-                                                >
-                                                    <FiEdit className="text-base" />
-                                                </button>
-                                                <button
-                                                    onClick={() => openDeleteModal(question)}
-                                                    className="flex items-center gap-1 px-3 py-1.5 text-sm font-medium border border-red-500 text-red-500 rounded hover:bg-red-500 hover:text-white transition-colors duration-200"
-                                                >
-                                                    <FiTrash2 className="text-base" />
-                                                </button>
-                                            </div>
-                                        </td>
+                            </thead>
+                            <tbody className="bg-white text-xs text-gray-700">
+                                {filteredQuestion.length === 0 ? (
+                                    <tr>
+                                        <td colSpan="6" className="text-center py-4">No data found</td>
                                     </tr>
-                                ))
-                            )}
-                        </tbody>
-                    </table>
+                                ) : (
+                                    filteredQuestion.map((question, index) => (
+                                        <tr key={index} className="border-b border-gray-300 hover:bg-gray-50">
+                                            <td data-label="SL" className="px-4 py-2 text-center">{index + 1}</td>
+                                            <td data-label="Subject" className="px-4 py-2">{question.SubjectName}</td>
+                                            <td data-label="Question" className="px-4 py-2">{question.Name}</td>
+                                            <td data-label="Type" className="px-4 py-2">{question.QnType}</td>
+                                            <td data-label="Mark" className="px-4 py-2 text-center">{question.Mark}</td>
+                                            <td data-label="Actions" className="px-4 py-2 text-center">
+                                                <div className="flex justify-center gap-3">
+                                                    <button
+                                                        onClick={() => openViewModal(question)}
+                                                        className="flex items-center gap-1 px-3 py-1.5 text-sm font-medium border border-blue-500 text-blue-500 rounded hover:bg-blue-500 hover:text-white transition-colors duration-200"
+                                                    >
+                                                        <FiEye className="text-base" />
+                                                    </button>
+                                                    <button
+                                                        onClick={() => openEditModal(question)}
+                                                        title="Edit"
+                                                        className="flex items-center gap-1 px-3 py-1.5 text-sm font-medium border border-[#00925a] text-[#00925a] rounded hover:bg-[#00925a] hover:text-white transition-colors duration-200"
+                                                    >
+                                                        <FiEdit className="text-base" />
+                                                    </button>
+                                                    <button
+                                                        onClick={() => openDeleteModal(question)}
+                                                        className="flex items-center gap-1 px-3 py-1.5 text-sm font-medium border border-red-500 text-red-500 rounded hover:bg-red-500 hover:text-white transition-colors duration-200"
+                                                    >
+                                                        <FiTrash2 className="text-base" />
+                                                    </button>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    ))
+                                )}
+                            </tbody>
+                        </table>
+                    </div>
 
                 </div>
             </div>

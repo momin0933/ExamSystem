@@ -236,7 +236,10 @@ export default function SubjectManage() {
             };
         }, []);
     return (
-        <div className="overflow-x-auto  ">
+        
+        <div className="overflow-x-auto p-3 ">
+
+            
             {/* ------------------- SEARCH & ACTIONS ------------------- */}
             <div className="rounded-md font-roboto overflow-hidden">
                 {/* Search & Add/Export */}
@@ -276,7 +279,7 @@ export default function SubjectManage() {
                 </div>
 
                 {/* ------------------- TABLE WRAPPER ------------------- */}
-                <div className="border border-gray-300 rounded-b-md overflow-hidden max-h-[75vh] overflow-y-auto">
+                <div className="border border-gray-300 rounded-b-md overflow-hidden max-h-[68vh] overflow-y-auto">
                     <table className="min-w-full text-sm text-left text-gray-600">
                         <thead className="bg-gray-100 text-xs uppercase text-gray-700 sticky top-0 z-10">
                             <tr className="border-b">

@@ -256,6 +256,10 @@ export default function AddSet() {
     };
 
     return (
+           <div className="overflow-x-auto p-3">
+            <div className="mb-4">
+                <h1 className="text-2xl font-bold text-gray-800">Question Set</h1>            
+            </div>
         <div className="rounded-md font-roboto overflow-hidden shadow-md">
             <div className="bg-gradient-to-r from-[#2c3e50] to-[#3498db] sticky top-0 z-20">
                 {/* Search & Actions */}
@@ -286,8 +290,10 @@ export default function AddSet() {
                 </div>
 
                 {/* Set List Table */}
+                <div className="border border-gray-300 rounded-b-md overflow-hidden max-h-[68vh] overflow-y-auto">
                 <table className="min-w-full text-sm text-left text-gray-600">
-                    <thead className="bg-gray-100 text-xs uppercase text-gray-700">
+                    {/* <thead className="bg-gray-100 text-xs uppercase text-gray-700"> */}
+                         <thead className="bg-gray-100 text-xs uppercase text-gray-700 sticky top-0 z-10">
                         <tr className="border-b">
                             <th className="px-4 py-2 text-center w-[5%]">SL</th>
                             <th className="px-4 py-2 text-center w-[25%]">Set Name</th>
@@ -328,6 +334,7 @@ export default function AddSet() {
                         )}
                     </tbody>
                 </table>
+                </div>
             </div>
 
             {isViewModalOpen && viewData && (
@@ -446,11 +453,7 @@ export default function AddSet() {
                     </div>
                 </div>
             )}
-
-
-
         </div>
-
-
+    </div>
     );
 }
