@@ -229,12 +229,15 @@ export default function SubjectManage() {
             setIsDeleteModalOpen(false);
         }
     };
+
      useEffect(() => {
             document.body.style.overflow = 'hidden';
             return () => {
                 document.body.style.overflow = 'unset';
             };
         }, []);
+
+        
     return (
         
         <div className="overflow-x-auto p-3 ">
