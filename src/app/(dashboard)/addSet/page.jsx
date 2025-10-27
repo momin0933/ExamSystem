@@ -386,14 +386,14 @@ export default function AddSet() {
                                             </span>
                                         </div> */}
 
-                                      <div className="mb-4 relative">
-  <h4 className="font-semibold text-gray-800 text-lg pr-16">
-    {index + 1}. {q.question}
-  </h4>
-  <span className="absolute top-0 right-0 text-gray-600 font-semibold">
-    Mark: {q.qnMark}
-  </span>
-</div>
+                                        <div className="mb-4 relative">
+                                            <h4 className="font-semibold text-gray-800 text-lg pr-16">
+                                                {index + 1}. {q.question}
+                                            </h4>
+                                            <span className="absolute top-0 right-0 text-gray-600 font-semibold">
+                                                Mark: {q.qnMark}
+                                            </span>
+                                        </div>
 
 
 
