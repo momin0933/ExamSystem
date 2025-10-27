@@ -255,7 +255,12 @@ export default function AddSet() {
         XLSX.utils.book_append_sheet(workbook, worksheet, 'Questions');
         XLSX.writeFile(workbook, 'Questions_Report.xlsx');
     };
-
+  useEffect(() => {
+        document.body.style.overflow = 'hidden';
+        return () => {
+            document.body.style.overflow = 'unset';
+        };
+    }, []);
     return (
            <div className="overflow-x-auto p-3">
             <div className="mb-4">
@@ -291,7 +296,7 @@ export default function AddSet() {
                 </div>
 
                 {/* Set List Table */}
-                <div className="border border-gray-300 rounded-b-md overflow-hidden max-h-[68vh] overflow-y-auto">
+                <div className="border border-gray-300 rounded-b-md overflow-hidden max-h-[60vh] overflow-y-auto">
                 <table className="min-w-full text-sm text-left text-gray-600">
                     {/* <thead className="bg-gray-100 text-xs uppercase text-gray-700"> */}
                          <thead className="bg-gray-100 text-xs uppercase text-gray-700 sticky top-0 z-10">
