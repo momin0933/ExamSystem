@@ -23,6 +23,10 @@ export default function SetEntryPage() {
     const [selectedSubject, setSelectedSubject] = useState("");
     const [totalMark, setTotalMark] = useState(0);
     const [showPreview, setShowPreview] = useState(false);
+    const [addMode, setAddMode] = useState("");
+    const [questionCount, setQuestionCount] = useState("");
+
+
 
     useEffect(() => {
         AOS.init({ duration: 800, once: true });
@@ -55,6 +59,12 @@ export default function SetEntryPage() {
             console.error(error);
             toast.error("Failed to load subjects");
         }
+    };
+
+    const handleModeChange = (mode) => {
+        setAddMode(mode);
+        setSelectedQuestions([]);
+        setTotalMark(0);
     };
 
 
@@ -149,7 +159,55 @@ export default function SetEntryPage() {
         }
     };
 
+
+    const fetchRandomQuestions = async () => {
+        if (!selectedSubject || !questionCount) {
+            toast.warning("Please select a subject and enter number of questions!");
+            return;
+        }
+
+        try {
+            const response = await fetch(`${config.API_BASE_URL}api/Procedure/GetData`, {
+                method: "POST",
+                headers: {
+                    TenantId: loginData.tenantId,
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify({
+                    operation: "",
+                    procedureName: "SP_GetRandomQuestions",
+                    parameters: {
+                        SubId: selectedSubject,
+                        NumberOfQuestions: parseInt(questionCount),
+                    },
+                }),
+            });
+
+            const data = await response.json();
+            console.log("random Question", data)
+            if (!Array.isArray(data) || data.length === 0) {
+                toast.error("No random questions found!");
+                return;
+            }
+
+            // Replace previous random questions (keep manual ones if needed)
+            setSelectedQuestions(
+                data.map(q => ({ ...q, isChecked: true }))
+            );
+
+            // Update total mark
+            const total = data.reduce((sum, q) => sum + (Number(q.Mark) || 0), 0);
+            setTotalMark(total);
+
+            toast.success(`${data.length} random questions loaded!`);
+        } catch (error) {
+            console.error("Error fetching random questions:", error);
+            toast.error("Failed to load random questions!");
+        }
+    };
+
     // Initialize component
+
     useEffect(() => {
         if (!loginData?.tenantId) return;
 
@@ -206,55 +264,105 @@ export default function SetEntryPage() {
         setShowPreview(true);
     };
 
+    // const handleSubmit = async (e) => {
+
+    //     debugger;
+    //     e.preventDefault();
+
+    //     if (!formData.name) return toast.error("Set Name required");
+    //     if (selectedQuestions.length === 0) return toast.error("Select at least 1 question");
+
+    //     try {
+    //         const questionsJson = selectedQuestions.map(q => ({
+    //             SubId: q.SubjectId,
+    //             QnId: q.QuestionId,
+    //             Mark: q.Mark || 0,
+    //             Remarks: q.Remarks || ''
+    //         }));
+
+    //         const queryChecker = isEdit ? 5 : 1;
+    //         const requestBody = {
+    //             operation: '',
+    //             procedureName: 'SP_QuestionSetManage',
+    //             parameters: {
+    //                 QueryChecker: queryChecker,
+    //                 Name: formData.name,
+    //                 Remarks: formData.remarks || '',
+    //                 TotalMark: totalMark || 0,
+    //                 EntryBy: loginData.UserId,
+    //                 Questions: JSON.stringify(questionsJson)
+    //             }
+    //         };
+
+    //         if (isEdit && editId) {
+    //             requestBody.parameters.Id = editId;
+    //         }
+
+    //         const response = await fetch(`${config.API_BASE_URL}api/Procedure/GetData`, {
+    //             method: 'POST',
+    //             headers: {
+    //                 TenantId: loginData.tenantId,
+    //                 'Content-Type': 'application/json',
+    //             },
+    //             body: JSON.stringify(requestBody)
+    //         });
+
+    //         if (!response.ok) throw new Error('Failed to save set');
+
+    //         toast.success(`Set ${isEdit ? 'updated' : 'saved'} successfully`);
+    //         router.push("/addSet"); // Redirect back to list page
+    //     } catch (err) {
+    //         toast.error(err.message);
+    //     }
+    // };
+
+
     const handleSubmit = async (e) => {
-        e.preventDefault();
+    e.preventDefault();
 
-        if (!formData.name) return toast.error("Set Name required");
-        if (selectedQuestions.length === 0) return toast.error("Select at least 1 question");
+    if (!formData.name) return toast.error("Set Name required");
+    if (selectedQuestions.length === 0) return toast.error("Select at least 1 question");
 
-        try {
-            const questionsJson = selectedQuestions.map(q => ({
-                SubId: q.SubjectId,
-                QnId: q.QuestionId,
-                Mark: q.Mark || 0,
-                Remarks: q.Remarks || ''
-            }));
+    try {
+        // Normalize questions so manual and random questions have same keys
+        const questionsJson = selectedQuestions.map(q => ({
+            SubId: q.SubjectId || q.SubId,
+            QnId: q.QuestionId || q.Id,
+            Mark: q.Mark || 0,
+            Remarks: q.Remarks || ''
+        }));
 
-            const queryChecker = isEdit ? 5 : 1;
-            const requestBody = {
+        const res = await fetch(`${config.API_BASE_URL}api/Procedure/GetData`, {
+            method: 'POST',
+            headers: {
+                TenantId: loginData.tenantId,
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
                 operation: '',
                 procedureName: 'SP_QuestionSetManage',
                 parameters: {
-                    QueryChecker: queryChecker,
+                    QueryChecker: isEdit ? 5 : 1, 
+                    Id: isEdit ? editId : undefined, 
                     Name: formData.name,
                     Remarks: formData.remarks || '',
                     TotalMark: totalMark || 0,
                     EntryBy: loginData.UserId,
                     Questions: JSON.stringify(questionsJson)
                 }
-            };
+            })
+        });
 
-            if (isEdit && editId) {
-                requestBody.parameters.Id = editId;
-            }
+        if (!res.ok) throw new Error(`Save failed: ${res.status}`);
 
-            const response = await fetch(`${config.API_BASE_URL}api/Procedure/GetData`, {
-                method: 'POST',
-                headers: {
-                    TenantId: loginData.tenantId,
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify(requestBody)
-            });
-
-            if (!response.ok) throw new Error('Failed to save set');
-
-            toast.success(`Set ${isEdit ? 'updated' : 'saved'} successfully`);
-            router.push("/addSet"); // Redirect back to list page
-        } catch (err) {
-            toast.error(err.message);
-        }
-    };
+        toast.success(`Set ${isEdit ? 'updated' : 'saved'} successfully`);
+        // Reset form or redirect
+        router.push("/addSet");
+    } catch (err) {
+        console.error(err);
+        toast.error('Failed to save set');
+    }
+};
 
     const handleChange = (e) => {
         const { name, value } = e.target;
@@ -291,6 +399,7 @@ export default function SetEntryPage() {
                 <div className="border border-gray-300 rounded-b-md overflow-hidden max-h-[68vh] overflow-y-auto">
                     <form onSubmit={handleSubmit} className="space-y-4 text-sm bg-white p-6 rounded-lg shadow">
                         {/* Set Name */}
+                        {/* ---------------- SET NAME ---------------- */}
                         <div className="flex items-center gap-3">
                             <label className="w-1/3 text-sm font-semibold text-gray-700">Set Name</label>
                             <input
@@ -303,8 +412,22 @@ export default function SetEntryPage() {
                             />
                         </div>
 
-                        {/* Total Mark */}
-                        <div className="flex items-center gap-3">
+                        {/* ---------------- ADD MODE ---------------- */}
+                        <div className="flex items-center gap-2 mt-2">
+                            <label className="w-1/3 text-sm font-semibold text-gray-700">Add Mode</label>
+                            <select
+                                value={addMode}
+                                onChange={(e) => handleModeChange(e.target.value)}
+                                className="w-full border rounded p-2"
+                            >
+                                <option value="">-- Select Mode --</option>
+                                <option value="manual">Add Manual Question</option>
+                                <option value="random">Add Random Question</option>
+                            </select>
+                        </div>
+
+                        {/* ---------------- TOTAL MARK ---------------- */}
+                        <div className="flex items-center gap-3 mt-2">
                             <label className="w-1/3 text-sm font-semibold text-gray-700">Total Mark</label>
                             <input
                                 name="mark"
@@ -314,31 +437,184 @@ export default function SetEntryPage() {
                             />
                         </div>
 
-                        {/* Subject Selection */}
-                        <div className="flex items-center gap-3">
-                            <label className="w-1/3 text-sm font-semibold text-gray-700">Select Subject</label>
-                            <div className="w-full">
-                                {subjectData.length > 0 && (
-                                    <Select
-                                        name="filterSubject"
-                                        value={subjectData.find(s => s.value === selectedSubject) || null}
-                                        onChange={(selected) => {
-                                            const subId = selected?.value || "";
-                                            setSelectedSubject(subId);
-                                            fetchQuestionsBySubject(subId);
-                                        }}
-                                        options={subjectData}
-                                        placeholder="Select or search subject..."
-                                        className="w-full"
-                                        isClearable
-                                        isSearchable
-                                    />
-                                )}
+                        {/* ---------------- CONDITIONAL BLOCKS ---------------- */}
+                        {addMode === "manual" && (
+                            <>
+                                {/* SUBJECT SELECTION (Manual Mode) */}
+                                <div className="flex items-center gap-3 mt-2">
+                                    <label className="w-1/3 text-sm font-semibold text-gray-700">Select Subject</label>
+                                    <div className="w-full">
+                                        {subjectData.length > 0 && (
+                                            <Select
+                                                name="filterSubject"
+                                                value={subjectData.find(s => s.value === selectedSubject) || null}
+                                                onChange={(selected) => {
+                                                    const subId = selected?.value || "";
+                                                    setSelectedSubject(subId);
+                                                    fetchQuestionsBySubject(subId);
+                                                }}
+                                                options={subjectData}
+                                                placeholder="Select or search subject..."
+                                                className="w-full"
+                                                isClearable
+                                                isSearchable
+                                            />
+                                        )}
+                                    </div>
+                                </div>
+
+                                {/* QUESTIONS LIST */}
+                                <div className="border border-gray-200 rounded-lg p-3 bg-gray-50 max-h-64 overflow-y-auto mt-2">
+                                    {questionData.length === 0 ? (
+                                        <p className="text-gray-400 text-sm italic text-center py-3">
+                                            {selectedSubject
+                                                ? "No questions found for this subject."
+                                                : "Please select a subject to view questions."}
+                                        </p>
+                                    ) : (
+                                        questionData.map((q) => (
+                                            <div
+                                                key={q.QuestionId}
+                                                className="flex items-center gap-2 p-2 bg-white border border-gray-200 rounded-md hover:shadow-sm transition"
+                                            >
+                                                <input
+                                                    type="checkbox"
+                                                    checked={isQuestionSelected(q.QuestionId)}
+                                                    onChange={() => handleCheckboxChange(q)}
+                                                    className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-400"
+                                                />
+                                                <label className="text-gray-700 text-sm flex-1">
+                                                    {q.Name}
+                                                    <span className="text-gray-500 ml-1">
+                                                        ({q.QnType} - {q.Mark} Marks)
+                                                    </span>
+                                                </label>
+                                            </div>
+                                        ))
+                                    )}
+                                </div>
+                            </>
+                        )}
+
+                        {addMode === "random" && (
+                            <>
+                                {/* RANDOM MODE SECTION */}
+                                <div className="space-y-3 mt-3 bg-gray-50 p-3 rounded-lg border">
+                                    {/* Select Subject */}
+                                    <div className="flex items-center gap-3">
+                                        <label className="w-1/3 text-sm font-semibold text-gray-700">Select Subject</label>
+                                        <div className="w-full">
+                                            <Select
+                                                value={subjectData.find(s => s.value === selectedSubject) || null}
+                                                onChange={(selected) => setSelectedSubject(selected?.value || "")}
+                                                options={subjectData}
+                                                placeholder="Select or search subject..."
+                                                className="w-full"
+                                                isClearable
+                                                isSearchable
+                                            />
+                                        </div>
+                                    </div>
+
+                                    {/* Number of Questions */}
+                                    <div className="flex items-center gap-3">
+                                        <label className="w-1/3 text-sm font-semibold text-gray-700">Number of Questions</label>
+                                        <input
+                                            type="number"
+                                            min="1"
+                                            value={questionCount}
+                                            onChange={(e) => setQuestionCount(e.target.value)}
+                                            className="w-full border border-gray-300 px-3 py-2 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-400"
+                                        />
+                                    </div>
+
+                                    {/* Add Random Button */}
+                                    <div className="flex justify-end mt-2">
+                                        <button
+                                            type="button"
+                                            onClick={fetchRandomQuestions}
+                                            className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
+                                        >
+                                            Add Random Questions
+                                        </button>
+                                    </div>
+                                    {selectedQuestions.length > 0 && (
+                                        <div className="mt-4 border rounded-lg bg-gray-50 p-3">
+                                            <h3 className="text-sm font-semibold text-gray-700 mb-2">
+                                                Selected Questions ({selectedQuestions.filter(q => q.isChecked).length})
+                                            </h3>
+
+                                            <ul className="space-y-2">
+                                                {selectedQuestions.map((q, index) => (
+                                                    <li
+                                                        key={q.QuestionId || index}
+                                                        className="flex items-center gap-2 pb-1"
+                                                    >
+                                                        <input
+                                                            type="checkbox"
+                                                            checked={q.isChecked || false}
+                                                            onChange={(e) => {
+                                                                const isChecked = e.target.checked;
+                                                                setSelectedQuestions((prev) =>
+                                                                    prev.map((x) =>
+                                                                        x.QuestionId === q.QuestionId
+                                                                            ? { ...x, isChecked }
+                                                                            : x
+                                                                    )
+                                                                );
+                                                            }}
+                                                            className="w-4 h-4 accent-blue-500"
+                                                        />
+
+                                                        <span className="text-gray-700 text-sm flex-1">
+                                                            {q.QuestionName || q.Name} ({q.QnType}) - {q.Mark} Marks
+                                                        </span>
+                                                    </li>
+                                                ))}
+                                            </ul>
+                                        </div>
+                                    )}
+
+
+                                </div>
+                            </>
+                        )}
+
+                        {/* ✅ Selected Questions Preview */}
+                        {/* {selectedQuestions.length > 0 && (
+                            <div className="mt-4 border rounded-lg bg-gray-50 p-3">
+                                <h3 className="text-sm font-semibold text-gray-700 mb-2">
+                                    Selected Questions ({selectedQuestions.length})
+                                </h3>
+                                <ul className="space-y-2">
+                                    {selectedQuestions.map((q, index) => (
+                                        <li
+                                            key={q.QuestionId || index}
+                                            className="flex justify-between items-center border-b pb-1"
+                                        >
+                                            <span className="text-gray-700 text-sm">
+                                                {q.QuestionName || q.Name} ({q.QnType}) - {q.Mark} Marks
+                                            </span>
+                                            <button
+                                                onClick={() =>
+                                                    setSelectedQuestions((prev) =>
+                                                        prev.filter((x) => x.QuestionId !== q.QuestionId)
+                                                    )
+                                                }
+                                                className="text-red-500 text-xs hover:underline"
+                                            >
+                                                Remove
+                                            </button>
+                                        </li>
+                                    ))}
+                                </ul>
                             </div>
-                        </div>
+                        )} */}
+
+
 
                         {/* Questions List */}
-                        <div className="border border-gray-200 rounded-lg p-3 bg-gray-50 max-h-64 overflow-y-auto">
+                        {/* <div className="border border-gray-200 rounded-lg p-3 bg-gray-50 max-h-64 overflow-y-auto">
                             {questionData.length === 0 ? (
                                 <p className="text-gray-400 text-sm italic text-center py-3">
                                     {selectedSubject ? "No questions found for this subject." : "Please select a subject to view questions."}
@@ -359,7 +635,7 @@ export default function SetEntryPage() {
                                     </div>
                                 ))
                             )}
-                        </div>
+                        </div> */}
 
                         {/* Preview Table */}
                         {/* {showPreview && selectedQuestions.length > 0 && (

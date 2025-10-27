@@ -129,12 +129,13 @@ export default function AddSet() {
                 const questionMap = new Map();
 
                 data.forEach((item) => {
-                    const key = item.QnId || item.Question; // use QnId if available
+                    const key = item.QuestionId; 
                     if (!questionMap.has(key)) {
                         questionMap.set(key, {
-                            qnId: key,
+                             qnId: item.QuestionId,
                             id: item.Id,
                             subjectName: item.SubjectName,
+                            // qnId:item.QuestionId,
                             question: item.Question || "No Question Text",
                             qnType: item.QnType,
                             qnMark: item.Mark,
@@ -154,7 +155,7 @@ export default function AddSet() {
                     Id: data[0].Id,
                     SetName: data[0].SetName,
                     TotalMark: data[0].TotalMark,
-                    TotalQuestions: questionMap.size, // number of unique questions
+                    TotalQuestions: questionMap.size,
                     Questions: Array.from(questionMap.values()),
                 };
 
