@@ -755,7 +755,7 @@ export default function AddQuestion() {
                     <div className="border border-gray-300 rounded-b-md overflow-hidden max-h-[59vh] overflow-y-auto">
                         <table className="min-w-full text-sm text-left text-gray-600">
                             {/* <thead className="bg-gray-100 text-xs uppercase text-gray-700"> */}
-                            <thead className="bg-gray-100 text-xs uppercase text-gray-700 sticky top-0 z-10">
+                            <thead className="bg-gray-100 text-xs uppercase text-gray-700 sticky top-0">
                                 <tr className="border-b">
                                     <th className="px-4 py-2 text-center">SL</th>
                                     <th className="px-4 py-2">Subject</th>
