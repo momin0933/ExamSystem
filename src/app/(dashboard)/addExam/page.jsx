@@ -20,19 +20,19 @@ export default function AddExam() {
   const { loginData } = useContext(AuthContext);
   // Search and Filter States
   const [searchQuery, setSearchQuery] = useState('');
-  
+
   // Modal Control States
   const [showModal, setShowModal] = useState(false);
   const [isEdit, setIsEdit] = useState(false);
   const [isViewModalOpen, setIsViewModalOpen] = useState(false);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
-  
+
   // Data States
   const [questionSet, setQuestionSet] = useState([]);
   const [exams, setExams] = useState([]);
   const [filteredExams, setFilteredExams] = useState([]);
   const [viewData, setViewData] = useState(null);
-  
+
   // Form States
   const [formData, setFormData] = useState({
     id: 0,
@@ -44,11 +44,11 @@ export default function AddExam() {
     entryBy: loginData?.UserId,
     isActive: true,
   });
-  
+
   // Time States
   const [examHour, setExamHour] = useState("00");
   const [examMinute, setExamMinute] = useState("00");
-  
+
   // Operation States
   const [loading, setLoading] = useState(false);
   const [editId, setEditId] = useState(null);
@@ -93,7 +93,7 @@ export default function AddExam() {
   }, [loginData?.tenantId]);
 
 
-//Fetches all Question set for Dropdown
+  //Fetches all Question set for Dropdown
 
   const fetchQuestionSets = async () => {
     if (!loginData?.tenantId) {
@@ -126,9 +126,9 @@ export default function AddExam() {
     }
   };
 
-  
-   //Fetches all exams for display in table
-  
+
+  //Fetches all exams for display in table
+
   const fetchExams = async () => {
     if (!loginData?.tenantId) {
       console.warn("No tenantId available, skipping fetch");
@@ -164,8 +164,8 @@ export default function AddExam() {
     }
   };
 
-   //Fetches detailed exam data for view
-   
+  //Fetches detailed exam data for view
+
   const fetchExamById = async (id) => {
     if (!id || !loginData?.tenantId) return;
 
@@ -235,8 +235,8 @@ export default function AddExam() {
     }
   };
 
- //Handles form submission for both add and edit operations
-   
+  //Handles form submission for both add and edit operations
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
@@ -294,8 +294,8 @@ export default function AddExam() {
     }
   };
 
-   //Resets form to initial state
-  
+  //Resets form to initial state
+
   const resetForm = () => {
     setFormData({
       id: 0,
@@ -313,17 +313,17 @@ export default function AddExam() {
     setEditId(null);
   };
 
-  
-   //Opens modal for adding new exam
-  
+
+  //Opens modal for adding new exam
+
   const handleOpenModal = () => {
     resetForm();
     setShowModal(true);
   };
 
 
-    //Opens modal for editing existing exam
-  
+  //Opens modal for editing existing exam
+
   const openEditModal = async (exam) => {
     if (!exam?.id) {
       console.error("Invalid Exam ID");
@@ -365,18 +365,18 @@ export default function AddExam() {
     }
   };
 
-  
-   // Opens view modal with exam details
-  
+
+  // Opens view modal with exam details
+
   const openViewModal = (exam) => {
     if (!exam?.id) return;
     fetchExamById(exam.id);
   };
 
 
-  
-    //Opens delete confirmation modal
-   
+
+  //Opens delete confirmation modal
+
   const openDeleteModal = (exam) => {
     if (!exam?.id) return;
     setDeleteId(exam.id);
@@ -384,8 +384,8 @@ export default function AddExam() {
     setIsDeleteModalOpen(true);
   };
 
-   // Handles exam deletion after confirmation
-  
+  // Handles exam deletion after confirmation
+
   const handleConfirmDelete = async () => {
     if (!deleteId || !loginData?.tenantId) return;
 
@@ -451,8 +451,8 @@ export default function AddExam() {
 
       <div className="rounded-md font-roboto overflow-hidden">
         <div className="bg-gradient-to-r from-[#2c3e50] to-[#3498db] sticky top-0 z-20 shadow-md">
-          
-     {/* Search Input */}
+
+          {/* Search Input */}
           <div className="px-3 py-2 flex flex-wrap justify-between items-center gap-2">
             <div className='flex items-center gap-3'>
               <div className="relative flex items-center w-full sm:w-auto min-w-[180px] max-w-[300px]">
@@ -478,7 +478,7 @@ export default function AddExam() {
               </div>
             </div>
 
-         
+
             <div className='flex items-center gap-3'>
               <Link onClick={handleOpenModal} href="#" passHref className="text-lg text-gray-50 cursor-pointer">
                 <IoMdAddCircle className="text-xl" />
@@ -523,7 +523,7 @@ export default function AddExam() {
                           className="flex items-center gap-1 px-3 py-1.5 text-sm font-medium border border-blue-500 text-blue-500 rounded hover:bg-blue-500 hover:text-white transition-colors duration-200">
                           <FiEye />
                         </button>
-                        
+
                         {/* Edit Button */}
                         <button
                           onClick={() => openEditModal(item)}
@@ -532,7 +532,7 @@ export default function AddExam() {
                         >
                           <FiEdit className="text-base" />
                         </button>
-                        
+
                         {/* Delete Button */}
                         <button
                           onClick={() => openDeleteModal(item)}
