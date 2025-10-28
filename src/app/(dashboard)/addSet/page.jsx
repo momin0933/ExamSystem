@@ -26,15 +26,8 @@ export default function AddSet() {
     const [isViewModalOpen, setIsViewModalOpen] = useState(false);
 
     // Form/Edit/View States
-    const [showModal, setShowModal] = useState(false);
-    const [isEdit, setIsEdit] = useState(false);
-    const [editId, setEditId] = useState(null);
-    const [formData, setFormData] = useState({ name: '', remarks: '' });
+ 
     const [selectedQuestions, setSelectedQuestions] = useState([]);
-    const [totalMark, setTotalMark] = useState(0);
-    const [selectedSubject, setSelectedSubject] = useState('');
-    const [questionData, setQuestionData] = useState([]);
-    const [showPreview, setShowPreview] = useState(false);
     const [viewData, setViewData] = useState(null);
 
     const fetchSetData = async () => {

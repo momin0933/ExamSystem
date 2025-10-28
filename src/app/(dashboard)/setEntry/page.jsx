@@ -8,6 +8,7 @@ import { toast } from 'react-hot-toast';
 import React, { useState, useEffect, useContext } from 'react';
 import AOS from 'aos';
 
+
 export default function SetEntryPage() {
     const { loginData } = useContext(AuthContext);
     const router = useRouter();
@@ -25,8 +26,6 @@ export default function SetEntryPage() {
     const [showPreview, setShowPreview] = useState(false);
     const [addMode, setAddMode] = useState("");
     const [questionCount, setQuestionCount] = useState("");
-
-
 
     useEffect(() => {
         AOS.init({ duration: 800, once: true });
@@ -89,8 +88,22 @@ export default function SetEntryPage() {
 
             const data = await response.json();
             const questions = Array.isArray(data) ? data : [];
-            setQuestionData(questions);
-            return questions;
+            console.log("Question by Subject ", questions)
+            // setQuestionData(questions);
+            // return questions;
+            const merged = questions.map((q) => {
+                const selected = selectedQuestions.find(s => s.QuestionId === q.QuestionId);
+                return {
+                    ...q,
+                    Name: q.Name || q.QuestionName,
+                    Mark: q.Mark || q.QuestionMark || 0,
+                    QnType: q.QnType || "Descriptive",
+                    isChecked: selected ? true : false,
+                };
+            });
+
+            setQuestionData(merged);
+            return merged;
         } catch (error) {
             console.error(error);
             toast.error("Failed to load questions");
@@ -100,7 +113,7 @@ export default function SetEntryPage() {
 
     // Fetch set data for editing
     const fetchSetDataForEdit = async (id) => {
-        debugger
+
         try {
             const response = await fetch(`${config.API_BASE_URL}api/Procedure/GetData`, {
                 method: "POST",
@@ -119,6 +132,7 @@ export default function SetEntryPage() {
             });
 
             const data = await response.json();
+            console.log("Question data for edit", data)
             if (!Array.isArray(data) || data.length === 0) {
                 toast.error("No data found for this question set!");
                 return;
@@ -140,8 +154,10 @@ export default function SetEntryPage() {
                     QnType: item.QnType,
                     SubjectId: item.SubjectId,
                     SubjectName: item.SubjectName,
-                    Remarks: item.Remarks || ""
+                    isChecked: true,
                 }));
+
+            console.log("Question Details data for edit", data)
 
             setSelectedQuestions(details);
             const subjectIds = [...new Set(details.map(d => d.SubjectId))];
@@ -149,7 +165,16 @@ export default function SetEntryPage() {
             if (subjectIds.length > 0) {
                 const firstSubjectId = subjectIds[0];
                 setSelectedSubject(firstSubjectId);
-                await fetchQuestionsBySubject(firstSubjectId);
+                // await fetchQuestionsBySubject(firstSubjectId);
+                const questions = await fetchQuestionsBySubject(firstSubjectId);
+
+                // Update questionData to show checkboxes properly
+                const updatedQuestions = questions.map(q => ({
+                    ...q,
+                    isChecked: details.some(d => d.QuestionId === q.QuestionId)
+                }));
+
+                setQuestionData(updatedQuestions);
             } else {
                 setQuestionData([]);
             }
@@ -219,8 +244,8 @@ export default function SetEntryPage() {
             setIsEdit(true);
             setEditId(editIdFromQuery);
             fetchSetDataForEdit(editIdFromQuery);
+            setAddMode("manual");
         } else {
-            // Reset form for new entry
             resetForm();
         }
     }, [loginData, editIdFromQuery]);
@@ -265,7 +290,7 @@ export default function SetEntryPage() {
         setShowPreview(true);
     };
 
-    
+
 
 
     const handleSubmit = async (e) => {
@@ -393,21 +418,22 @@ export default function SetEntryPage() {
                                 </div>
 
                                 {/* ---------------- ADD MODE ---------------- */}
-                                <div className="flex items-center gap-2 w-full sm:w-[25%]">
-                                    <label className="w-1/3 text-sm font-semibold text-gray-700 text-nowrap">
-                                        Add Mode:
-                                    </label>
-                                    <select
-                                        value={addMode}
-                                        onChange={(e) => handleModeChange(e.target.value)}
-                                        className="w-2/3 border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-400 transition-all duration-200"
-                                    >
-                                        <option value="">-- Select Mode --</option>
-                                        <option value="manual">Add Manual Question</option>
-                                        <option value="random">Add Random Question</option>
-                                    </select>
-                                </div>
-
+                                {!isEdit && (
+                                    <div className="flex items-center gap-2 w-full sm:w-[25%]">
+                                        <label className="w-1/3 text-sm font-semibold text-gray-700 text-nowrap">
+                                            Add Mode:
+                                        </label>
+                                        <select
+                                            value={addMode}
+                                            onChange={(e) => handleModeChange(e.target.value)}
+                                            className="w-2/3 border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-400 transition-all duration-200"
+                                        >
+                                            <option value="">-- Select Mode --</option>
+                                            <option value="manual">Add Manual Question</option>
+                                            <option value="random">Add Random Question</option>
+                                        </select>
+                                    </div>
+                                )}
                                 {/* ---------------- TOTAL MARK ---------------- */}
                                 <div className="flex items-center gap-2 w-full sm:w-[20%]">
                                     <label className="w-1.5/3 text-sm font-semibold text-gray-700 text-nowrap">
@@ -426,7 +452,7 @@ export default function SetEntryPage() {
 
 
                         {/* ---------------- CONDITIONAL BLOCKS ---------------- */}
-                        {addMode === "manual" && (
+                        {(addMode === "manual" || isEdit) && (
                             <>
                                 <div className="border border-gray-200 rounded-lg p-3 bg-gray-50 max-h-64 overflow-y-auto mt-2">
                                     {questionData.length === 0 ? (
@@ -472,7 +498,7 @@ export default function SetEntryPage() {
                             </>
                         )}
 
-                        {addMode === "random" && (
+                        {addMode === "random" && !isEdit && (
                             <>
                                 <div className="border border-gray-200 rounded-lg p-4 bg-gray-50 mt-2">
                                     {/* ----------- INPUT + BUTTON ROW ----------- */}
