@@ -100,6 +100,7 @@ export default function SetEntryPage() {
 
     // Fetch set data for editing
     const fetchSetDataForEdit = async (id) => {
+        debugger
         try {
             const response = await fetch(`${config.API_BASE_URL}api/Procedure/GetData`, {
                 method: "POST",
@@ -264,57 +265,7 @@ export default function SetEntryPage() {
         setShowPreview(true);
     };
 
-    // const handleSubmit = async (e) => {
-
-    //     debugger;
-    //     e.preventDefault();
-
-    //     if (!formData.name) return toast.error("Set Name required");
-    //     if (selectedQuestions.length === 0) return toast.error("Select at least 1 question");
-
-    //     try {
-    //         const questionsJson = selectedQuestions.map(q => ({
-    //             SubId: q.SubjectId,
-    //             QnId: q.QuestionId,
-    //             Mark: q.Mark || 0,
-    //             Remarks: q.Remarks || ''
-    //         }));
-
-    //         const queryChecker = isEdit ? 5 : 1;
-    //         const requestBody = {
-    //             operation: '',
-    //             procedureName: 'SP_QuestionSetManage',
-    //             parameters: {
-    //                 QueryChecker: queryChecker,
-    //                 Name: formData.name,
-    //                 Remarks: formData.remarks || '',
-    //                 TotalMark: totalMark || 0,
-    //                 EntryBy: loginData.UserId,
-    //                 Questions: JSON.stringify(questionsJson)
-    //             }
-    //         };
-
-    //         if (isEdit && editId) {
-    //             requestBody.parameters.Id = editId;
-    //         }
-
-    //         const response = await fetch(`${config.API_BASE_URL}api/Procedure/GetData`, {
-    //             method: 'POST',
-    //             headers: {
-    //                 TenantId: loginData.tenantId,
-    //                 'Content-Type': 'application/json',
-    //             },
-    //             body: JSON.stringify(requestBody)
-    //         });
-
-    //         if (!response.ok) throw new Error('Failed to save set');
-
-    //         toast.success(`Set ${isEdit ? 'updated' : 'saved'} successfully`);
-    //         router.push("/addSet"); // Redirect back to list page
-    //     } catch (err) {
-    //         toast.error(err.message);
-    //     }
-    // };
+    
 
 
     const handleSubmit = async (e) => {
@@ -398,72 +349,85 @@ export default function SetEntryPage() {
                 </div>
                 <div className="border border-gray-300 rounded-b-md overflow-hidden max-h-[68vh] overflow-y-auto">
                     <form onSubmit={handleSubmit} className="space-y-4 text-sm bg-white p-6 rounded-lg shadow">
-                        <div className="flex items-center gap-6 mt-3">
-                            {/* ---------------- SET NAME ---------------- */}
-                            <div className="flex items-center gap-2 w-1/3">
-                                <label className="w-1/3 text-sm font-semibold text-gray-700">Set Name</label>
-                                <input
-                                    type="text"
-                                    name="name"
-                                    value={formData.name}
-                                    onChange={handleChange}
-                                    className="w-full border border-gray-300 px-3 py-2 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-400"
-                                    required
-                                />
-                            </div>
+                        <div>
+                            <div className="flex flex-wrap items-center gap-2">
+                                {/* ---------------- SET NAME ---------------- */}
+                                <div className="flex items-center gap-2 w-full sm:w-[23%]">
+                                    <label className="w-1/3 text-sm font-semibold text-gray-700 text-nowrap">
+                                        Set Name:
+                                    </label>
+                                    <input
+                                        type="text"
+                                        name="name"
+                                        value={formData.name}
+                                        onChange={handleChange}
+                                        className="w-2/3 border border-gray-300 px-3 py-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400 transition-all duration-200"
+                                        required
+                                    />
+                                </div>
 
-                            {/* ---------------- ADD MODE ---------------- */}
-                            <div className="flex items-center gap-2 w-1/3">
-                                <label className="w-1/3 text-sm font-semibold text-gray-700">Add Mode</label>
-                                <select
-                                    value={addMode}
-                                    onChange={(e) => handleModeChange(e.target.value)}
-                                    className="w-full border rounded p-2"
-                                >
-                                    <option value="">-- Select Mode --</option>
-                                    <option value="manual">Add Manual Question</option>
-                                    <option value="random">Add Random Question</option>
-                                </select>
-                            </div>
-
-                            {/* ---------------- TOTAL MARK ---------------- */}
-                            <div className="flex items-center gap-2 w-1/3">
-                                <label className="w-1/3 text-sm font-semibold text-gray-700">Total Mark</label>
-                                <input
-                                    name="mark"
-                                    value={totalMark}
-                                    readOnly
-                                    className="w-full border border-gray-200 px-3 py-2 rounded-md bg-gray-100 text-gray-600"
-                                />
-                            </div>
-                        </div>
-                        {/* ---------------- CONDITIONAL BLOCKS ---------------- */}
-                        {addMode === "manual" && (
-                            <>
-                                {/* SUBJECT SELECTION (Manual Mode) */}
-                                <div className="flex items-center gap-3 mt-2">
-                                    <label className="w-1/3 text-sm font-semibold text-gray-700">Select Subject</label>
-                                    <div className="w-full">
+                                {/* ---------------- SELECT SUBJECT ---------------- */}
+                                <div className="flex items-center gap-2 w-full sm:w-[28%]">
+                                    <label className="w-.8/3 text-sm font-semibold text-gray-700 text-nowrap">
+                                        Subject:
+                                    </label>
+                                    <div className="w-2.2/3">
                                         {subjectData.length > 0 && (
                                             <Select
                                                 name="filterSubject"
-                                                value={subjectData.find(s => s.value === selectedSubject) || null}
+                                                value={subjectData.find((s) => s.value === selectedSubject) || null}
                                                 onChange={(selected) => {
                                                     const subId = selected?.value || "";
                                                     setSelectedSubject(subId);
                                                     fetchQuestionsBySubject(subId);
                                                 }}
                                                 options={subjectData}
-                                                placeholder="Select or search subject..."
-                                                className="w-full"
+                                                placeholder="Search or choose..."
+                                                className="text-sm"
                                                 isClearable
                                                 isSearchable
+
                                             />
                                         )}
                                     </div>
                                 </div>
 
-                                {/* QUESTIONS LIST */}
+                                {/* ---------------- ADD MODE ---------------- */}
+                                <div className="flex items-center gap-2 w-full sm:w-[25%]">
+                                    <label className="w-1/3 text-sm font-semibold text-gray-700 text-nowrap">
+                                        Add Mode:
+                                    </label>
+                                    <select
+                                        value={addMode}
+                                        onChange={(e) => handleModeChange(e.target.value)}
+                                        className="w-2/3 border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-400 transition-all duration-200"
+                                    >
+                                        <option value="">-- Select Mode --</option>
+                                        <option value="manual">Add Manual Question</option>
+                                        <option value="random">Add Random Question</option>
+                                    </select>
+                                </div>
+
+                                {/* ---------------- TOTAL MARK ---------------- */}
+                                <div className="flex items-center gap-2 w-full sm:w-[20%]">
+                                    <label className="w-1.5/3 text-sm font-semibold text-gray-700 text-nowrap">
+                                        Total Mark:
+                                    </label>
+                                    <input
+                                        name="mark"
+                                        value={totalMark}
+                                        readOnly
+                                        className="w-1/3 border border-gray-200 px-3 py-2 rounded-lg bg-gray-100 text-gray-600 focus:outline-none"
+                                    />
+                                </div>
+                            </div>
+                        </div>
+
+
+
+                        {/* ---------------- CONDITIONAL BLOCKS ---------------- */}
+                        {addMode === "manual" && (
+                            <>
                                 <div className="border border-gray-200 rounded-lg p-3 bg-gray-50 max-h-64 overflow-y-auto mt-2">
                                     {questionData.length === 0 ? (
                                         <p className="text-gray-400 text-sm italic text-center py-3">
@@ -472,243 +436,127 @@ export default function SetEntryPage() {
                                                 : "Please select a subject to view questions."}
                                         </p>
                                     ) : (
-                                        questionData.map((q) => (
-                                            <div
-                                                key={q.QuestionId}
-                                                className="flex items-center gap-2 p-2 bg-white border border-gray-200 rounded-md hover:shadow-sm transition"
-                                            >
-                                                <input
-                                                    type="checkbox"
-                                                    checked={isQuestionSelected(q.QuestionId)}
-                                                    onChange={() => handleCheckboxChange(q)}
-                                                    className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-400"
-                                                />
-                                                <label className="text-gray-700 text-sm flex-1">
-                                                    {q.Name}
-                                                    <span className="text-gray-500 ml-1">
-                                                        ({q.QnType} - {q.Mark} Marks)
-                                                    </span>
-                                                </label>
-                                            </div>
-                                        ))
+                                        <table className="w-full text-sm border-collapse">
+                                            <thead className="bg-gray-100 sticky top-0">
+                                                <tr>
+                                                    <th className="w-10 p-2 border-b text-left">Select</th>
+                                                    <th className="p-2 border-b text-left">Question</th>
+                                                    <th className="w-24 p-2 border-b text-left">Type</th>
+                                                    <th className="w-20 p-2 border-b text-left">Mark</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                {questionData.map((q) => (
+                                                    <tr
+                                                        key={q.QuestionId}
+                                                        className="hover:bg-gray-50 border-b last:border-0"
+                                                    >
+                                                        <td className="p-2 text-center">
+                                                            <input
+                                                                type="checkbox"
+                                                                checked={isQuestionSelected(q.QuestionId)}
+                                                                onChange={() => handleCheckboxChange(q)}
+                                                                className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-400"
+                                                            />
+                                                        </td>
+                                                        <td className="p-2 text-gray-700">{q.Name}</td>
+                                                        <td className="p-2 text-gray-600">{q.QnType}</td>
+                                                        <td className="p-2 text-gray-600">{q.Mark}</td>
+                                                    </tr>
+                                                ))}
+                                            </tbody>
+                                        </table>
                                     )}
                                 </div>
+
                             </>
                         )}
 
                         {addMode === "random" && (
                             <>
-                                {/* RANDOM MODE SECTION */}
-                                <div className="space-y-3 mt-3 bg-gray-50 p-3 rounded-lg border">
-                                    {/* Select Subject */}
-                                    <div className="flex items-center gap-3">
-                                        <label className="w-1/3 text-sm font-semibold text-gray-700">Select Subject</label>
-                                        <div className="w-full">
-                                            <Select
-                                                value={subjectData.find(s => s.value === selectedSubject) || null}
-                                                onChange={(selected) => setSelectedSubject(selected?.value || "")}
-                                                options={subjectData}
-                                                placeholder="Select or search subject..."
-                                                className="w-full"
-                                                isClearable
-                                                isSearchable
+                                <div className="border border-gray-200 rounded-lg p-4 bg-gray-50 mt-2">
+                                    {/* ----------- INPUT + BUTTON ROW ----------- */}
+                                    <div className="flex flex-wrap items-center justify-between gap-4 mb-3">
+                                        {/* Number of Questions Input */}
+                                        <div className="flex items-center gap-2 w-full sm:w-[50%]">
+                                            <label className="text-sm font-semibold text-gray-700 whitespace-nowrap">
+                                                Number of Questions:
+                                            </label>
+                                            <input
+                                                type="number"
+                                                min="1"
+                                                value={questionCount}
+                                                onChange={(e) => setQuestionCount(e.target.value)}
+                                                className="border border-gray-300 px-3 py-2 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-400 transition-all duration-200 w-32"
                                             />
                                         </div>
+
+                                        {/* Add Random Button */}
+                                        <div className="flex justify-end w-full sm:w-auto">
+                                            <button
+                                                type="button"
+                                                onClick={fetchRandomQuestions}
+                                                className="px-4 py-2 bg-blue-500 text-white text-sm font-medium rounded-md shadow-sm hover:bg-blue-600 transition-all duration-200"
+                                            >
+                                                Add Random Questions
+                                            </button>
+                                        </div>
                                     </div>
 
-                                    {/* Number of Questions */}
-                                    <div className="flex items-center gap-3">
-                                        <label className="w-1/3 text-sm font-semibold text-gray-700">Number of Questions</label>
-                                        <input
-                                            type="number"
-                                            min="1"
-                                            value={questionCount}
-                                            onChange={(e) => setQuestionCount(e.target.value)}
-                                            className="w-full border border-gray-300 px-3 py-2 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-400"
-                                        />
-                                    </div>
-
-                                    {/* Add Random Button */}
-                                    <div className="flex justify-end mt-2">
-                                        <button
-                                            type="button"
-                                            onClick={fetchRandomQuestions}
-                                            className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
-                                        >
-                                            Add Random Questions
-                                        </button>
-                                    </div>
-                                    {selectedQuestions.length > 0 && (
-                                        <div className="mt-4 border rounded-lg bg-gray-50 p-3">
-                                            <h3 className="text-sm font-semibold text-gray-700 mb-2">
-                                                Selected Questions ({selectedQuestions.filter(q => q.isChecked).length})
-                                            </h3>
-
-                                            <ul className="space-y-2">
-                                                {selectedQuestions.map((q, index) => (
-                                                    <li
-                                                        key={q.QuestionId || index}
-                                                        className="flex items-center gap-2 pb-1"
-                                                    >
-                                                        <input
-                                                            type="checkbox"
-                                                            checked={q.isChecked || false}
-                                                            onChange={(e) => {
-                                                                const isChecked = e.target.checked;
-                                                                setSelectedQuestions((prev) =>
-                                                                    prev.map((x) =>
-                                                                        x.QuestionId === q.QuestionId
-                                                                            ? { ...x, isChecked }
-                                                                            : x
-                                                                    )
-                                                                );
-                                                            }}
-                                                            className="w-4 h-4 accent-blue-500"
-                                                        />
-
-                                                        <span className="text-gray-700 text-sm flex-1">
-                                                            {q.QuestionName || q.Name} ({q.QnType}) - {q.Mark} Marks
-                                                        </span>
-                                                    </li>
-                                                ))}
-                                            </ul>
+                                    {/* ----------- TABLE DISPLAY ----------- */}
+                                    {selectedQuestions.length === 0 ? (
+                                        <p className="text-gray-400 text-sm italic text-center py-3">
+                                            No random questions added yet.
+                                        </p>
+                                    ) : (
+                                        <div className="max-h-64 overflow-y-auto rounded-lg border border-gray-200 bg-white">
+                                            <table className="w-full text-sm border-collapse">
+                                                <thead className="bg-gray-100 sticky top-0">
+                                                    <tr>
+                                                        <th className="w-10 p-2 text-left border-b">Select</th>
+                                                        <th className="p-2 text-left border-b">Question</th>
+                                                        <th className="w-24 p-2 text-left border-b">Type</th>
+                                                        <th className="w-20 p-2 text-left border-b">Mark</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                    {selectedQuestions.map((q, index) => (
+                                                        <tr
+                                                            key={q.QuestionId || index}
+                                                            className="hover:bg-gray-50 border-b last:border-0"
+                                                        >
+                                                            <td className="p-2 text-center">
+                                                                <input
+                                                                    type="checkbox"
+                                                                    checked={q.isChecked || false}
+                                                                    onChange={(e) => {
+                                                                        const isChecked = e.target.checked;
+                                                                        setSelectedQuestions((prev) =>
+                                                                            prev.map((x) =>
+                                                                                x.QuestionId === q.QuestionId
+                                                                                    ? { ...x, isChecked }
+                                                                                    : x
+                                                                            )
+                                                                        );
+                                                                    }}
+                                                                    className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-400"
+                                                                />
+                                                            </td>
+                                                            <td className="p-2 text-gray-700">
+                                                                {q.QuestionName || q.Name}
+                                                            </td>
+                                                            <td className="p-2 text-gray-600">{q.QnType}</td>
+                                                            <td className="p-2 text-gray-600">{q.Mark}</td>
+                                                        </tr>
+                                                    ))}
+                                                </tbody>
+                                            </table>
                                         </div>
                                     )}
-
-
                                 </div>
                             </>
                         )}
 
-                        {/* ✅ Selected Questions Preview */}
-                        {/* {selectedQuestions.length > 0 && (
-                            <div className="mt-4 border rounded-lg bg-gray-50 p-3">
-                                <h3 className="text-sm font-semibold text-gray-700 mb-2">
-                                    Selected Questions ({selectedQuestions.length})
-                                </h3>
-                                <ul className="space-y-2">
-                                    {selectedQuestions.map((q, index) => (
-                                        <li
-                                            key={q.QuestionId || index}
-                                            className="flex justify-between items-center border-b pb-1"
-                                        >
-                                            <span className="text-gray-700 text-sm">
-                                                {q.QuestionName || q.Name} ({q.QnType}) - {q.Mark} Marks
-                                            </span>
-                                            <button
-                                                onClick={() =>
-                                                    setSelectedQuestions((prev) =>
-                                                        prev.filter((x) => x.QuestionId !== q.QuestionId)
-                                                    )
-                                                }
-                                                className="text-red-500 text-xs hover:underline"
-                                            >
-                                                Remove
-                                            </button>
-                                        </li>
-                                    ))}
-                                </ul>
-                            </div>
-                        )} */}
-
-
-
-                        {/* Questions List */}
-                        {/* <div className="border border-gray-200 rounded-lg p-3 bg-gray-50 max-h-64 overflow-y-auto">
-                            {questionData.length === 0 ? (
-                                <p className="text-gray-400 text-sm italic text-center py-3">
-                                    {selectedSubject ? "No questions found for this subject." : "Please select a subject to view questions."}
-                                </p>
-                            ) : (
-                                questionData.map((q) => (
-                                    <div key={q.QuestionId} className="flex items-center gap-2 p-2 bg-white border border-gray-200 rounded-md hover:shadow-sm transition">
-                                        <input
-                                            type="checkbox"
-                                            checked={isQuestionSelected(q.QuestionId)}
-                                            onChange={() => handleCheckboxChange(q)}
-                                            className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-400"
-                                        />
-                                        <label className="text-gray-700 text-sm flex-1">
-                                            {q.Name}
-                                            <span className="text-gray-500 ml-1">({q.QnType} - {q.Mark} Marks)</span>
-                                        </label>
-                                    </div>
-                                ))
-                            )}
-                        </div> */}
-
-                        {/* Preview Table */}
-                        {/* {showPreview && selectedQuestions.length > 0 && (
-                            <div className="mt-4 border border-gray-300 rounded-lg p-3 bg-gray-100">
-                                <h4 className="font-semibold mb-2 text-gray-800">Preview Selected Questions</h4>
-                                <table className="w-full text-sm border border-gray-300 rounded overflow-hidden">
-                                    <thead className="bg-blue-50 text-gray-700">
-                                        <tr>
-                                            <th className="border px-2 py-1">SL</th>
-                                            <th className="border px-2 py-1">Subject</th>
-                                            <th className="border px-2 py-1">Total Qn</th>
-                                            <th className="border px-2 py-1">Type</th>
-                                            <th className="border px-2 py-1">Mark</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        {(() => {
-                                            const grouped = selectedQuestions.reduce((acc, q) => {
-                                                if (!acc[q.SubjectName]) acc[q.SubjectName] = {};
-                                                if (!acc[q.SubjectName][q.QnType]) acc[q.SubjectName][q.QnType] = { count: 0, totalMark: 0 };
-                                                acc[q.SubjectName][q.QnType].count++;
-                                                acc[q.SubjectName][q.QnType].totalMark += Number(q.Mark) || 0;
-                                                return acc;
-                                            }, {});
-
-                                            const subjects = Object.entries(grouped);
-                                            let grandTotalQuestions = 0;
-                                            let grandTotalMarks = 0;
-
-                                            return (
-                                                <>
-                                                    {subjects.map(([subject, types], idx) => {
-                                                        const totalForSubject = Object.values(types).reduce((acc, t) => ({ count: acc.count + t.count, totalMark: acc.totalMark + t.totalMark }), { count: 0, totalMark: 0 });
-                                                        grandTotalQuestions += totalForSubject.count;
-                                                        grandTotalMarks += totalForSubject.totalMark;
-
-                                                        return (
-                                                            <React.Fragment key={idx}>
-                                                                {Object.entries(types).map(([type, data], tIdx) => (
-                                                                    <tr key={`${subject}-${type}`} className="bg-white hover:bg-gray-50">
-                                                                        {tIdx === 0 && (
-                                                                            <>
-                                                                                <td className="border px-2 py-1 text-center font-medium" rowSpan={Object.keys(types).length}>{idx + 1}</td>
-                                                                                <td className="border px-2 py-1 font-semibold text-gray-800" rowSpan={Object.keys(types).length}>{subject}</td>
-                                                                            </>
-                                                                        )}
-                                                                        <td className="border px-2 py-1 text-center">{data.count}</td>
-                                                                        <td className="border px-2 py-1 text-center">{type}</td>
-                                                                        <td className="border px-2 py-1 text-center">{data.totalMark}</td>
-                                                                    </tr>
-                                                                ))}
-                                                                <tr className="bg-blue-50 font-semibold text-gray-800">
-                                                                    <td colSpan={2} className="border px-2 py-1 text-right">Subtotal:</td>
-                                                                    <td className="border px-2 py-1 text-center">{totalForSubject.count}</td>
-                                                                    <td className="border px-2 py-1 text-center">Total</td>
-                                                                    <td className="border px-2 py-1 text-center">{totalForSubject.totalMark}</td>
-                                                                </tr>
-                                                            </React.Fragment>
-                                                        );
-                                                    })}
-                                                    <tr className="bg-green-100 font-bold text-gray-900">
-                                                        <td colSpan={2} className="border px-2 py-1 text-right">Grand Total:</td>
-                                                        <td className="border px-2 py-1 text-center">{grandTotalQuestions}</td>
-                                                        <td className="border px-2 py-1 text-center">All Types</td>
-                                                        <td className="border px-2 py-1 text-center">{grandTotalMarks}</td>
-                                                    </tr>
-                                                </>
-                                            );
-                                        })()}
-                                    </tbody>
-                                </table>
-                            </div>
-                        )} */}
                         {/* Modal */}
                         {showPreview && selectedQuestions.length > 0 && (
                             <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
