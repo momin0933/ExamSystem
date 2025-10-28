@@ -323,6 +323,7 @@ export default function SetEntryPage() {
                         Name: formData.name,
                         Remarks: formData.remarks || '',
                         TotalMark: totalMark || 0,
+                        TotalQn: selectedQuestions.length,
                         EntryBy: loginData.UserId,
                         Questions: JSON.stringify(questionsJson)
                     }
@@ -446,6 +447,20 @@ export default function SetEntryPage() {
                                         className="w-1/3 border border-gray-200 px-3 py-2 rounded-lg bg-gray-100 text-gray-600 focus:outline-none"
                                     />
                                 </div>
+
+                                {/* ---------------- TOTAL QUESTIONS ---------------- */}
+                                <div className="flex items-center gap-2 w-full sm:w-[20%]">
+                                    <label className="w-1.5/3 text-sm font-semibold text-gray-700 text-nowrap">
+                                        Total Questions:
+                                    </label>
+                                    <input
+                                        name="totalQuestions"
+                                        value={selectedQuestions.length}
+                                        readOnly
+                                        className="w-1/3 border border-gray-200 px-3 py-2 rounded-lg bg-gray-100 text-gray-600 focus:outline-none"
+                                    />
+                                </div>
+
                             </div>
                         </div>
 
