@@ -452,9 +452,8 @@ export default function AddExam() {
       <div className="rounded-md font-roboto overflow-hidden">
         <div className="bg-gradient-to-r from-[#2c3e50] to-[#3498db] sticky top-0 z-20 shadow-md">
           
-    
+     {/* Search Input */}
           <div className="px-3 py-2 flex flex-wrap justify-between items-center gap-2">
-            {/* Search Input */}
             <div className='flex items-center gap-3'>
               <div className="relative flex items-center w-full sm:w-auto min-w-[180px] max-w-[300px]">
                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
@@ -479,7 +478,7 @@ export default function AddExam() {
               </div>
             </div>
 
-            {/* Action buttons */}
+         
             <div className='flex items-center gap-3'>
               <Link onClick={handleOpenModal} href="#" passHref className="text-lg text-gray-50 cursor-pointer">
                 <IoMdAddCircle className="text-xl" />
