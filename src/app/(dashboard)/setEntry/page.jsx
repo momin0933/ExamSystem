@@ -318,51 +318,51 @@ export default function SetEntryPage() {
 
 
     const handleSubmit = async (e) => {
-    e.preventDefault();
+        e.preventDefault();
 
-    if (!formData.name) return toast.error("Set Name required");
-    if (selectedQuestions.length === 0) return toast.error("Select at least 1 question");
+        if (!formData.name) return toast.error("Set Name required");
+        if (selectedQuestions.length === 0) return toast.error("Select at least 1 question");
 
-    try {
-        // Normalize questions so manual and random questions have same keys
-        const questionsJson = selectedQuestions.map(q => ({
-            SubId: q.SubjectId || q.SubId,
-            QnId: q.QuestionId || q.Id,
-            Mark: q.Mark || 0,
-            Remarks: q.Remarks || ''
-        }));
+        try {
+            // Normalize questions so manual and random questions have same keys
+            const questionsJson = selectedQuestions.map(q => ({
+                SubId: q.SubjectId || q.SubId,
+                QnId: q.QuestionId || q.Id,
+                Mark: q.Mark || 0,
+                Remarks: q.Remarks || ''
+            }));
 
-        const res = await fetch(`${config.API_BASE_URL}api/Procedure/GetData`, {
-            method: 'POST',
-            headers: {
-                TenantId: loginData.tenantId,
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-                operation: '',
-                procedureName: 'SP_QuestionSetManage',
-                parameters: {
-                    QueryChecker: isEdit ? 5 : 1, 
-                    Id: isEdit ? editId : undefined, 
-                    Name: formData.name,
-                    Remarks: formData.remarks || '',
-                    TotalMark: totalMark || 0,
-                    EntryBy: loginData.UserId,
-                    Questions: JSON.stringify(questionsJson)
-                }
-            })
-        });
+            const res = await fetch(`${config.API_BASE_URL}api/Procedure/GetData`, {
+                method: 'POST',
+                headers: {
+                    TenantId: loginData.tenantId,
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    operation: '',
+                    procedureName: 'SP_QuestionSetManage',
+                    parameters: {
+                        QueryChecker: isEdit ? 5 : 1,
+                        Id: isEdit ? editId : undefined,
+                        Name: formData.name,
+                        Remarks: formData.remarks || '',
+                        TotalMark: totalMark || 0,
+                        EntryBy: loginData.UserId,
+                        Questions: JSON.stringify(questionsJson)
+                    }
+                })
+            });
 
-        if (!res.ok) throw new Error(`Save failed: ${res.status}`);
+            if (!res.ok) throw new Error(`Save failed: ${res.status}`);
 
-        toast.success(`Set ${isEdit ? 'updated' : 'saved'} successfully`);
-        // Reset form or redirect
-        router.push("/addSet");
-    } catch (err) {
-        console.error(err);
-        toast.error('Failed to save set');
-    }
-};
+            toast.success(`Set ${isEdit ? 'updated' : 'saved'} successfully`);
+            // Reset form or redirect
+            router.push("/addSet");
+        } catch (err) {
+            console.error(err);
+            toast.error('Failed to save set');
+        }
+    };
 
     const handleChange = (e) => {
         const { name, value } = e.target;
@@ -398,45 +398,45 @@ export default function SetEntryPage() {
                 </div>
                 <div className="border border-gray-300 rounded-b-md overflow-hidden max-h-[68vh] overflow-y-auto">
                     <form onSubmit={handleSubmit} className="space-y-4 text-sm bg-white p-6 rounded-lg shadow">
-                        {/* Set Name */}
-                        {/* ---------------- SET NAME ---------------- */}
-                        <div className="flex items-center gap-3">
-                            <label className="w-1/3 text-sm font-semibold text-gray-700">Set Name</label>
-                            <input
-                                type="text"
-                                name="name"
-                                value={formData.name}
-                                onChange={handleChange}
-                                className="w-full border border-gray-300 px-3 py-2 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-400"
-                                required
-                            />
-                        </div>
+                        <div className="flex items-center gap-6 mt-3">
+                            {/* ---------------- SET NAME ---------------- */}
+                            <div className="flex items-center gap-2 w-1/3">
+                                <label className="w-1/3 text-sm font-semibold text-gray-700">Set Name</label>
+                                <input
+                                    type="text"
+                                    name="name"
+                                    value={formData.name}
+                                    onChange={handleChange}
+                                    className="w-full border border-gray-300 px-3 py-2 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-400"
+                                    required
+                                />
+                            </div>
 
-                        {/* ---------------- ADD MODE ---------------- */}
-                        <div className="flex items-center gap-2 mt-2">
-                            <label className="w-1/3 text-sm font-semibold text-gray-700">Add Mode</label>
-                            <select
-                                value={addMode}
-                                onChange={(e) => handleModeChange(e.target.value)}
-                                className="w-full border rounded p-2"
-                            >
-                                <option value="">-- Select Mode --</option>
-                                <option value="manual">Add Manual Question</option>
-                                <option value="random">Add Random Question</option>
-                            </select>
-                        </div>
+                            {/* ---------------- ADD MODE ---------------- */}
+                            <div className="flex items-center gap-2 w-1/3">
+                                <label className="w-1/3 text-sm font-semibold text-gray-700">Add Mode</label>
+                                <select
+                                    value={addMode}
+                                    onChange={(e) => handleModeChange(e.target.value)}
+                                    className="w-full border rounded p-2"
+                                >
+                                    <option value="">-- Select Mode --</option>
+                                    <option value="manual">Add Manual Question</option>
+                                    <option value="random">Add Random Question</option>
+                                </select>
+                            </div>
 
-                        {/* ---------------- TOTAL MARK ---------------- */}
-                        <div className="flex items-center gap-3 mt-2">
-                            <label className="w-1/3 text-sm font-semibold text-gray-700">Total Mark</label>
-                            <input
-                                name="mark"
-                                value={totalMark}
-                                readOnly
-                                className="w-full border border-gray-200 px-3 py-2 rounded-md bg-gray-100 text-gray-600"
-                            />
+                            {/* ---------------- TOTAL MARK ---------------- */}
+                            <div className="flex items-center gap-2 w-1/3">
+                                <label className="w-1/3 text-sm font-semibold text-gray-700">Total Mark</label>
+                                <input
+                                    name="mark"
+                                    value={totalMark}
+                                    readOnly
+                                    className="w-full border border-gray-200 px-3 py-2 rounded-md bg-gray-100 text-gray-600"
+                                />
+                            </div>
                         </div>
-
                         {/* ---------------- CONDITIONAL BLOCKS ---------------- */}
                         {addMode === "manual" && (
                             <>
