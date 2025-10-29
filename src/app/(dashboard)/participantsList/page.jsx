@@ -30,7 +30,7 @@ export default function AddExam() {
         AOS.init({ duration: 800, once: true });
     }, []);
 
-
+// for grid table
     const fetchParticipate = async () => {
         try {
             const response = await fetch(`${config.API_BASE_URL}api/Procedure/GetData`, {
@@ -58,6 +58,7 @@ export default function AddExam() {
                     password: item.Password,
                     org: item.CurrentOrg,
                     salary: item.CurrentSalary,
+                    totalQnMark:item.TotalQnMark,
                     noticePeriod: item.NoticePeriod,
                 }));
                 console.log("Participate formatted  List", formatted);
@@ -72,7 +73,7 @@ export default function AddExam() {
         }
     };
 
-
+//for view and evaluate
     const fetchParticipateQuestionPaper = async (participateId) => {
         debugger;
         try {
@@ -461,11 +462,12 @@ export default function AddExam() {
                                 <th className="px-4 py-2">SL</th>
                                 <th className="px-4 py-2">Exam Name</th>
                                 <th className="px-4 py-2">Name</th>
-                                <th className="px-4 py-2">User ID</th>
-                                <th className="px-4 py-2">Password</th>
+                                {/* <th className="px-4 py-2">User ID</th>
+                                <th className="px-4 py-2">Password</th> */}
                                 <th className="px-4 py-2">Organization</th>
                                 <th className="px-4 py-2">Salary</th>
                                 <th className="px-4 py-2 text-center">Notice Period (days)</th>
+                                <th className="px-4 py-2">Qn Mark</th>
                                 <th className="px-4 py-2 text-center">Exam Paper</th>
                             </tr>
                         </thead>
@@ -481,11 +483,12 @@ export default function AddExam() {
                                         <td data-label="SL" className="px-4 py-2">{index + 1}</td>
                                         <td data-label="Name" className="px-4 py-2">{item.examName}</td>
                                         <td data-label="Name" className="px-4 py-2">{item.label}</td>
-                                        <td data-label="User ID" className="px-4 py-2">{item.value}</td>
-                                        <td data-label="Password" className="px-4 py-2">{item.password}</td>
+                                        {/* <td data-label="User ID" className="px-4 py-2">{item.value}</td>
+                                        <td data-label="Password" className="px-4 py-2">{item.password}</td> */}
                                         <td data-label="Organization" className="px-4 py-2">{item.org}</td>
                                         <td data-label="Salary" className="px-4 py-2">৳ {item.salary}</td>
                                         <td data-label="Notice Period" className="px-4 py-2 text-center">{item.noticePeriod}</td>
+                                         <td data-label="Qn Mark" className="px-4 py-2 text-center">{item.totalQnMark}</td>
                                         <td data-label="Actions" className="px-4 py-2 text-center">
                                             <div className="flex justify-center gap-3">
 

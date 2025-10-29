@@ -128,11 +128,11 @@ const getLinkClasses = (href, baseClasses = "") => {
             {!isCollapsed && activeDropdown === 2 && (
               <div className="ml-8 mt-2 space-y-1 border-l-2 border-blue-100 pl-3">
                 {[
-                  { href: "/addSubject", label: "Add Subject", icon: <MdSubject /> },
-                  { href: "/addQuestion", label: "Add Question", icon: <BsPatchQuestion /> },
-                  { href: "/addSet", label: "Add Set", icon: <RiStackLine /> },
-                  { href: "/addExam", label: "Add Exam", icon: <MdOutlineQuiz /> },
-                  { href: "/addCandidate", label: "Add Candidate", icon: <FaUserPlus /> },
+                  { href: "/addSubject", label: "Subject List", icon: <MdSubject /> },
+                  { href: "/addQuestion", label: "Question Bank", icon: <BsPatchQuestion /> },
+                  { href: "/addSet", label: "Set List", icon: <RiStackLine /> },
+                  { href: "/addExam", label: "Exam List", icon: <MdOutlineQuiz /> },
+                  { href: "/addCandidate", label: "Candidate List", icon: <FaUserPlus /> },
                 ].map((item) => (
                   <Link
                     key={item.href}

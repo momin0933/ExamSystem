@@ -15,6 +15,8 @@ export default function ParticipatePage() {
         CurrentSalary: '',
         CurrentOrg: '',
         NoticePeriod: '',
+        MobileNo: '',
+        Experience: '',
         Remarks: '',
     })
 
@@ -43,6 +45,8 @@ export default function ParticipatePage() {
             const payload = {
                 CandidateId: formData.CandidateId,
                 CurrentSalary: Number(formData.CurrentSalary) || null,
+                MobileNo: formData.MobileNo || null,
+                Experience: formData.Experience || null,
                 CurrentOrg: formData.CurrentOrg || null,
                 NoticePeriod: Number(formData.NoticePeriod) || null,
                 Remarks: formData.Remarks || null,
@@ -70,13 +74,7 @@ export default function ParticipatePage() {
             const resultText = await res.text();
             const savedId = parseInt(resultText, 10);
             console.log("API returned Id:", savedId);
-
-            // if (!isNaN(savedId) && savedId > 0) {
-            // //   toast.success("Saved successfully!");
-            //   router.push("/examPage");
-            // } else {
-            //   toast.error("Failed to save participation data.");
-            // }
+       
             if (!isNaN(savedId) && savedId > 0) {
                 // Store the new ParticipateId locally before redirect
                 localStorage.setItem("participateId", savedId);
@@ -110,6 +108,19 @@ export default function ParticipatePage() {
                         />
                     </div>
 
+                    {/* Mobile No */}
+                    <div className="flex items-center gap-2">
+                        <label className="w-1/3 font-medium text-gray-700">Mobile No</label>
+                        <input
+                            type="text"
+                            name="MobileNo"
+                            value={formData.MobileNo}
+                            onChange={handleChange}
+                            className="w-full border rounded p-2"
+                            placeholder="Enter mobile number"
+                        />
+                    </div>
+
                     {/* Current Salary */}
                     <div className="flex items-center">
                         <label className="w-1/4 text-gray-700 font-medium">Current Salary</label>
@@ -135,6 +146,19 @@ export default function ParticipatePage() {
                             onChange={handleChange}
                         />
                     </div>
+
+                    <div className="flex items-center gap-2">
+                        <label className="w-1/3 font-medium text-gray-700">Experience</label>
+                        <input
+                            type="text"
+                            name="Experience"
+                            value={formData.Experience}
+                            onChange={handleChange}
+                            className="w-full border rounded p-2"
+                            placeholder="Enter experience (e.g., 1 year)"
+                        />
+                    </div>
+
 
                     {/* Notice Period */}
                     <div className="flex items-center">

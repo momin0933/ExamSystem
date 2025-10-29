@@ -32,7 +32,7 @@ export default function AddCandidate() {
     const [candidates, setCandidates] = useState([]);
     const [filteredSet, setFilteredSet] = useState([]);
     const [setData, setSetData] = useState([]);
-     const [isEditMode, setIsEditMode] = useState(false);
+    const [isEditMode, setIsEditMode] = useState(false);
 
     const [formData, setFormData] = useState({
         id: "",
@@ -66,6 +66,7 @@ export default function AddCandidate() {
     }, [searchQuery, candidates]);
 
 
+    //For Exam Dropdown
     const fetchExams = async () => {
         if (!loginData.tenantId) return;
 
@@ -89,61 +90,64 @@ export default function AddCandidate() {
             toast.error("Failed to load exams");
         }
     };
-    const fetchParticipateQuestionPaper = async (userAutoId) => {
-        debugger;
-    try {
-        const response = await fetch(`${config.API_BASE_URL}api/Procedure/GetData`, {
-            method: "POST",
-            headers: {
-                TenantId: loginData.tenantId,
-                "Content-Type": "application/json",
-            },
-            body: JSON.stringify({
-                operation: "",
-                procedureName: "SP_CandidateManage",
-                parameters: { QueryChecker: 3, UserAccountId: userAutoId },
-            }),
-        });
-         console.log("Check Response", response);
-        const data = await response.json();
-        console.log("Participate Question Paper", data);
 
-        if (Array.isArray(data)) {
-            const groupedData = data.reduce((acc, item) => {
-                // Check if question already added
-                let existing = acc.find(q => q.question === item.Question);
+    //For View
+    // const fetchParticipateQuestionPaper = async (userAutoId) => {
+    //     debugger;
+    //     try {
+    //         const response = await fetch(`${config.API_BASE_URL}api/Procedure/GetData`, {
+    //             method: "POST",
+    //             headers: {
+    //                 TenantId: loginData.tenantId,
+    //                 "Content-Type": "application/json",
+    //             },
+    //             body: JSON.stringify({
+    //                 operation: "",
+    //                 procedureName: "SP_CandidateManage",
+    //                 parameters: { QueryChecker: 3, UserAccountId: userAutoId },
+    //             }),
+    //         });
+    //         console.log("Check Response", response);
+    //         const data = await response.json();
+    //         console.log("Participate Question Paper", data);
 
-                if (!existing) {
-                    acc.push({
-                        userId: item.Id,
-                        examName: item.ExamName,
-                        totalMark: item.TotalMark,
-                        qnMark:item.Mark,
-                        setName: item.SetName,
-                        question: item.Question,
-                        qnType: item.QnType,
-                        // collect first option if present
-                        options: item.OptionText ? [item.OptionText] : [],
-                        userInfo: {
-                            name: item.ParticipateName,
-                        },
-                    });
-                } else if (item.OptionText && !existing.options.includes(item.OptionText)) {
-                    existing.options.push(item.OptionText);
-                }
+    //         if (Array.isArray(data)) {
+    //             const groupedData = data.reduce((acc, item) => {
+    //                 // Check if question already added
+    //                 let existing = acc.find(q => q.question === item.Question);
 
-                return acc;
-            }, []);
+    //                 if (!existing) {
+    //                     acc.push({
+    //                         userId: item.Id,
+    //                         examName: item.ExamName,
+    //                         totalMark: item.TotalMark,
+    //                         qnMark: item.Mark,
+    //                         setName: item.SetName,
+    //                         question: item.Question,
+    //                         qnType: item.QnType,
+    //                         // collect first option if present
+    //                         options: item.OptionText ? [item.OptionText] : [],
+    //                         userInfo: {
+    //                             name: item.ParticipateName,
+    //                         },
+    //                     });
+    //                 } else if (item.OptionText && !existing.options.includes(item.OptionText)) {
+    //                     existing.options.push(item.OptionText);
+    //                 }
 
-            console.log("Grouped Question Paper Data", groupedData);
-            setParticipateQuestionPaper(groupedData);
-        }
-    } catch (error) {
-        console.error(error);
-        toast.error("Failed to load participate question paper");
-    }
-};
+    //                 return acc;
+    //             }, []);
 
+    //             console.log("Grouped Question Paper Data", groupedData);
+    //             setParticipateQuestionPaper(groupedData);
+    //         }
+    //     } catch (error) {
+    //         console.error(error);
+    //         toast.error("Failed to load participate question paper");
+    //     }
+    // };
+
+    //For Grid Table
     const fetchCandidateWithExam = async () => {
         if (!loginData.tenantId) return;
 
@@ -175,10 +179,12 @@ export default function AddCandidate() {
                 name: candidate.Name,
                 password: candidate.Password,
                 examName: candidate.ExamName,
+                setName: candidate.SetName,
                 userId: candidate.UserId,
                 userRole: candidate.UserRole,
                 email: candidate.Email,
                 mobileNo: candidate.MobileNo,
+                isActive: candidate.IsActive
             }));
 
             //  Sort by id descending
@@ -194,6 +200,43 @@ export default function AddCandidate() {
         }
     };
 
+    const handleToggleActive = async (candidate) => {
+        try {
+            const newStatus = !candidate.isActive;
+
+            const response = await fetch(`${config.API_BASE_URL}api/Procedure/GetData`, {
+                method: "POST",
+                headers: {
+                    TenantId: loginData.tenantId,
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify({
+                    operation: "",
+                    procedureName: "SP_CandidateManage",
+                    parameters: {
+                        QueryChecker: 4,
+                        UserAccountId: candidate.id,
+                        IsActive: !candidate.isActive
+                    },
+                }),
+            });
+
+            if (response.ok) {
+                toast.success(`User ${newStatus ? "activated" : "deactivated"} successfully`);
+                // Update UI instantly
+                setFilteredSet((prev) =>
+                    prev.map((item) =>
+                        item.id === candidate.id ? { ...item, isActive: newStatus } : item
+                    )
+                );
+            } else {
+                toast.error("Failed to update user status");
+            }
+        } catch (err) {
+            console.error(err);
+            toast.error("Error updating user status");
+        }
+    };
 
     const generatePassword = () => {
         // random 4 chars + current timestamp in base36 to make it unique
@@ -232,7 +275,7 @@ export default function AddCandidate() {
 
 
 
-
+    //for fetch data for  Edit
     const openEditCandidateModal = async (candidate) => {
 
         if (!candidate?.id) {
@@ -299,7 +342,10 @@ export default function AddCandidate() {
             toast.error("Failed to load candidate data for editing");
         }
     };
-const handleDownload = async () => {
+
+    //For Pdf Download
+
+    const handleDownload = async () => {
         if (!participateQuestionPaper || participateQuestionPaper.length === 0) return;
 
         const doc = new jsPDF({
@@ -503,14 +549,14 @@ const handleDownload = async () => {
         setShowModal(true);
     };
 
-
+    //Insert and Update
     const handleSubmit = async (e) => {
         e.preventDefault();
 
         // Basic validation
         if (!formData.name.trim()) return toast.error("Name is required");
         if (!formData.email.trim()) return toast.error("Email is required");
-        if (!formData.mobileNo.trim()) return toast.error("Mobile No is required");
+        // if (!formData.mobileNo.trim()) return toast.error("Mobile No is required");
 
         // Prepare payload
         const payload = {
@@ -719,11 +765,13 @@ const handleDownload = async () => {
                             <tr className="border-b">
                                 <th className="px-4 py-2 text-center">SL</th>
                                 <th className="px-4 py-2 ">Name</th>
-                                <th className="px-4 py-2 text-center">User Id</th>
-                                <th className="px-4 py-2 text-center">Password</th>
+                                <th className="px-4 py-2 ">User Id</th>
+                                <th className="px-4 py-2 ">Password</th>
                                 <th className="px-4 py-2 ">Exam</th>
-                                <th className="px-4 py-2 text-center">Email</th>
+                                <th className="px-4 py-2 ">Set</th>
+                                <th className="px-4 py-2 ">Email</th>
                                 <th className="px-4 py-2 text-center">Mobile No</th>
+                                <th className="px-4 py-2 text-center">Is Active</th>
                                 <th className="px-4 py-2 text-center">Actions</th>
                             </tr>
                         </thead>
@@ -743,14 +791,66 @@ const handleDownload = async () => {
                                     >
                                         <td className="px-4 py-2 text-center">{index + 1}</td>
                                         <td className="px-4 py-2">{candidate.name}</td>
-                                        <td className="px-4 py-2 text-center">{candidate.userId}</td>
-                                        <td className="px-4 py-2 text-center">{candidate.password}</td>
+                                        <td className="px-4 py-2 ">{candidate.userId}</td>
+                                        <td className="px-4 py-2 ">{candidate.password}</td>
                                         <td className="px-4 py-2 ">{candidate.examName}</td>
-                                        <td className="px-4 py-2 text-center">{candidate.email}</td>
+                                        <td className="px-4 py-2 ">{candidate.setName}</td>
+                                        <td className="px-4 py-2 ">{candidate.email}</td>
                                         <td className="px-4 py-2 text-center">{candidate.mobileNo}</td>
+
+                                        {/* <td className="px-4 py-2 text-center">
+                                            {candidate.isActive ? "Active" : "Inactive"}
+                                        </td> */}
+                                        {/* <td className="px-4 py-2 text-center">
+                                            <button
+                                                onClick={() => handleToggleActive(candidate)}
+                                                className={`px-3 py-1 rounded-full text-xs font-semibold ${candidate.isActive
+                                                    ? "bg-green-100 text-green-700 border border-green-500"
+                                                    : "bg-red-100 text-red-700 border border-red-500"
+                                                    }`}
+                                            >
+                                                {candidate.isActive ? "Active" : "Inactive"}
+                                            </button>
+                                        </td> */}
+                                        {/* <td className="px-4 py-2 text-center">
+                                            <label className="relative inline-flex items-center cursor-pointer">
+                                                <input
+                                                    type="checkbox"
+                                                    className="sr-only peer"
+                                                    checked={candidate.isActive}
+                                                    onChange={() => handleToggleActive(candidate)}
+                                                />
+                                                <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:bg-green-500 transition-colors duration-300"></div>
+                                                <span
+                                                    className={`absolute left-[4px] top-[4px] bg-white w-4 h-4 rounded-full transition-transform duration-300 ${candidate.isActive ? "translate-x-5" : ""
+                                                        }`}
+                                                ></span>
+                                            </label>
+                        
+                                        </td> */}
+
+                                        <td className="px-4 py-2 text-center">
+                                            <label className="inline-flex items-center cursor-pointer">
+                                                <div className="relative">
+                                                    <input
+                                                        type="checkbox"
+                                                        checked={candidate.isActive}
+                                                        onChange={() => handleToggleActive(candidate)}
+                                                        className="sr-only peer"
+                                                    />
+                                                    <div className="w-8 h-4 bg-gray-300 rounded-full peer-checked:bg-green-500 transition-all duration-300"></div>
+                                                    <div
+                                                        className={`absolute top-[2px] left-[2px] w-3 h-3 bg-white rounded-full transition-transform duration-300 ${candidate.isActive ? "translate-x-4" : ""
+                                                            }`}
+                                                    ></div>
+                                                </div>
+                                            </label>
+                                        </td>
+
+
                                         <td className="px-4 py-2 text-center">
                                             <div className="flex items-center justify-center gap-3">
-                                                <button
+                                                {/* <button
                                                     onClick={async () => {
                                                         await fetchParticipateQuestionPaper(candidate.id);
                                                         setIsEditMode(false);
@@ -759,7 +859,7 @@ const handleDownload = async () => {
                                                     className="flex items-center gap-1 px-3 py-1.5 text-sm font-medium border border-blue-500 text-blue-500 rounded hover:bg-blue-500 hover:text-white transition-colors duration-200"
                                                 >
                                                     <FiEye className="text-base" />
-                                                </button>
+                                                </button> */}
                                                 <button
                                                     onClick={() => openEditCandidateModal(candidate)}
                                                     className="flex items-center gap-1 px-3 py-1.5 text-sm font-medium border border-[#00925a] text-[#00925a] rounded hover:bg-[#00925a] hover:text-white transition-colors duration-200"
@@ -852,7 +952,7 @@ const handleDownload = async () => {
                             </div>
 
                             {/* Mobile No */}
-                            <div className="flex items-center gap-2">
+                            {/* <div className="flex items-center gap-2">
                                 <label className="w-1/3 font-semibold text-gray-700">Mobile No</label>
                                 <input
                                     type="text"
@@ -865,7 +965,7 @@ const handleDownload = async () => {
                                     placeholder="Enter mobile number"
                                     required
                                 />
-                            </div>
+                            </div> */}
 
                             {/* User Role */}
                             <div className="flex items-center gap-2 mt-2">
@@ -929,32 +1029,32 @@ const handleDownload = async () => {
 
 
             {showQuestionModal && (
-    <div className="fixed inset-0 bg-black/40 flex items-start justify-center z-50 p-4 overflow-y-auto">
-        <div className="bg-white rounded-xl p-6 w-full max-w-4xl mt-10 relative">
-            {/* Close button */}
-            <button
-                onClick={() => {
-                    setShowQuestionModal(false);
-                    setIsEditMode(false);
-                }}
-                className="absolute top-4 right-4 text-gray-500 hover:text-gray-800 text-lg font-bold"
-            >
-                ✕
-            </button>
+                <div className="fixed inset-0 bg-black/40 flex items-start justify-center z-50 p-4 overflow-y-auto">
+                    <div className="bg-white rounded-xl p-6 w-full max-w-4xl mt-10 relative">
+                        {/* Close button */}
+                        <button
+                            onClick={() => {
+                                setShowQuestionModal(false);
+                                setIsEditMode(false);
+                            }}
+                            className="absolute top-4 right-4 text-gray-500 hover:text-gray-800 text-lg font-bold"
+                        >
+                            ✕
+                        </button>
 
-            {participateQuestionPaper.length > 0 ? (
-                <>
-                    {/* ==== User Info & Exam Info ==== */}
-                    <div className="mb-8 p-4 bg-blue-50 rounded-lg text-center mt-5">
-                        <div className="relative">
-                            <h2 className="text-2xl font-semibold text-center flex flex-col items-center justify-center">
-                                <span className="text-blue-700">{participateQuestionPaper[0]?.userInfo?.name}</span>
-                                <span className="text-black">
-                                    Exam Name: {participateQuestionPaper[0]?.examName}
-                                </span>
-                            </h2>
+                        {participateQuestionPaper.length > 0 ? (
+                            <>
+                                {/* ==== User Info & Exam Info ==== */}
+                                <div className="mb-8 p-4 bg-blue-50 rounded-lg text-center mt-5">
+                                    <div className="relative">
+                                        <h2 className="text-2xl font-semibold text-center flex flex-col items-center justify-center">
+                                            <span className="text-blue-700">{participateQuestionPaper[0]?.userInfo?.name}</span>
+                                            <span className="text-black">
+                                                Exam Name: {participateQuestionPaper[0]?.examName}
+                                            </span>
+                                        </h2>
 
-                            {/* <div className="absolute top-1/2 right-4 -translate-y-1/2 font-semibold text-gray-800 border-3 border-gray-400 rounded-lg p-2">
+                                        {/* <div className="absolute top-1/2 right-4 -translate-y-1/2 font-semibold text-gray-800 border-3 border-gray-400 rounded-lg p-2">
                                 Total Scored:{" "}
                                 {participateQuestionPaper.reduce(
                                     (sum, q) => sum + (parseFloat(q.ansMark) || 0),
@@ -966,9 +1066,9 @@ const handleDownload = async () => {
                                     0
                                 )}
                             </div> */}
-                        </div>
+                                    </div>
 
-                        {/* <p className="text-sm text-gray-700 mt-1">
+                                    {/* <p className="text-sm text-gray-700 mt-1">
                             <span className="font-medium">Current Organization:</span>{" "}
                             {participateQuestionPaper[0]?.userInfo?.org || "N/A"} |{" "}
                             <span className="font-medium">Current Salary:</span> ৳
@@ -976,106 +1076,105 @@ const handleDownload = async () => {
                             <span className="font-medium">Notice Period:</span>{" "}
                             {participateQuestionPaper[0]?.userInfo?.noticePeriod || "N/A"} days
                         </p> */}
-                    </div>
-
-                    {/* ==== Question List ==== */}
-                    <div className="space-y-4">
-                        {participateQuestionPaper.map((q, index) => (
-                            <div key={index} className="p-4 border border-gray-100 rounded-lg shadow-sm">
-                                {/* Question Header + Marks */}
-                                <div className="flex justify-between items-start mb-2">
-                                    <div>
-                                        <h3 className="font-semibold text-gray-800 text-lg">
-                                            {index + 1}. {q.question}
-                                        </h3>
-                                        <span className="text-sm text-gray-500 font-medium">{q.qnType}</span>
-                                    </div>
-                                    <div className="text-sm text-gray-600 flex gap-4 mt-1">
-                                        <span>Mark: {q.qnMark ?? "-"}</span>
-                                        {/* <span>Scored: {q.ansMark ?? "-"}</span> */}
-                                    </div>
                                 </div>
 
-                                {/* MCQ Options */}
-                                {q.qnType === "MCQ" && q.options?.length > 0 && (
-                                    <ul className="ml-4 space-y-1">
-                                        {q.options.map((opt, i) => {
-                                            const isSelected = q.participateAns === opt;
-                                            return (
-                                                <li
-                                                    key={i}
-                                                    className={`p-2 rounded text-sm items-center ${
-                                                        isSelected
-                                                            ? "bg-blue-100 text-blue-800 font-medium"
-                                                            : "text-gray-700"
-                                                    }`}
-                                                >
-                                                    <span className="font-medium mr-1">
-                                                        {String.fromCharCode(65 + i)}.
+                                {/* ==== Question List ==== */}
+                                <div className="space-y-4">
+                                    {participateQuestionPaper.map((q, index) => (
+                                        <div key={index} className="p-4 border border-gray-100 rounded-lg shadow-sm">
+                                            {/* Question Header + Marks */}
+                                            <div className="flex justify-between items-start mb-2">
+                                                <div>
+                                                    <h3 className="font-semibold text-gray-800 text-lg">
+                                                        {index + 1}. {q.question}
+                                                    </h3>
+                                                    <span className="text-sm text-gray-500 font-medium">{q.qnType}</span>
+                                                </div>
+                                                <div className="text-sm text-gray-600 flex gap-4 mt-1">
+                                                    <span>Mark: {q.qnMark ?? "-"}</span>
+                                                    {/* <span>Scored: {q.ansMark ?? "-"}</span> */}
+                                                </div>
+                                            </div>
+
+                                            {/* MCQ Options */}
+                                            {q.qnType === "MCQ" && q.options?.length > 0 && (
+                                                <ul className="ml-4 space-y-1">
+                                                    {q.options.map((opt, i) => {
+                                                        const isSelected = q.participateAns === opt;
+                                                        return (
+                                                            <li
+                                                                key={i}
+                                                                className={`p-2 rounded text-sm items-center ${isSelected
+                                                                    ? "bg-blue-100 text-blue-800 font-medium"
+                                                                    : "text-gray-700"
+                                                                    }`}
+                                                            >
+                                                                <span className="font-medium mr-1">
+                                                                    {String.fromCharCode(65 + i)}.
+                                                                </span>
+                                                                {opt}
+                                                            </li>
+                                                        );
+                                                    })}
+                                                </ul>
+                                            )}
+
+                                            {/* Question Image */}
+                                            {q.qnImage && (
+                                                <div className="mb-2 flex justify-start">
+                                                    <img
+                                                        src={q.qnImage}
+                                                        alt="Question"
+                                                        className="rounded-md object-contain"
+                                                        style={{ maxHeight: "150px" }}
+                                                    />
+                                                </div>
+                                            )}
+
+                                            {/* Written Answer */}
+                                            {q.qnType !== "MCQ" && (
+                                                <div className="mt-2 ml-2 text-sm pl-2">
+                                                    <span className="font-bold">Answer:</span>{" "}
+                                                    <span style={{ textAlign: "justify", display: "block" }}>
+                                                        {q.participateAns || "No Answer Provided"}
                                                     </span>
-                                                    {opt}
-                                                </li>
-                                            );
-                                        })}
-                                    </ul>
-                                )}
+                                                </div>
+                                            )}
+                                        </div>
+                                    ))}
+                                </div>
+                            </>
+                        ) : (
+                            <p className="text-center text-gray-500 py-12 text-lg">
+                                No questions found.
+                            </p>
+                        )}
 
-                                {/* Question Image */}
-                                {q.qnImage && (
-                                    <div className="mb-2 flex justify-start">
-                                        <img
-                                            src={q.qnImage}
-                                            alt="Question"
-                                            className="rounded-md object-contain"
-                                            style={{ maxHeight: "150px" }}
-                                        />
-                                    </div>
-                                )}
-
-                                {/* Written Answer */}
-                                {q.qnType !== "MCQ" && (
-                                    <div className="mt-2 ml-2 text-sm pl-2">
-                                        <span className="font-bold">Answer:</span>{" "}
-                                        <span style={{ textAlign: "justify", display: "block" }}>
-                                            {q.participateAns || "No Answer Provided"}
-                                        </span>
-                                    </div>
-                                )}
-                            </div>
-                        ))}
+                        {/* ==== Footer Buttons ==== */}
+                        <div className="flex justify-end space-x-2 pt-4">
+                            {!isEditMode && (
+                                <button
+                                    type="button"
+                                    onClick={handleDownload}
+                                    className="px-3 py-1 bg-blue-600 text-white rounded hover:bg-blue-700"
+                                >
+                                    Download
+                                </button>
+                            )}
+                            <button
+                                type="button"
+                                onClick={() => {
+                                    setShowQuestionModal(false);
+                                    setIsEditMode(false);
+                                }}
+                                className="px-3 py-1 bg-gray-500 text-white rounded hover:bg-gray-600"
+                            >
+                                Close
+                            </button>
+                        </div>
                     </div>
-                </>
-            ) : (
-                <p className="text-center text-gray-500 py-12 text-lg">
-                    No questions found.
-                </p>
+                </div>
             )}
-
-            {/* ==== Footer Buttons ==== */}
-            <div className="flex justify-end space-x-2 pt-4">
-                {!isEditMode && (
-                    <button
-                        type="button"
-                        onClick={handleDownload}
-                        className="px-3 py-1 bg-blue-600 text-white rounded hover:bg-blue-700"
-                    >
-                        Download
-                    </button>
-                )}
-                <button
-                    type="button"
-                    onClick={() => {
-                        setShowQuestionModal(false);
-                        setIsEditMode(false);
-                    }}
-                    className="px-3 py-1 bg-gray-500 text-white rounded hover:bg-gray-600"
-                >
-                    Close
-                </button>
-            </div>
-        </div>
-    </div>
-)}
 
         </div>
     );
