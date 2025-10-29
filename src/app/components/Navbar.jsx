@@ -112,14 +112,14 @@ export default function Navbar() {
               onMouseLeave={() => setDropdownOpen(false)}
             >
               {/* Profile Link */}
-              <li>
-                <Link
+              <li className="flex items-center gap-3 px-3 py-2 rounded-lg text-gray-700 hover:bg-gradient-to-r hover:from-blue-500 hover:to-indigo-500 hover:text-white transition-all duration-300 shadow-sm hover:shadow-md">
+                {/* <Link
                   href="/homepage"
                   className="flex items-center gap-3 px-3 py-2 rounded-lg text-gray-700 hover:bg-gradient-to-r hover:from-blue-500 hover:to-indigo-500 hover:text-white transition-all duration-300 shadow-sm hover:shadow-md"
-                >
+                > */}
                   <FaRegCircleUser className="text-lg" />
                   <span className="text-sm font-medium">View Profile</span>
-                </Link>
+                {/* </Link> */}
               </li>
 
               <hr className="my-2 border-gray-200" />
