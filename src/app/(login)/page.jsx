@@ -3,18 +3,15 @@ import Image from "next/image";
 import { useContext, useState } from "react";
 import { AuthContext } from "../provider/AuthProvider";
 import config from "@/config";
+import { FiUser, FiLock } from "react-icons/fi";
+
 const Login = () => {
   const [credentials, setCredentials] = useState({ UserId: "", password: "" });
-  const [tenantId, setTenantId] = useState("");
   const { login, loading, error } = useContext(AuthContext);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
     setCredentials({ ...credentials, [name]: value });
-  };
-
-  const handleTenantChange = (e) => {
-    setTenantId(e.target.value);
   };
 
   const handleSubmit = (e) => {
@@ -23,13 +20,20 @@ const Login = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-500 flex items-center justify-center p-4">
-      <div className="flex flex-col lg:flex-row w-full max-w-4xl bg-white shadow-lg rounded-md overflow-hidden">
-        
-        {/* Left Section - Full Background Image */}
-        <div className="relative w-full lg:w-1/2 min-h-[250px] lg:min-h-[300px] bg-cover bg-center" style={{ backgroundImage: "url('/images/exam.png')" }}>
-          {/* Logo Image (Absolute Centered) */}
-          <div className="absolute top-5 left-1/2 transform -translate-x-1/2">
+    <div className="min-h-screen bg-gradient-to-r from-blue-100 to-purple-100 flex items-center justify-center p-4">
+      <div className="flex flex-col lg:flex-row w-full max-w-5xl bg-white shadow-2xl rounded-2xl overflow-hidden">
+
+        {/* Left Section - Modern Image with Overlay */}
+        <div className="relative w-full lg:w-1/2 min-h-[300px]">
+          <Image
+            src="/images/exam.png"
+            alt="Exam Background"
+            fill
+            className="object-cover"
+            priority
+          />
+          <div className="absolute inset-0 bg-black/40"></div>
+          <div className="absolute top-10 left-1/2 transform -translate-x-1/2 text-center text-white px-4">
             <Image
               src="/images/FashionTex-Logo.png"
               alt="Fashion Tex Logo"
@@ -37,70 +41,87 @@ const Login = () => {
               height={55}
               priority
             />
+            <h3 className="mt-6 text-2xl font-bold drop-shadow-lg">
+              Welcome to the Exam Portal
+            </h3>
+            <p className="mt-2 text-sm text-gray-200">
+              Focus, Perform, and Achieve your best!
+            </p>
           </div>
         </div>
 
-        {/* Right Section */}
-        <div className="w-full lg:w-1/2 p-4 lg:p-6 bg-white">
-          <h2 className="text-xl text-gray-700 font-semibold text-center mb-3">
-            Login
+        {/* Right Section - Form */}
+        <div className="w-full lg:w-1/2 p-8 lg:p-12 flex flex-col justify-center bg-white">
+          <h2 className="text-3xl text-gray-800 font-bold text-center mb-6">
+            Welcome Back
           </h2>
-          <form onSubmit={handleSubmit}> 
-            <div className="form-control mb-3">
-              <label className="label">
-                <span className="label-text text-gray-700  text-sm">User ID</span>
-              </label>
+          <p className="text-center text-gray-500 mb-8">
+            Enter your credentials to access your account
+          </p>
+
+          <form onSubmit={handleSubmit} className="space-y-6">
+
+            {/* User ID */}
+            <div className="relative">
+              <FiUser className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 text-lg" />
               <input
                 id="UserId"
                 name="UserId"
                 type="text"
-                placeholder="UserId"
-                className="peer w-full rounded-md border border-gray-300 bg-gray-50 px-4 pt-5 pb-2 text-gray-900 focus:border-blue-600 focus:ring-1 focus:ring-blue-600 focus:outline-none transition"
+                placeholder="User ID"
+                className="w-full pl-10 pr-4 py-3 rounded-xl border border-gray-300 bg-gray-50 text-gray-900 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none transition shadow-sm"
                 value={credentials.UserId}
                 onChange={handleChange}
                 required
               />
             </div>
-            {/* Password Field */}
-            <div className="form-control mb-3">
-              <label className="label">
-                <span className="label-text text-gray-700 text-sm">Password</span>
-              </label>
+
+            {/* Password */}
+            <div className="relative">
+              <FiLock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 text-lg" />
               <input
                 name="password"
                 type="password"
                 placeholder="Password"
-                className="peer w-full rounded-md border border-gray-300 bg-gray-50 px-4 pt-5 pb-2 text-gray-900 focus:border-blue-600 focus:ring-1 focus:ring-blue-600 focus:outline-none transition"
+                className="w-full pl-10 pr-4 py-3 rounded-xl border border-gray-300 bg-gray-50 text-gray-900 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none transition shadow-sm"
                 value={credentials.password}
                 onChange={handleChange}
                 required
               />
             </div>
-            {/* Remember Me and Forgot Password */}
-            <div className="form-control flex flex-row justify-between items-center mb-4">
-              <label className="flex items-center gap-2 text-sm">
+
+            {/* Remember & Forgot */}
+            <div className="flex justify-between items-center text-sm text-gray-600">
+              <label className="flex items-center gap-2">
                 <input type="checkbox" className="checkbox checkbox-sm" />
                 Remember Me
               </label>
-              <a href="#" className="text-sm text-red-500 hover:underline">
+              <a href="#" className="text-blue-500 hover:underline">
                 Forgot password?
               </a>
             </div>
-            {/* Display error message if any */}
-            {error && <div className="text-red-500 text-sm mb-3">{error}</div>}
+
+            {/* Error Message */}
+            {error && <div className="text-red-500 text-sm">{error}</div>}
 
             {/* Submit Button */}
-            <div className="form-control">
-              <button
-                className={`w-full bg-gray-800 rounded-md px-4 py-2 text-white font-medium shadow-md transition-all duration-300 transform hover:-translate-y-0.5 hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-1 ${
-                  loading ? "opacity-50 cursor-not-allowed" : ""
-                }`}
-                disabled={loading}
-              >
-                {loading ? "Logging in..." : "Login"}
-              </button>
-            </div>
+            <button
+              type="submit"
+              className={`w-full py-3 rounded-xl text-white font-semibold shadow-md transition-all duration-300 transform ${
+                loading
+                  ? "bg-blue-300 cursor-not-allowed"
+                  : "bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 hover:shadow-xl"
+              }`}
+              disabled={loading}
+            >
+              {loading ? "Logging in..." : "Login"}
+            </button>
           </form>
+
+          {/* Footer */}
+          <p className="text-center text-gray-400 text-xs mt-6">
+            &copy; 2025 Fashion Tex. All rights reserved.
+          </p>
         </div>
       </div>
     </div>
