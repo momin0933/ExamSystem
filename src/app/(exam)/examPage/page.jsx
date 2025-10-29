@@ -1,34 +1,128 @@
 "use client";
-import React from "react";
+import React, { useEffect, useState, useContext } from "react";
 import { useRouter } from "next/navigation";
+import { AuthContext } from "../../provider/AuthProvider"; // adjust path
+import toast from "react-hot-toast";
+import config from "@/config";
 
 export default function ExamLandingPage() {
   const router = useRouter();
+  const { loginData } = useContext(AuthContext);
+  console.log("User Login Data", loginData)
+
+  const [examDuration, setExamDuration] = useState(null);
+  const [totalQuestions, setTotalQuestions] = useState(null);
+  const [loading, setLoading] = useState(true);
 
   const handleStartExam = () => {
     router.push("/examStart");
   };
 
+  const fetchTimeAndQuestionNumber = async (userAutoId) => {
+    debugger;
+    try {
+      setLoading(true);
+      const response = await fetch(`${config.API_BASE_URL}api/Procedure/GetData`, {
+        method: "POST",
+        headers: {
+          TenantId: loginData?.tenantId,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+
+          operation: "",
+          procedureName: "SP_CandidateManage",
+          parameters: { QueryChecker: 5, UserAccountId: userAutoId }, // pass UserAutoId here
+        }),
+      });
+      debugger;
+      if (!response.ok) {
+        const text = await response.text();
+        throw new Error(text || "Failed to fetch exam info");
+      }
+      debugger;
+      const data = await response.json();
+      console.log("Exam Time and Question Number", data);
+      debugger;
+      if (Array.isArray(data) && data.length > 0) {
+        setExamDuration(data[0].ExamTime);
+        setTotalQuestions(data[0].TotalMark);
+      }
+    } catch (error) {
+      console.error("fetchTimeAndQuestionNumber error:", error);
+      toast.error("Failed to load exam info");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+
+  useEffect(() => {
+    if (loginData?.UserAutoId) {
+      fetchTimeAndQuestionNumber(loginData.UserAutoId);
+    }
+  }, [loginData]);
+
+
   return (
-    <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
-      <div className="bg-white shadow-lg rounded-lg p-8 max-w-2xl w-full">
-        <h1 className="text-2xl font-bold mb-4 text-center">Exam Instructions</h1>
-        <ul className="list-decimal list-inside space-y-2 text-gray-700">
-          <li><strong>Duration:</strong> 60 minutes (make sure to finish on time).</li>
-          <li><strong>Questions:</strong> 20 questions, including multiple-choice and descriptive.</li>
-          <li><strong>Navigation:</strong> Use Next/Previous buttons to move between questions.</li>
-          <li><strong>Time Management:</strong> Keep track of the timer; exam auto-submits when time ends.</li>
-          <li><strong>Answering:</strong> Select options or type answers carefully; review before submitting.</li>
-          <li><strong>No External Help:</strong> Do not use books, notes, or online sources unless allowed.</li>
-          <li><strong>Submission:</strong> Click "Submit Exam" to finish; answers cannot be changed after submission.</li>
-          <li><strong>Technical Issues:</strong> Notify the administrator immediately; do not refresh the page.</li>
-          <li><strong>Integrity:</strong> Cheating is strictly prohibited and may lead to disqualification.</li>
-          <li><strong>Good Luck!</strong> Read all questions carefully and do your best.</li>
+    <div className="flex items-center justify-center p-2 min-h-screen bg-gray-50">
+      <div >
+        <h1 className="text-3xl font-extrabold mb-6 text-center text-gray-800">
+          Exam Instructions
+        </h1>
+
+        <ul className="list-decimal list-inside space-y-4 text-gray-700 text-lg">
+          <li>
+            <span >Duration:</span>{" "}
+            {loading ? (
+              <span className="inline-block w-20 h-5 bg-gray-300 rounded animate-pulse"></span>
+            ) : (
+              <span>
+                <span className="font-semibold">{examDuration} minutes</span> (make sure to finish on time)
+              </span>
+            )}
+          </li>
+          <li>
+            <span >Questions:</span>{" "}
+            {loading ? (
+              <span className="inline-block w-10 h-5 bg-gray-300 rounded animate-pulse"></span>
+            ) : (
+              <span>
+                <span className="font-semibold">{totalQuestions} questions</span>, including multiple-choice and descriptive
+              </span>
+            )}
+          </li>
+
+          <li>
+            <span >Navigation:</span> Use Next/Previous buttons to move between questions.
+          </li>
+          <li>
+            <span >Time Management:</span> Keep track of the timer; exam auto-submits when time ends.
+          </li>
+          <li>
+            <span >Answering:</span> Select options or type answers carefully; review before submitting.
+          </li>
+          <li>
+            <span >No External Help:</span> Do not use books, notes, or online sources unless allowed.
+          </li>
+          <li>
+            <span >Submission:</span> Click "Submit Exam" to finish; answers cannot be changed after submission.
+          </li>
+          <li>
+            <span >Technical Issues:</span> Notify the administrator immediately; do not refresh the page.
+          </li>
+          <li>
+            <span >Integrity:</span> Cheating is strictly prohibited and may lead to disqualification.
+          </li>
+          <li>
+            <span >Good Luck!</span> Read all questions carefully and do your best.
+          </li>
         </ul>
-        <div className="mt-6 text-center">
+
+        <div className="mt-8 text-center">
           <button
             onClick={handleStartExam}
-            className="px-6 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors"
+            className="px-8 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-bold rounded-xl shadow-lg hover:shadow-xl hover:scale-105 transform transition-all duration-300"
           >
             Start Exam
           </button>
