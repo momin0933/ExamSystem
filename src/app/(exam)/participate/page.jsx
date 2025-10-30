@@ -37,8 +37,8 @@ export default function ParticipatePage() {
     }
 
     const handleNext = async (e) => {
-        e.preventDefault(); // Stop form auto submit
-        setErrors({}); // reset errors
+        e.preventDefault(); 
+        setErrors({}); 
 
         // Validation
         if (!formData.MobileNo?.trim() || !formData.NoticePeriod?.trim()) {
@@ -56,10 +56,10 @@ export default function ParticipatePage() {
                 MobileNo: formData.MobileNo,
                 CurrentSalary: formData.CurrentSalary
                     ? Number(formData.CurrentSalary)
-                    : null,
-                CurrentOrg: formData.CurrentOrg || null,
-                Experience: formData.Experience || null,
-                NoticePeriod: Number(formData.NoticePeriod), // ✅ Always a number now
+                    : 0,
+                CurrentOrg: formData.CurrentOrg || "NA",
+                Experience: formData.Experience || "00 Years",
+                NoticePeriod: Number(formData.NoticePeriod), 
                 Remarks: formData.Remarks || null,
                 EntryBy: loginData?.UserId,
                 EntryDate: new Date().toISOString(),

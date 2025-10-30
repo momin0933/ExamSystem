@@ -60,6 +60,8 @@ export default function AddExam() {
                     salary: item.CurrentSalary,
                     totalQnMark:item.TotalQnMark,
                     noticePeriod: item.NoticePeriod,
+                    mobileNo:item.MobileNo,
+                    experience:item.Experience
                 }));
                 console.log("Participate formatted  List", formatted);
 
@@ -466,6 +468,8 @@ export default function AddExam() {
                                 <th className="px-4 py-2">Password</th> */}
                                 <th className="px-4 py-2">Organization</th>
                                 <th className="px-4 py-2">Salary</th>
+                                <th className="px-4 py-2">Mobile No</th>
+                                <th className="px-4 py-2">Experience</th>
                                 <th className="px-4 py-2 text-center">Notice Period (days)</th>
                                 <th className="px-4 py-2">Qn Mark</th>
                                 <th className="px-4 py-2 text-center">Exam Paper</th>
@@ -487,6 +491,8 @@ export default function AddExam() {
                                         <td data-label="Password" className="px-4 py-2">{item.password}</td> */}
                                         <td data-label="Organization" className="px-4 py-2">{item.org}</td>
                                         <td data-label="Salary" className="px-4 py-2">৳ {item.salary}</td>
+                                        <td data-label="Mobile No" className="px-4 py-2">{item.mobileNo}</td>
+                                        <td data-label="Experience" className="px-4 py-2">{item.experience}</td>
                                         <td data-label="Notice Period" className="px-4 py-2 text-center">{item.noticePeriod}</td>
                                          <td data-label="Qn Mark" className="px-4 py-2 text-center">{item.totalQnMark}</td>
                                         <td data-label="Actions" className="px-4 py-2 text-center">

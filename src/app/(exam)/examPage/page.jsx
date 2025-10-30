@@ -12,6 +12,8 @@ export default function ExamLandingPage() {
 
   const [examDuration, setExamDuration] = useState(null);
   const [totalQuestions, setTotalQuestions] = useState(null);
+  const [totalMark, setTotalMark] = useState(null);
+
   const [loading, setLoading] = useState(true);
 
   const handleStartExam = () => {
@@ -19,7 +21,7 @@ export default function ExamLandingPage() {
   };
 
   const fetchTimeAndQuestionNumber = async (userAutoId) => {
-    debugger;
+ 
     try {
       setLoading(true);
       const response = await fetch(`${config.API_BASE_URL}api/Procedure/GetData`, {
@@ -35,18 +37,20 @@ export default function ExamLandingPage() {
           parameters: { QueryChecker: 5, UserAccountId: userAutoId }, // pass UserAutoId here
         }),
       });
-      debugger;
+     
       if (!response.ok) {
         const text = await response.text();
         throw new Error(text || "Failed to fetch exam info");
       }
-      debugger;
+     
       const data = await response.json();
       console.log("Exam Time and Question Number", data);
-      debugger;
+    
       if (Array.isArray(data) && data.length > 0) {
         setExamDuration(data[0].ExamTime);
-        setTotalQuestions(data[0].TotalMark);
+        setTotalMark(data[0].TotalMark);
+        setTotalQuestions(data[0].TotalQn);
+
       }
     } catch (error) {
       console.error("fetchTimeAndQuestionNumber error:", error);
@@ -88,7 +92,7 @@ export default function ExamLandingPage() {
               <span className="inline-block w-10 h-5 bg-gray-300 rounded animate-pulse"></span>
             ) : (
               <span>
-                <span className="font-semibold">{totalQuestions} questions</span>, including multiple-choice and descriptive
+                <span className="font-semibold">{totalQuestions} questions</span> and <span className="font-semibold">{totalMark} Marks</span> , including multiple-choice and descriptive
               </span>
             )}
           </li>
