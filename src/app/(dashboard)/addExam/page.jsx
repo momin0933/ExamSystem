@@ -41,6 +41,8 @@ export default function AddExam() {
     totalMark: 0,
     totalQn: 0,
     examTime: "00:00",
+    examFromDate: "",
+    examToDate: "",
     entryBy: loginData?.UserId,
     isActive: true,
   });
@@ -146,6 +148,7 @@ export default function AddExam() {
       if (!res.ok) throw new Error("Failed to fetch exams");
 
       const data = await res.json();
+      console.log("Exam Grid Data", data)
       const formattedExams = data.map(exam => ({
         id: exam.Id,
         setName: exam.SetName,
@@ -153,9 +156,11 @@ export default function AddExam() {
         setId: exam.SetId,
         totalMark: exam.TotalMark,
         totalQn: exam.TotalQn,
-        examTime: exam.ExamTime
+        examTime: exam.ExamTime,
+        fromDate: exam.FromDate,
+        toDate: exam.ToDate
       }));
-
+      console.log("Exam Grid formatted Data", formattedExams)
       setExams(formattedExams);
       setFilteredExams(formattedExams);
     } catch (err) {
@@ -223,6 +228,8 @@ export default function AddExam() {
         TotalMark: data[0].TotalMark ?? 0,
         TotalQuestions: questionMap.size,
         ExamTime: data[0].ExamTime || "00:00",
+        ExamFromDate: data[0].ExamFromDate ? new Date(data[0].ExamFromDate).toISOString().split("T")[0] : "",
+        ExamToDate: data[0].ExamToDate ? new Date(data[0].ExamToDate).toISOString().split("T")[0] : "",
         Questions: Array.from(questionMap.values()),
       };
 
@@ -238,6 +245,7 @@ export default function AddExam() {
   //Handles form submission for both add and edit operations
 
   const handleSubmit = async (e) => {
+    debugger;
     e.preventDefault();
     setLoading(true);
 
@@ -259,12 +267,23 @@ export default function AddExam() {
         SetId: Number(formData.setId),
         Name: formData.name.trim(),
         TotalMark: Number(formData.totalMark),
+        ExamFromDate: formData.examFromDate ? new Date(formData.examFromDate).toISOString() : null,
+        ExamToDate: formData.examToDate ? new Date(formData.examToDate).toISOString() : null,
         ExamTime: examTime,
         ...(isEdit
           ? { UpdateBy: loginData?.UserId }
           : { EntryBy: loginData?.UserId }),
         IsActive: true,
       };
+
+      console.log("Exam play load Data", payload)
+      if (formData.examFromDate && formData.examToDate) {
+        if (new Date(formData.examToDate) < new Date(formData.examFromDate)) {
+          toast.error("Exam To Date cannot be earlier than Exam From Date.");
+          setLoading(false);
+          return;
+        }
+      }
 
       const apiUrl = isEdit
         ? `${config.API_BASE_URL}api/Exam/UpdateExam`
@@ -304,6 +323,8 @@ export default function AddExam() {
       totalMark: 0,
       totalQn: 0,
       examTime: "00:00",
+      examFromDate: "",
+      examToDate: "",
       entryBy: loginData?.UserId,
       isActive: true
     });
@@ -351,6 +372,8 @@ export default function AddExam() {
         totalMark: data.TotalMark || 0,
         totalQn: data.TotalQn || 0,
         examTime: data.ExamTime,
+        examFromDate: data.ExamFromDate ? data.ExamFromDate.split("T")[0] : "",
+        examToDate: data.ExamToDate ? data.ExamToDate.split("T")[0] : "",
         entryBy: data.EntryBy || loginData?.UserId,
         isActive: data.IsActive ?? true,
       });
@@ -491,16 +514,17 @@ export default function AddExam() {
           <table className="min-w-full text-sm text-left text-gray-600">
             <thead className="bg-gray-100 text-xs uppercase text-gray-700">
               <tr className="border-b">
-                <th className="px-4 py-2 text-center">SL</th>
-                <th className="px-4 py-2 text-center">Set Name</th>
-                <th className="px-4 py-2 text-center">Exam Name</th>
-                <th className="px-4 py-2 text-center">Total Ques</th>
-                <th className="px-4 py-2 text-center">Total Mark</th>
-                <th className="px-4 py-2 text-center">Exam Time</th>
-                <th className="px-4 py-2 text-center">Actions</th>
+                <th className="px-4 py-2 text-center whitespace-nowrap">SL</th>
+                <th className="px-4 py-2 whitespace-nowrap">Set Name</th>
+                <th className="px-4 py-2 whitespace-nowrap">Exam Name</th>
+                <th className="px-4 py-2 whitespace-nowrap">Total Ques</th>
+                <th className="px-4 py-2 whitespace-nowrap">Total Mark</th>
+                <th className="px-4 py-2 whitespace-nowrap">From Date</th>
+                <th className="px-4 py-2 whitespace-nowrap">To Date</th>
+                <th className="px-4 py-2 whitespace-nowrap">Exam Time</th>
+                <th className="px-4 py-2 text-center whitespace-nowrap">Actions</th>
               </tr>
             </thead>
-
             <tbody className="bg-white text-xs text-gray-700">
               {filteredExams.length === 0 ? (
                 <tr key="no-exams">
@@ -510,11 +534,21 @@ export default function AddExam() {
                 filteredExams.map((item, index) => (
                   <tr key={item.id} className="border-b border-gray-300 hover:bg-gray-50">
                     <td data-label="SL" className="px-4 py-2 text-center">{index + 1}</td>
-                    <td data-label="Set Name" className="px-4 py-2 text-center">{item.setName}</td>
-                    <td data-label="Exam Name" className="px-4 py-2 text-center">{item.examName}</td>
-                    <td data-label="Total Ques" className="px-4 py-2 text-center">{item.totalQn}</td>
-                    <td data-label="Total Mark" className="px-4 py-2 text-center">{item.totalMark}</td>
-                    <td data-label="Exam Time" className="px-4 py-2 text-center">{item.examTime}</td>
+                    <td data-label="Set Name" className="px-4 py-2 ">{item.setName}</td>
+                    <td data-label="Exam Name" className="px-4 py-2 ">{item.examName}</td>
+                    <td data-label="Total Ques" className="px-4 py-2 ">{item.totalQn}</td>
+                    <td data-label="Total Mark" className="px-4 py-2 ">{item.totalMark}</td>
+                    {/* <td data-label="From Date" className="px-4 py-2 text-center">{item.fromDate}</td>
+                    <td data-label="To Date" className="px-4 py-2 text-center">{item.toDate}</td> */}
+                    <td data-label="From Date" className="px-4 py-2 ">
+                      {item.fromDate ? new Date(item.fromDate).toLocaleDateString("en-GB") : "-"}
+                    </td>
+                    <td data-label="To Date" className="px-4 py-2 ">
+                      {item.toDate ? new Date(item.toDate).toLocaleDateString("en-GB") : "-"}
+                    </td>
+
+
+                    <td data-label="Exam Time" className="px-4 py-2">{item.examTime}</td>
                     <td data-label="Actions" className="px-4 py-2 text-center">
                       <div className="flex justify-center gap-3">
                         {/* View Button */}
@@ -599,6 +633,27 @@ export default function AddExam() {
                   className="w-full border px-3 py-2 rounded"
                   placeholder="Enter exam name"
                   required
+                />
+              </div>
+              {/* Exam From Date */}
+              <div className='flex items-center gap-2 mt-2'>
+                <label className="w-1/3 text-sm font-semibold text-gray-700">Exam From Date:</label>
+                <input
+                  type="date"
+                  value={formData.examFromDate || ""}
+                  onChange={(e) => setFormData({ ...formData, examFromDate: e.target.value })}
+                  className="w-full border px-3 py-2 rounded"
+                />
+              </div>
+
+              {/* Exam To Date */}
+              <div className='flex items-center gap-2 mt-2'>
+                <label className="w-1/3 text-sm font-semibold text-gray-700">Exam To Date:</label>
+                <input
+                  type="date"
+                  value={formData.examToDate || ""}
+                  onChange={(e) => setFormData({ ...formData, examToDate: e.target.value })}
+                  className="w-full border px-3 py-2 rounded"
                 />
               </div>
 
@@ -697,7 +752,8 @@ export default function AddExam() {
             </div>
 
             {/* Basic Info */}
-            <div className="flex flex-wrap justify-between items-center gap-4 text-gray-700 text-sm font-medium mb-6">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 text-gray-700 text-medium font-medium mb-6">
+              {/* First Row */}
               <span>
                 <b>Set Name: </b>
                 <span className="font-normal">{viewData.SetName}</span>
@@ -710,6 +766,20 @@ export default function AddExam() {
                 <b>Total Mark: </b>
                 <span className="font-normal">{viewData.TotalMark}</span>
               </span>
+
+              {/* Second Row */}
+              {viewData.ExamFromDate && (
+                <span>
+                  <b>From Date: </b>
+                  <span className="font-normal">{viewData.ExamFromDate}</span>
+                </span>
+              )}
+              {viewData.ExamToDate && (
+                <span>
+                  <b>To Date: </b>
+                  <span className="font-normal">{viewData.ExamToDate}</span>
+                </span>
+              )}
               {viewData.ExamTime && (
                 <span>
                   <b>Exam Time: </b>
@@ -718,6 +788,7 @@ export default function AddExam() {
               )}
             </div>
 
+
             {/* Questions List */}
             <div className="space-y-6">
               {viewData.Questions && viewData.Questions.length > 0 ? (
@@ -725,10 +796,10 @@ export default function AddExam() {
                   <div key={q.qnId || index}>
                     {/* Question Header */}
                     <div className="mb-4 relative">
-                      <h4 className="font-semibold text-gray-800 text-lg pr-16">
+                      <h4 className="font-normal ">
                         {index + 1}. {q.question}
                       </h4>
-                      <span className="absolute top-0 right-0 text-gray-600 font-semibold">
+                      <span className="absolute top-0 right-0 font-normal">
                         Mark: {q.qnMark}
                       </span>
                     </div>

@@ -30,7 +30,7 @@ export default function AddExam() {
         AOS.init({ duration: 800, once: true });
     }, []);
 
-// for grid table
+    // for grid table
     const fetchParticipate = async () => {
         try {
             const response = await fetch(`${config.API_BASE_URL}api/Procedure/GetData`, {
@@ -58,10 +58,10 @@ export default function AddExam() {
                     password: item.Password,
                     org: item.CurrentOrg,
                     salary: item.CurrentSalary,
-                    totalQnMark:item.TotalQnMark,
+                    totalQnMark: item.TotalQnMark,
                     noticePeriod: item.NoticePeriod,
-                    mobileNo:item.MobileNo,
-                    experience:item.Experience
+                    mobileNo: item.MobileNo,
+                    experience: item.Experience
                 }));
                 console.log("Participate formatted  List", formatted);
 
@@ -75,7 +75,7 @@ export default function AddExam() {
         }
     };
 
-//for view and evaluate
+    //for view and evaluate
     const fetchParticipateQuestionPaper = async (participateId) => {
         debugger;
         try {
@@ -385,6 +385,12 @@ export default function AddExam() {
     };
 
 
+    useEffect(() => {
+        document.body.style.overflow = 'hidden';
+        return () => {
+            document.body.style.overflow = 'unset';
+        };
+    }, []);
 
     return (
         <div className="overflow-x-auto p-3">
@@ -458,77 +464,78 @@ export default function AddExam() {
                     </div>
 
                     {/* Participate  table */}
-                    <table className="min-w-full text-sm text-left text-gray-600">
-                        <thead className="bg-gray-100 text-xs uppercase text-gray-700">
-                            <tr className="border-b">
-                                <th className="px-4 py-2">SL</th>
-                                <th className="px-4 py-2">Exam Name</th>
-                                <th className="px-4 py-2">Name</th>
-                                {/* <th className="px-4 py-2">User ID</th>
-                                <th className="px-4 py-2">Password</th> */}
-                                <th className="px-4 py-2">Organization</th>
-                                <th className="px-4 py-2">Salary</th>
-                                <th className="px-4 py-2">Mobile No</th>
-                                <th className="px-4 py-2">Experience</th>
-                                <th className="px-4 py-2 text-center">Notice Period (days)</th>
-                                <th className="px-4 py-2">Qn Mark</th>
-                                <th className="px-4 py-2 text-center">Exam Paper</th>
-                            </tr>
-                        </thead>
-
-                        <tbody className="bg-white text-xs text-gray-700">
-                            {filteredSet.length === 0 ? (
-                                <tr key="no-participants">
-                                    <td colSpan="7" className="text-center py-4">No participants found</td>
+                    <div className="border border-gray-300 rounded-b-md overflow-hidden max-h-[58vh] overflow-y-auto">
+                        <table className="min-w-full text-sm text-left text-gray-600">
+                            <thead className="bg-gray-100 text-xs uppercase text-gray-700 sticky top-0 z-10">
+                                <tr className="border-b">
+                                    <th className="px-4 py-2">SL</th>
+                                    <th className="px-4 py-2">Exam Name</th>
+                                    <th className="px-4 py-2">Name</th>
+                                    {/* <th className="px-4 py-2">User ID</th>
+                                    <th className="px-4 py-2">Password</th> */}
+                                    <th className="px-4 py-2">Organization</th>
+                                    <th className="px-4 py-2">Salary</th>
+                                    <th className="px-4 py-2">Mobile No</th>
+                                    <th className="px-4 py-2">Experience</th>
+                                    <th className="px-4 py-2 text-center">Notice Period (days)</th>
+                                    <th className="px-4 py-2">Qn Mark</th>
+                                    <th className="px-4 py-2 text-center">Exam Paper</th>
                                 </tr>
-                            ) : (
-                                filteredSet.map((item, index) => (
-                                    <tr key={`${item.value}-${index}`} className="border-b border-gray-300 hover:bg-gray-50">
-                                        <td data-label="SL" className="px-4 py-2">{index + 1}</td>
-                                        <td data-label="Name" className="px-4 py-2">{item.examName}</td>
-                                        <td data-label="Name" className="px-4 py-2">{item.label}</td>
-                                        {/* <td data-label="User ID" className="px-4 py-2">{item.value}</td>
-                                        <td data-label="Password" className="px-4 py-2">{item.password}</td> */}
-                                        <td data-label="Organization" className="px-4 py-2">{item.org}</td>
-                                        <td data-label="Salary" className="px-4 py-2">৳ {item.salary}</td>
-                                        <td data-label="Mobile No" className="px-4 py-2">{item.mobileNo}</td>
-                                        <td data-label="Experience" className="px-4 py-2">{item.experience}</td>
-                                        <td data-label="Notice Period" className="px-4 py-2 text-center">{item.noticePeriod}</td>
-                                         <td data-label="Qn Mark" className="px-4 py-2 text-center">{item.totalQnMark}</td>
-                                        <td data-label="Actions" className="px-4 py-2 text-center">
-                                            <div className="flex justify-center gap-3">
+                            </thead>
 
-                                                <button
-                                                    onClick={async () => {
-                                                        await fetchParticipateQuestionPaper(item.id);
-                                                        setIsEditMode(false);
-                                                        setShowQuestionModal(true);
-                                                    }}
-                                                    className="flex items-center gap-1 px-3 py-1.5 text-sm font-medium border border-blue-500 text-blue-500 rounded hover:bg-blue-500 hover:text-white transition-colors duration-200"
-                                                >
-                                                    <FiEye className="text-base" />
-                                                </button>
-
-                                                <button
-                                                    onClick={async () => {
-                                                        await fetchParticipateQuestionPaper(item.id);
-                                                        setIsEditMode(true);
-                                                        setShowQuestionModal(true);
-                                                    }}
-                                                    className="flex items-center gap-1 px-3 py-1.5 text-sm font-medium border border-green-500 text-green-500 rounded hover:bg-green-500 hover:text-white transition-colors duration-200"
-                                                >
-                                                    <FiCheckCircle className="text-base" />
-                                                </button>
-
-                                            </div>
-                                        </td>
+                            <tbody className="bg-white text-xs text-gray-700">
+                                {filteredSet.length === 0 ? (
+                                    <tr key="no-participants">
+                                        <td colSpan="7" className="text-center py-4">No participants found</td>
                                     </tr>
-                                ))
+                                ) : (
+                                    filteredSet.map((item, index) => (
+                                        <tr key={`${item.value}-${index}`} className="border-b border-gray-300 hover:bg-gray-50">
+                                            <td data-label="SL" className="px-4 py-2">{index + 1}</td>
+                                            <td data-label="Name" className="px-4 py-2">{item.examName}</td>
+                                            <td data-label="Name" className="px-4 py-2">{item.label}</td>
+                                            {/* <td data-label="User ID" className="px-4 py-2">{item.value}</td>
+                                        <td data-label="Password" className="px-4 py-2">{item.password}</td> */}
+                                            <td data-label="Organization" className="px-4 py-2">{item.org}</td>
+                                            <td data-label="Salary" className="px-4 py-2">৳ {item.salary}</td>
+                                            <td data-label="Mobile No" className="px-4 py-2">{item.mobileNo}</td>
+                                            <td data-label="Experience" className="px-4 py-2">{item.experience}</td>
+                                            <td data-label="Notice Period" className="px-4 py-2 text-center">{item.noticePeriod}</td>
+                                            <td data-label="Qn Mark" className="px-4 py-2 text-center">{item.totalQnMark}</td>
+                                            <td data-label="Actions" className="px-4 py-2 text-center">
+                                                <div className="flex justify-center gap-3">
 
-                            )}
-                        </tbody>
-                    </table>
+                                                    <button
+                                                        onClick={async () => {
+                                                            await fetchParticipateQuestionPaper(item.id);
+                                                            setIsEditMode(false);
+                                                            setShowQuestionModal(true);
+                                                        }}
+                                                        className="flex items-center gap-1 px-3 py-1.5 text-sm font-medium border border-blue-500 text-blue-500 rounded hover:bg-blue-500 hover:text-white transition-colors duration-200"
+                                                    >
+                                                        <FiEye className="text-base" />
+                                                    </button>
 
+                                                    <button
+                                                        onClick={async () => {
+                                                            await fetchParticipateQuestionPaper(item.id);
+                                                            setIsEditMode(true);
+                                                            setShowQuestionModal(true);
+                                                        }}
+                                                        className="flex items-center gap-1 px-3 py-1.5 text-sm font-medium border border-green-500 text-green-500 rounded hover:bg-green-500 hover:text-white transition-colors duration-200"
+                                                    >
+                                                        <FiCheckCircle className="text-base" />
+                                                    </button>
+
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    ))
+
+                                )}
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
             </div>
 
@@ -551,7 +558,7 @@ export default function AddExam() {
                             <>
 
                                 <div className="mb-8 p-4 bg-blue-50 rounded-lg text-center mt-5">
-                                    <div className="relative ">                          
+                                    <div className="relative ">
                                         <h2 className="text-2xl font-semibold text-center flex flex-col items-center justify-center">
                                             <span className="text-blue-700">{participateQuestionPaper[0]?.userInfo.name}</span>
                                             <span className="text-black">Exam Name: {participateQuestionPaper[0]?.examName}</span>

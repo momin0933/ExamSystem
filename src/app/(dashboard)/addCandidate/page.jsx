@@ -59,7 +59,7 @@ export default function AddCandidate() {
                 candidate.userId.toLowerCase().includes(query) ||
                 candidate.examName.toLowerCase().includes(query) ||
                 candidate.mobileNo.toLowerCase().includes(query) ||
-                candidate.email.toLowerCase().includes(query)||
+                candidate.email.toLowerCase().includes(query) ||
                 candidate.isActive.toString().toLowerCase().includes(query)
             );
         }
@@ -692,7 +692,12 @@ export default function AddCandidate() {
         XLSX.utils.book_append_sheet(workbook, worksheet, 'Questions');
         XLSX.writeFile(workbook, 'Questions_Report.xlsx');
     };
-
+    useEffect(() => {
+        document.body.style.overflow = 'hidden';
+        return () => {
+            document.body.style.overflow = 'unset';
+        };
+    }, []);
     return (
         <div className="overflow-x-auto p-3">
             <style jsx>{`
@@ -760,49 +765,49 @@ export default function AddCandidate() {
                             <FaFileExcel onClick={handleDownloadExcel} className="text-lg cursor-pointer text-gray-50" />
                         </div>
                     </div>
-
-                    <table className="min-w-full text-sm text-left text-gray-600">
-                        <thead className="bg-gray-100 text-xs uppercase text-gray-700">
-                            <tr className="border-b">
-                                <th className="px-4 py-2 text-center">SL</th>
-                                <th className="px-4 py-2 ">Name</th>
-                                <th className="px-4 py-2 ">User Id</th>
-                                <th className="px-4 py-2 ">Password</th>
-                                <th className="px-4 py-2 ">Exam</th>
-                                <th className="px-4 py-2 ">Set</th>
-                                <th className="px-4 py-2 ">Email</th>
-                                <th className="px-4 py-2 text-center">Mobile No</th>
-                                <th className="px-4 py-2 text-center">Is Active</th>
-                                <th className="px-4 py-2 text-center">Actions</th>
-                            </tr>
-                        </thead>
-
-                        <tbody className="bg-white text-xs text-gray-700">
-                            {filteredSet.length === 0 ? (
-                                <tr key="no-data">
-                                    <td colSpan="6" className="text-center py-4">
-                                        No data found
-                                    </td>
+                    <div className="border border-gray-300 rounded-b-md overflow-hidden max-h-[68vh] overflow-y-auto">
+                        <table className="min-w-full text-sm text-left text-gray-600">
+                            <thead className="bg-gray-100 text-xs uppercase text-gray-700 sticky top-0 z-10">
+                                <tr className="border-b">
+                                    <th className="px-4 py-2 text-center">SL</th>
+                                    <th className="px-4 py-2 ">Name</th>
+                                    <th className="px-4 py-2 ">User Id</th>
+                                    <th className="px-4 py-2 ">Password</th>
+                                    <th className="px-4 py-2 ">Exam</th>
+                                    <th className="px-4 py-2 ">Set</th>
+                                    <th className="px-4 py-2 ">Email</th>
+                                    <th className="px-4 py-2 text-center">Mobile No</th>
+                                    <th className="px-4 py-2 text-center">Is Active</th>
+                                    <th className="px-4 py-2 text-center">Actions</th>
                                 </tr>
-                            ) : (
-                                filteredSet.map((candidate, index) => (
-                                    <tr
-                                        key={candidate.id ?? index}
-                                        className="border-b border-gray-300 hover:bg-gray-50"
-                                    >
-                                        <td className="px-4 py-2 text-center">{index + 1}</td>
-                                        <td className="px-4 py-2">{candidate.name}</td>
-                                        <td className="px-4 py-2 ">{candidate.userId}</td>
-                                        <td className="px-4 py-2 ">{candidate.password}</td>
-                                        <td className="px-4 py-2 ">{candidate.examName}</td>
-                                        <td className="px-4 py-2 ">{candidate.setName}</td>
-                                        <td className="px-4 py-2 ">{candidate.email}</td>
-                                        <td className="px-4 py-2 text-center">{candidate.mobileNo}</td>
+                            </thead>
 
-                                        {/* <td className="px-4 py-2 text-center">
+                            <tbody className="bg-white text-xs text-gray-700">
+                                {filteredSet.length === 0 ? (
+                                    <tr key="no-data">
+                                        <td colSpan="6" className="text-center py-4">
+                                            No data found
+                                        </td>
+                                    </tr>
+                                ) : (
+                                    filteredSet.map((candidate, index) => (
+                                        <tr
+                                            key={candidate.id ?? index}
+                                            className="border-b border-gray-300 hover:bg-gray-50"
+                                        >
+                                            <td className="px-4 py-2 text-center">{index + 1}</td>
+                                            <td className="px-4 py-2">{candidate.name}</td>
+                                            <td className="px-4 py-2 ">{candidate.userId}</td>
+                                            <td className="px-4 py-2 ">{candidate.password}</td>
+                                            <td className="px-4 py-2 ">{candidate.examName}</td>
+                                            <td className="px-4 py-2 ">{candidate.setName}</td>
+                                            <td className="px-4 py-2 ">{candidate.email}</td>
+                                            <td className="px-4 py-2 text-center">{candidate.mobileNo}</td>
+
+                                            {/* <td className="px-4 py-2 text-center">
                                             {candidate.isActive ? "Active" : "Inactive"}
                                         </td> */}
-                                        {/* <td className="px-4 py-2 text-center">
+                                            {/* <td className="px-4 py-2 text-center">
                                             <button
                                                 onClick={() => handleToggleActive(candidate)}
                                                 className={`px-3 py-1 rounded-full text-xs font-semibold ${candidate.isActive
@@ -813,7 +818,7 @@ export default function AddCandidate() {
                                                 {candidate.isActive ? "Active" : "Inactive"}
                                             </button>
                                         </td> */}
-                                        {/* <td className="px-4 py-2 text-center">
+                                            {/* <td className="px-4 py-2 text-center">
                                             <label className="relative inline-flex items-center cursor-pointer">
                                                 <input
                                                     type="checkbox"
@@ -830,28 +835,28 @@ export default function AddCandidate() {
                         
                                         </td> */}
 
-                                        <td className="px-4 py-2 text-center">
-                                            <label className="inline-flex items-center cursor-pointer">
-                                                <div className="relative">
-                                                    <input
-                                                        type="checkbox"
-                                                        checked={candidate.isActive}
-                                                        onChange={() => handleToggleActive(candidate)}
-                                                        className="sr-only peer"
-                                                    />
-                                                    <div className="w-8 h-4 bg-gray-300 rounded-full peer-checked:bg-green-500 transition-all duration-300"></div>
-                                                    <div
-                                                        className={`absolute top-[2px] left-[2px] w-3 h-3 bg-white rounded-full transition-transform duration-300 ${candidate.isActive ? "translate-x-4" : ""
-                                                            }`}
-                                                    ></div>
-                                                </div>
-                                            </label>
-                                        </td>
+                                            <td className="px-4 py-2 text-center">
+                                                <label className="inline-flex items-center cursor-pointer">
+                                                    <div className="relative">
+                                                        <input
+                                                            type="checkbox"
+                                                            checked={candidate.isActive}
+                                                            onChange={() => handleToggleActive(candidate)}
+                                                            className="sr-only peer"
+                                                        />
+                                                        <div className="w-8 h-4 bg-gray-300 rounded-full peer-checked:bg-green-500 transition-all duration-300"></div>
+                                                        <div
+                                                            className={`absolute top-[2px] left-[2px] w-3 h-3 bg-white rounded-full transition-transform duration-300 ${candidate.isActive ? "translate-x-4" : ""
+                                                                }`}
+                                                        ></div>
+                                                    </div>
+                                                </label>
+                                            </td>
 
 
-                                        <td className="px-4 py-2 text-center">
-                                            <div className="flex items-center justify-center gap-3">
-                                                {/* <button
+                                            <td className="px-4 py-2 text-center">
+                                                <div className="flex items-center justify-center gap-3">
+                                                    {/* <button
                                                     onClick={async () => {
                                                         await fetchParticipateQuestionPaper(candidate.id);
                                                         setIsEditMode(false);
@@ -861,26 +866,26 @@ export default function AddCandidate() {
                                                 >
                                                     <FiEye className="text-base" />
                                                 </button> */}
-                                                <button
-                                                    onClick={() => openEditCandidateModal(candidate)}
-                                                    className="flex items-center gap-1 px-3 py-1.5 text-sm font-medium border border-[#00925a] text-[#00925a] rounded hover:bg-[#00925a] hover:text-white transition-colors duration-200"
-                                                >
-                                                    <FiEdit className="text-base" />
-                                                </button>
-                                                {/* <button
+                                                    <button
+                                                        onClick={() => openEditCandidateModal(candidate)}
+                                                        className="flex items-center gap-1 px-3 py-1.5 text-sm font-medium border border-[#00925a] text-[#00925a] rounded hover:bg-[#00925a] hover:text-white transition-colors duration-200"
+                                                    >
+                                                        <FiEdit className="text-base" />
+                                                    </button>
+                                                    {/* <button
                                 onClick={() => openDeleteModal(candidate)}
                                 className="flex items-center gap-1 px-3 py-1.5 text-sm font-medium border border-red-500 text-red-500 rounded hover:bg-red-500 hover:text-white transition-colors duration-200"
                             >
                                 <FiTrash2 className="text-base" />
                             </button> */}
-                                            </div>
-                                        </td>
-                                    </tr>
-                                ))
-                            )}
-                        </tbody>
-                    </table>
-
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    ))
+                                )}
+                            </tbody>
+                        </table>
+                    </div>
 
                 </div>
             </div>
@@ -964,7 +969,7 @@ export default function AddCandidate() {
                                     }
                                     className="w-full border rounded p-2"
                                     placeholder="Enter mobile number"
-                                 
+
                                 />
                             </div>
 
