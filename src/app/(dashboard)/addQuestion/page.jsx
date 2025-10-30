@@ -724,7 +724,7 @@ export default function AddQuestion() {
                                         name="filterSubject"
                                         value={
                                             selectedSubject === ""
-                                                ? { value: "", label: "All Subjects" }
+                                                ? { value: "", label: "All Position" }
                                                 : subjectData.find(s => s.value === selectedSubject) || null
                                         }
                                         onChange={(selected) => {
@@ -733,10 +733,10 @@ export default function AddQuestion() {
                                             fetchQuestionsBySubject(subId);
                                         }}
                                         options={[
-                                            { value: "", label: "All Subjects" },
+                                            { value: "", label: "All Position" },
                                             ...subjectData
                                         ]}
-                                        placeholder="Select or search subject..."
+                                        placeholder="Select or search position..."
                                         className="w-full"
                                         isClearable
                                         isSearchable
@@ -758,7 +758,7 @@ export default function AddQuestion() {
                             <thead className="bg-gray-100 text-xs uppercase text-gray-700 sticky top-0">
                                 <tr className="border-b">
                                     <th className="px-4 py-2 text-center">SL</th>
-                                    <th className="px-4 py-2">Subject</th>
+                                    <th className="px-4 py-2">Position</th>
                                     <th className="px-4 py-2">Question</th>
                                     <th className="px-4 py-2">Type</th>
                                     <th className="px-4 py-2">Mark</th>
@@ -853,7 +853,7 @@ export default function AddQuestion() {
                             className="space-y-4 text-sm"
                         >
                             <div className="flex items-center gap-2 mt-2">
-                                <label className="w-1/3 text-sm font-semibold text-gray-700">Subject Name</label>
+                                <label className="w-1/3 text-sm font-semibold text-gray-700">Position Name</label>
                                 <Select
                                     name="subId"
                                     value={subjectData.find((s) => s.value === formData.subId) || null}
@@ -1144,9 +1144,9 @@ export default function AddQuestion() {
                         </div>
 
                         <div className="space-y-4 text-sm text-gray-700">
-                            {/* Subject */}
+                            {/* Position */}
                             <div className="flex items-center gap-2">
-                                <span className="w-32 font-semibold text-gray-800">Subject</span>
+                                <span className="w-32 font-semibold text-gray-800">Position</span>
                                 <span className="flex-1">{subjectData.find(s => s.value === viewData.SubjectId)?.label || "-"}</span>
                             </div>
 

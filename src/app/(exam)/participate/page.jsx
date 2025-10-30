@@ -36,38 +36,41 @@ export default function ParticipatePage() {
         setFormData({ ...formData, [e.target.name]: e.target.value })
     }
 
-    const handleNext = async () => {
-        // Reset errors
-        setErrors({});
+    const handleNext = async (e) => {
+        e.preventDefault(); // Stop form auto submit
+        setErrors({}); // reset errors
 
-        // Validate only MobileNo
-      if (!formData.MobileNo || formData.MobileNo.trim() === "" || !formData.NoticePeriod || formData.NoticePeriod.trim() === "") {
-    setErrors({
-        MobileNo: !formData.MobileNo ? "Mobile No is required" : "",
-        NoticePeriod: !formData.NoticePeriod ? "Notice Period is required" : "",
-    });
-    return;
-}
+        // Validation
+        if (!formData.MobileNo?.trim() || !formData.NoticePeriod?.trim()) {
+            setErrors({
+                MobileNo: !formData.MobileNo ? "Mobile No is required" : "",
+                NoticePeriod: !formData.NoticePeriod ? "Notice Period is required" : "",
+            });
+            toast.error("Please fill all required fields.");
+            return;
+        }
 
         try {
             const payload = {
                 CandidateId: formData.CandidateId,
                 MobileNo: formData.MobileNo,
-                CurrentSalary: formData.CurrentSalary ? Number(formData.CurrentSalary) : null,
+                CurrentSalary: formData.CurrentSalary
+                    ? Number(formData.CurrentSalary)
+                    : null,
                 CurrentOrg: formData.CurrentOrg || null,
                 Experience: formData.Experience || null,
-                NoticePeriod: formData.NoticePeriod ? Number(formData.NoticePeriod) : null,
+                NoticePeriod: Number(formData.NoticePeriod), // ✅ Always a number now
                 Remarks: formData.Remarks || null,
                 EntryBy: loginData?.UserId,
                 EntryDate: new Date().toISOString(),
-                IsActive: true
+                IsActive: true,
             };
 
             const res = await fetch(`${config.API_BASE_URL}api/Participate/AddParticipate`, {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
-                    TenantId: loginData?.tenantId
+                    TenantId: loginData?.tenantId,
                 },
                 body: JSON.stringify(payload),
             });
@@ -93,6 +96,7 @@ export default function ParticipatePage() {
 
 
 
+
     return (
         <div className="min-h-screen flex justify-center items-start pt-10 px-4">
             <div className="bg-white shadow-lg rounded-2xl w-full max-w-4xl p-8">
@@ -100,7 +104,7 @@ export default function ParticipatePage() {
                     Exam Participation Form
                 </h2>
 
-                <form>
+                <form onSubmit={handleNext}>
                     {/* Title */}
                     <h2 className="text-xl font-semibold text-gray-800 border-b pb-2 mb-6">
                         Candidate Information
@@ -137,10 +141,11 @@ export default function ParticipatePage() {
                                     className={`w-full border p-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 ${errors.MobileNo ? "border-red-500" : "border-gray-300"
                                         }`}
                                     placeholder="Enter mobile number"
+                                    required
                                 />
-                                {errors.MobileNo && (
+                                {/* {errors.MobileNo && (
                                     <p className="text-red-500 text-sm mt-1">{errors.MobileNo}</p>
-                                )}
+                                )} */}
                             </div>
                         </div>
 
@@ -202,10 +207,11 @@ export default function ParticipatePage() {
                                 placeholder="Enter Notice Period"
                                 value={formData.NoticePeriod}
                                 onChange={handleChange}
+                                required
                             />
-                             {errors.NoticePeriod && (
+                            {/* {errors.NoticePeriod && (
                                     <p className="text-red-500 text-sm mt-1">{errors.NoticePeriod}</p>
-                                )}
+                                )} */}
                         </div>
 
                     </div>
@@ -213,7 +219,7 @@ export default function ParticipatePage() {
                     {/* Next Button */}
                     <div className="flex justify-end pt-8">
                         <button
-                            type="button"
+                            type="submit"
                             onClick={handleNext}
                             className="bg-gradient-to-r from-blue-600 to-indigo-600 text-white py-2 px-5 rounded-lg font-semibold hover:shadow-lg hover:scale-105 transform transition-all duration-300"
                         >

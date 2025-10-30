@@ -6,7 +6,7 @@ import { usePathname } from 'next/navigation';
 import { AiOutlineDashboard, AiOutlineLogout } from 'react-icons/ai';
 import { GoSidebarCollapse } from 'react-icons/go';
 import { FaChevronDown } from "react-icons/fa";
-import { MdOutlineQuiz, MdSubject, MdOutlineAssignmentTurnedIn, MdManageAccounts } from "react-icons/md";
+import { MdOutlineQuiz, MdSubject, MdOutlineAssignmentTurnedIn, MdManageAccounts,MdWork  } from "react-icons/md";
 import { BsPatchQuestion } from "react-icons/bs";
 import { RiStackLine } from "react-icons/ri";
 import { FaUserPlus } from "react-icons/fa";
@@ -128,7 +128,7 @@ const getLinkClasses = (href, baseClasses = "") => {
             {!isCollapsed && activeDropdown === 2 && (
               <div className="ml-8 mt-2 space-y-1 border-l-2 border-blue-100 pl-3">
                 {[
-                  { href: "/addSubject", label: "Subject List", icon: <MdSubject /> },
+                  { href: "/addSubject", label: "Position List", icon: <MdWork  /> },
                   { href: "/addQuestion", label: "Question Bank", icon: <BsPatchQuestion /> },
                   { href: "/addSet", label: "Set List", icon: <RiStackLine /> },
                   { href: "/addExam", label: "Exam List", icon: <MdOutlineQuiz /> },

@@ -571,7 +571,7 @@ export default function AddExam() {
             <form onSubmit={handleSubmit} className="space-y-4 text-sm">
               {/* Question Set Selection */}
               <div className='flex items-center gap-2 mt-2'>
-                <label className="w-1/3 text-sm font-semibold text-gray-700">Select Set</label>
+                <label className="w-1/3 text-sm font-semibold text-gray-700">Select Set: <span className="text-red-500">*</span></label>
                 <Select
                   options={questionSet}
                   value={questionSet.find(opt => opt.value === formData.setId) || null}
@@ -585,12 +585,13 @@ export default function AddExam() {
                   className="w-full"
                   isClearable
                   isSearchable
+                  required
                 />
               </div>
 
               {/* Exam Name Input */}
               <div className='flex items-center gap-2 mt-2'>
-                <label className="w-1/3 text-sm font-semibold text-gray-700">Exam Name</label>
+                <label className="w-1/3 text-sm font-semibold text-gray-700">Exam Name: <span className="text-red-500">*</span></label>
                 <input
                   type="text"
                   value={formData.name}

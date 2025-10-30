@@ -59,7 +59,8 @@ export default function AddCandidate() {
                 candidate.userId.toLowerCase().includes(query) ||
                 candidate.examName.toLowerCase().includes(query) ||
                 candidate.mobileNo.toLowerCase().includes(query) ||
-                candidate.email.toLowerCase().includes(query)
+                candidate.email.toLowerCase().includes(query)||
+                candidate.isActive.toString().toLowerCase().includes(query)
             );
         }
         setFilteredSet(filteredData);
@@ -911,7 +912,7 @@ export default function AddCandidate() {
                         <form onSubmit={handleSubmit} className="space-y-4 text-sm">
                             {/* Full Name */}
                             <div className="flex items-center gap-2">
-                                <label className="w-1/3 font-semibold text-gray-700">Full Name</label>
+                                <label className="w-1/3 font-semibold text-gray-700">Full Name: <span className="text-red-500">*</span></label>
                                 <input
                                     type="text"
                                     name="name"
@@ -937,7 +938,7 @@ export default function AddCandidate() {
 
                             {/* Email */}
                             <div className="flex items-center gap-2">
-                                <label className="w-1/3 font-semibold text-gray-700">Email</label>
+                                <label className="w-1/3 font-semibold text-gray-700">Email: <span className="text-red-500">*</span></label>
                                 <input
                                     type="email"
                                     name="email"
@@ -952,7 +953,7 @@ export default function AddCandidate() {
                             </div>
 
                             {/* Mobile No */}
-                            {/* <div className="flex items-center gap-2">
+                            <div className="flex items-center gap-2">
                                 <label className="w-1/3 font-semibold text-gray-700">Mobile No</label>
                                 <input
                                     type="text"
@@ -963,9 +964,9 @@ export default function AddCandidate() {
                                     }
                                     className="w-full border rounded p-2"
                                     placeholder="Enter mobile number"
-                                    required
+                                 
                                 />
-                            </div> */}
+                            </div>
 
                             {/* User Role */}
                             <div className="flex items-center gap-2 mt-2">
@@ -980,7 +981,7 @@ export default function AddCandidate() {
 
                             {/* Exam Dropdown */}
                             <div className="flex items-center gap-2 mt-2">
-                                <label className="w-1/3 text-sm font-semibold text-gray-700">Select Exam</label>
+                                <label className="w-1/3 text-sm font-semibold text-gray-700">Select Exam: <span className="text-red-500">*</span></label>
                                 <Select
                                     options={exam.map((ex) => ({
                                         value: ex.id,
@@ -1002,6 +1003,7 @@ export default function AddCandidate() {
                                     className="w-full"
                                     isClearable
                                     isSearchable
+                                    required
                                 />
                             </div>
 
