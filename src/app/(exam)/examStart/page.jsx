@@ -165,66 +165,7 @@ export default function ExamStartPage() {
         if (currentIndex < questions.length - 1) setCurrentIndex(prev => prev + 1);
     };
 
-    //Submit Answered Question
-
-
-    // const handleSubmitExam = async (e) => {
-    //     debugger;
-    //     e.preventDefault();
-    //     setLoading(true);
-
-    //     try {
-    //         if (!participateId) throw new Error("Participate ID is missing!");
-    //         if (Object.keys(answers).length === 0) throw new Error("No answers found to submit.");
-
-    //         // Prepare payload
-    //         const payload = Object.entries(answers).map(([qId, ansValue]) => {
-    //             // Find the question in the questions array
-    //             const currentQuestion = questions.find(q => q.questionId === Number(qId));
-    //             let ansMark = 0;
-    //             if (currentQuestion?.qnType === "MCQ") {
-    //                 if (ansValue === currentQuestion.correctOption) {
-    //                     ansMark = currentQuestion.mark || 0;
-    //                 }
-    //             }
-    //             return {
-    //                 ParticipateId: participateId,
-    //                 QnId: Number(qId),
-    //                 Answer: ansValue || "",
-    //                 QnMark: currentQuestion?.mark || 0,
-    //                 AnsMark: ansMark,
-    //                 Remarks: null,
-    //                 EntryBy: loginData?.UserId,
-    //                 EntryDate: new Date().toISOString(),
-    //                 IsActive: true,
-    //             };
-    //         });
-
-    //         console.log("Submitting Exam Answers Payload:", payload);
-
-    //         const response = await fetch(`${config.API_BASE_URL}api/Participate/AddParticipateAns`, {
-    //             method: "POST",
-    //             headers: {
-    //                 "Content-Type": "application/json",
-    //                 TenantId: loginData?.tenantId,
-    //             },
-    //             body: JSON.stringify(payload),
-    //         });
-
-    //         if (!response.ok) {
-    //             const text = await response.text();
-    //             throw new Error(text || "Failed to submit exam answers");
-    //         }
-
-    //         toast.success("Exam answers submitted successfully!");
-    //         router.push("/examEnd");
-    //     } catch (err) {
-    //         console.error("Exam submission error:", err);
-    //         toast.error(err.message || "Error submitting exam answers.");
-    //     } finally {
-    //         setLoading(false);
-    //     }
-    // };
+   
 //Submit All Question
     const handleSubmitExam = async (e) => {
         e.preventDefault();
