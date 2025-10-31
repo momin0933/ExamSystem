@@ -19,7 +19,7 @@ export default function Navbar() {
   const [isNavOpen, setIsNavOpen] = useState(false);
 
   return (
-    <nav className="sticky top-0 z-50 bg-white shadow-md border-b border-gray-200">
+    <nav className="sticky top-0 z-50 bg-gray-600 shadow-md border-b border-gray-200">
       <div className="flex justify-between items-center px-4 py-2 lg:px-6 transition-all duration-300">
 
         {/* ===== Left: Sidebar Toggle ===== */}
@@ -29,7 +29,7 @@ export default function Navbar() {
             onClick={toggleSidebar}
             className="hidden sm:flex items-center justify-center w-10 h-10 rounded-lg hover:bg-gray-100 transition"
           >
-            <RxHamburgerMenu className="text-2xl text-gray-700" />
+            <RxHamburgerMenu className="text-2xl text-gray-50" />
           </button>
 
           {/* Mobile Toggle */}
@@ -57,11 +57,12 @@ export default function Navbar() {
           {/* Notification Icon */}
           <button
             title="Notifications"
-            className="relative w-10 h-10 flex items-center justify-center rounded-full hover:bg-gray-100 transition"
+            className="relative w-10 h-10 flex items-center justify-center rounded-full text-blue-600 hover:bg-blue-100 transition"
+
           >
             <svg
               xmlns="http://www.w3.org/2000/svg"
-              className="h-5 w-5 text-gray-700"
+              className="h-5 w-5 text-gray-50"
               fill="none"
               viewBox="0 0 24 24"
               stroke="currentColor"
@@ -82,8 +83,8 @@ export default function Navbar() {
             onClick={() => setDropdownOpen(!isDropdownOpen)}
           >
             <div className="hidden lg:block text-right">
-              <p className="text-gray-800 text-sm font-medium">{loginData?.Name}</p>
-              <p className="text-gray-500 text-xs">{loginData?.UserRole}</p>
+              <p className="text-gray-50 text-sm font-medium">{loginData?.Name}</p>
+              <p className="text-gray-50 text-xs">{loginData?.UserRole}</p>
             </div>
 
             <img
@@ -108,11 +109,11 @@ export default function Navbar() {
           {isDropdownOpen && (
             <ul
               data-aos="fade-up"
-              className="absolute right-0 top-12 w-60 bg-white/70 backdrop-blur-lg shadow-2xl rounded-2xl border border-gray-200/50 p-3 transition-all duration-300 transform origin-top-right animate-fade-in"
+              className="absolute  top-12 w-60 bg-white  transition-all duration-500 transform  animate-fade-in"
               onMouseLeave={() => setDropdownOpen(false)}
             >
               {/* Profile Link */}
-              <li className="flex items-center gap-3 px-3 py-2 rounded-lg text-gray-700 hover:bg-gradient-to-r hover:from-blue-500 hover:to-indigo-500 hover:text-white transition-all duration-300 shadow-sm hover:shadow-md">
+              <li className="flex items-center gap-3 px-3 py-2  text-gray-700 hover:bg-gradient-to-r hover:from-blue-500 hover:to-indigo-500 hover:text-white transition-all duration-300 shadow-sm hover:shadow-md">
                 {/* <Link
                   href="/homepage"
                   className="flex items-center gap-3 px-3 py-2 rounded-lg text-gray-700 hover:bg-gradient-to-r hover:from-blue-500 hover:to-indigo-500 hover:text-white transition-all duration-300 shadow-sm hover:shadow-md"
@@ -122,13 +123,11 @@ export default function Navbar() {
                 {/* </Link> */}
               </li>
 
-              <hr className="my-2 border-gray-200" />
-
               {/* Logout */}
               <li>
                 <button
                   onClick={logout}
-                  className="flex w-full items-center gap-3 px-3 py-2 rounded-lg text-gray-700 hover:bg-gradient-to-r hover:from-red-500 hover:to-pink-500 hover:text-white transition-all duration-300 shadow-sm hover:shadow-md"
+                  className="flex w-full items-center gap-3 px-3 py-2  text-gray-700 hover:bg-gradient-to-r hover:from-red-500 hover:to-pink-500 hover:text-white transition-all duration-300 shadow-sm hover:shadow-md"
                 >
                   <FiLogOut className="text-lg" />
                   <span className="text-sm font-medium">Logout</span>

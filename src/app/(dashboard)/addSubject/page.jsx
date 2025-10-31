@@ -230,21 +230,23 @@ export default function SubjectManage() {
         }
     };
 
-     useEffect(() => {
-            document.body.style.overflow = 'hidden';
-            return () => {
-                document.body.style.overflow = 'unset';
-            };
-        }, []);
+    useEffect(() => {
+        document.body.style.overflow = 'hidden';
+        return () => {
+            document.body.style.overflow = 'unset';
+        };
+    }, []);
 
-        
+
     return (
-        
+
         <div className="overflow-x-auto p-3 ">
 
-            
+            <div className="mb-1">
+                <h1 className="text-2xl font-bold text-gray-800">Position List</h1>
+            </div>
             {/* ------------------- SEARCH & ACTIONS ------------------- */}
-            <div className="rounded-md font-roboto overflow-hidden">
+            <div className="rounded-sm font-roboto overflow-hidden">
                 {/* Search & Add/Export */}
                 <div className="bg-gradient-to-r from-[#2c3e50] to-[#3498db] sticky top-0 z-20 shadow-md">
                     <div className="px-3 py-2 flex flex-wrap justify-between items-center gap-2">
@@ -261,7 +263,7 @@ export default function SubjectManage() {
                                     placeholder="Search"
                                     value={searchQuery}
                                     onChange={(e) => setSearchQuery(e.target.value)}
-                                    className="block w-full pl-10 pr-3 py-[6px] border border-gray-300 rounded-md leading-5 bg-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 sm:text-sm shadow-sm"
+                                    className="block w-full pl-10 pr-3 py-[6px] border border-gray-300 rounded-sm leading-5 bg-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 sm:text-sm shadow-sm"
                                 />
                                 {searchQuery && (
                                     <button onClick={() => setSearchQuery('')} className="absolute inset-y-0 right-0 pr-3 flex items-center">
@@ -282,7 +284,7 @@ export default function SubjectManage() {
                 </div>
 
                 {/* ------------------- TABLE WRAPPER ------------------- */}
-                <div className="border border-gray-300 rounded-b-md overflow-hidden max-h-[68vh] overflow-y-auto">
+                <div className="border border-gray-300 rounded-b-md overflow-hidden max-h-[64vh] overflow-y-auto">
                     <table className="min-w-full text-sm text-left text-gray-600">
                         <thead className="bg-gray-100 text-xs uppercase text-gray-700 sticky top-0 z-10">
                             <tr className="border-b">
@@ -327,15 +329,15 @@ export default function SubjectManage() {
             {/* ------------------- MODALS ------------------- */}
             {showModal && (
                 <div className="fixed inset-0 bg-black/20 z-50 flex items-center justify-center">
-                    <div data-aos="zoom-in" className="bg-white rounded-lg shadow-md p-6 w-full max-w-xl relative">
+                    <div data-aos="zoom-in" className="bg-white rounded-sm shadow-md p-6 w-full max-w-xl relative">
                         <button onClick={handleCloseModal} className="btn btn-sm btn-circle btn-ghost absolute right-2 top-2">✕</button>
 
-                        <h3 className="font-bold text-lg border-b border-gray-300 pb-2 mb-4">Department and Position Entry</h3>
+                        <h3 className="font-bold text-lg border-b border-gray-300 pb-2 mb-4">    {isEdit ? 'Department and Position Update' : 'Department and Position Entry'}</h3>
 
                         <form onSubmit={isEdit ? handleUpdateSubmit : handleSubmit} className="space-y-4 text-sm">
                             <div className="flex items-center gap-2 mt-2">
-                                <label className="w-1/3 text-sm font-semibold text-gray-700">Department</label>
-                                <div className="w-full">
+                                <label className="w-1/3 text-sm font-semibold text-gray-700">Department: <span className="text-red-500">*</span></label>
+                                <div className="w-full  ">
                                     <Select
                                         options={departmentData.map(d => ({ value: d.ChildId, label: d.ChildName }))}
                                         value={departmentData.map(d => ({ value: d.ChildId, label: d.ChildName }))
@@ -346,13 +348,15 @@ export default function SubjectManage() {
                                             setSelectedDepartmentLabel(selected?.label || '');
                                         }}
                                         placeholder="Select or search department..."
+                                 
                                         isSearchable
+                                        required
                                     />
                                 </div>
                             </div>
 
                             <div className='flex items-center gap-2 mt-2'>
-                                <label className="w-1/3 text-sm font-semibold text-gray-700">Position Name</label>
+                                <label className="w-1/3 text-sm font-semibold text-gray-700">Position Name: <span className="text-red-500">*</span></label>
                                 <input
                                     type="text"
                                     name="name"
@@ -363,10 +367,26 @@ export default function SubjectManage() {
                                 />
                             </div>
 
-                            <div className="flex justify-end space-x-2 pt-4">
+                            {/* <div className="flex justify-end space-x-2 pt-4">
                                 <button type="button" onClick={handleCloseModal} className="px-3 py-1 bg-gray-500 text-white rounded hover:bg-gray-600">Cancel</button>
                                 <button type="submit" className="px-3 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">{isEdit ? 'Update' : 'Save'}</button>
+                            </div> */}
+                            <div className="flex justify-end space-x-2 pt-4">
+                                <button
+                                    type="button"
+                                    onClick={handleCloseModal}
+                                    className="px-4 py-2 bg-gray-500 text-white rounded-md hover:bg-gray-600 transition-colors duration-200"
+                                >
+                                    Cancel
+                                </button>
+                                <button
+                                    type="submit"
+                                    className="px-4 py-2 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-md hover:from-blue-700 hover:to-indigo-700 shadow-md transition-all duration-200"
+                                >
+                                    {isEdit ? 'Update' : 'Save'}
+                                </button>
                             </div>
+
                         </form>
                     </div>
                 </div>

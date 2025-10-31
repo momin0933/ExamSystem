@@ -1,8 +1,25 @@
+"use client";
 
-export default async function Homepage() {
+import { useState, useEffect, useContext } from 'react';
+
+export default function Homepage() {
+
+   useEffect(() => {
+        document.body.style.overflow = 'hidden';
+        return () => {
+            document.body.style.overflow = 'unset';
+        };
+    }, []);
+    
   return (
-    <div className='font-roboto min-h-[calc(116vh-230px)]'>
-   <div>|THIS IS HOMEPAGE</div>
-    </div>
-  )
+  <div className="font-roboto flex items-center justify-center p-6">
+  
+    <p className="text-gray-600 text-sm md:text-base">
+      |THIS IS HOMEPAGE
+    </p>
+ 
+</div>
+
+  );
 }
+
