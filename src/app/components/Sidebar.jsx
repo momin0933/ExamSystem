@@ -95,7 +95,7 @@ const getLinkClasses = (href, baseClasses = "") => {
             : <GoSidebarCollapse className="text-gray-300 hidden hover:text-orange-500 transition ease-in-out" size={24} />}
         </button>
       </div>
-
+<hr className="border-t border-gray-200 w-full" />
       {/* Navigation */}
       <nav className={`flex-1 mt-4 space-y-2 ${isCollapsed ? "flex flex-col items-center" : ""}`}>
         

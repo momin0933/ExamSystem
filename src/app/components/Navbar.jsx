@@ -20,14 +20,14 @@ export default function Navbar() {
 
   return (
     <nav className="sticky top-0 z-50 bg-gray-600 shadow-md border-b border-gray-200">
-      <div className="flex justify-between items-center px-4 py-2 lg:px-6 transition-all duration-300">
+      <div className="flex justify-between items-center px-4 py-2 lg:px-2 transition-all duration-300">
 
         {/* ===== Left: Sidebar Toggle ===== */}
         <div className="flex items-center gap-2">
           {/* Desktop Sidebar Toggle */}
           <button
             onClick={toggleSidebar}
-            className="hidden sm:flex items-center justify-center w-10 h-10 rounded-lg hover:bg-gray-100 transition"
+            className="hidden sm:flex items-center justify-center w-10 h-10 cursor-pointer transition"
           >
             <RxHamburgerMenu className="text-2xl text-gray-50" />
           </button>
@@ -53,7 +53,7 @@ export default function Navbar() {
         </div>
 
         {/* ===== Right: Profile and Actions ===== */}
-        <div className="hidden sm:flex items-center gap-3 relative">
+        <div className="hidden sm:flex items-center gap-3 pr-4 relative">
           {/* Notification Icon */}
           <button
             title="Notifications"
