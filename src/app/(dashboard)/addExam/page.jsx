@@ -1,45 +1,68 @@
 'use client'
-import config from '@/config';
 import React, { useContext, useEffect, useState } from 'react';
-import { FaFileExcel } from 'react-icons/fa';
-import { AuthContext } from '../../provider/AuthProvider';
 import Link from 'next/link';
-import { IoMdAddCircle } from 'react-icons/io';
 import toast from 'react-hot-toast';
-import { FiEdit, FiTrash2 } from "react-icons/fi";
-import DeleteConfirmModal from '../../components/DeleteConfirmModal';
+import Select from 'react-select';
 import AOS from 'aos';
 import 'aos/dist/aos.css';
-import Select from 'react-select';
+
+// Icons
+import { FaFileExcel } from 'react-icons/fa';
+import { IoMdAddCircle } from 'react-icons/io';
+import { FiEdit, FiTrash2, FiEye } from "react-icons/fi";
+
+// Context and Components
+import { AuthContext } from '../../provider/AuthProvider';
+import DeleteConfirmModal from '../../components/DeleteConfirmModal';
+import config from '@/config';
 
 export default function AddExam() {
   const { loginData } = useContext(AuthContext);
-
-  // State declarations
+  // Search and Filter States
   const [searchQuery, setSearchQuery] = useState('');
+
+  // Modal Control States
   const [showModal, setShowModal] = useState(false);
-  const [questionSet, setQuestionSet] = useState([]);
-  const [loading, setLoading] = useState(false);
-  const [exam, setExam] = useState([]);
   const [isEdit, setIsEdit] = useState(false);
-  const [editId, setEditId] = useState(null);
+  const [isViewModalOpen, setIsViewModalOpen] = useState(false);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
-  const [deleteSuccessMsg, setDeleteSuccessMsg] = useState('');
-  const [deleteId, setDeleteId] = useState(null);
-  const [setData, setSetData] = useState([]);
-  const [filteredSet, setFilteredSet] = useState([]);
+
+  // Data States
+  const [questionSet, setQuestionSet] = useState([]);
+  const [exams, setExams] = useState([]);
+  const [filteredExams, setFilteredExams] = useState([]);
+  const [viewData, setViewData] = useState(null);
+
+  // Form States
   const [formData, setFormData] = useState({
     id: 0,
     name: "",
     setId: "",
     totalMark: 0,
-    examTime: "00:00", 
+    totalQn: 0,
+    examTime: "00:00",
+    examFromDate: "",
+    examToDate: "",
     entryBy: loginData?.UserId,
     isActive: true,
   });
-  const [examHour, setExamHour] = useState(formData.examTime ? formData.examTime.split(":")[0] : "00");
-  const [examMinute, setExamMinute] = useState(formData.examTime ? formData.examTime.split(":")[1] : "00");
 
+  // Time States
+  const [examHour, setExamHour] = useState("00");
+  const [examMinute, setExamMinute] = useState("00");
+
+  // Operation States
+  const [loading, setLoading] = useState(false);
+  const [editId, setEditId] = useState(null);
+  const [deleteId, setDeleteId] = useState(null);
+  const [deleteSuccessMsg, setDeleteSuccessMsg] = useState('');
+
+  // Initialize AOS animations
+  useEffect(() => {
+    AOS.init({ duration: 800, once: true });
+  }, []);
+
+  // Update time states when formData.examTime changes
   useEffect(() => {
     if (formData.examTime) {
       const [hh, mm] = formData.examTime.split(":");
@@ -48,16 +71,35 @@ export default function AddExam() {
     }
   }, [formData.examTime]);
 
-
-  // Initialize AOS animations
+  // Filter exams based on search query
   useEffect(() => {
-    AOS.init({ duration: 800, once: true });
-  }, []);
+    if (!searchQuery.trim()) {
+      setFilteredExams(exams);
+      return;
+    }
 
-  // Fetch question sets for dropdown
+    const query = searchQuery.toLowerCase();
+    const filtered = exams.filter(exam =>
+      exam.setName.toLowerCase().includes(query) ||
+      exam.examName.toLowerCase().includes(query)
+    );
+    setFilteredExams(filtered);
+  }, [searchQuery, exams]);
+
+  // Load data when tenantId is available
+  useEffect(() => {
+    if (loginData?.tenantId) {
+      fetchQuestionSets();
+      fetchExams();
+    }
+  }, [loginData?.tenantId]);
+
+
+  //Fetches all Question set for Dropdown
+
   const fetchQuestionSets = async () => {
-    if (!loginData.tenantId) {
-      console.warn("No loginData available, skipping fetch");
+    if (!loginData?.tenantId) {
+      console.warn("No tenantId available, skipping fetch");
       return;
     }
 
@@ -69,42 +111,29 @@ export default function AddExam() {
         },
       });
 
+      if (!res.ok) throw new Error("Failed to fetch question sets");
+
       const data = await res.json();
       const options = data.map(set => ({
         value: set.Id,
         label: set.Name,
-        totalMark: set.TotalMark
+        totalMark: set.TotalMark,
+        totalQn: set.TotalQn,
       }));
-      setQuestionSet(options);
 
+      setQuestionSet(options);
     } catch (err) {
-      console.error(err);
+      console.error("Error fetching question sets:", err);
       toast.error("Failed to load question sets");
     }
   };
 
 
-useEffect(() => {
-    let filteredData = setData;
+  //Fetches all exams for display in table
 
-    if (searchQuery.trim() !== '') {
-        const query = searchQuery.toLowerCase();
-        filteredData = filteredData.filter(set =>
-            set.setName.toLowerCase().includes(query) ||
-            set.examName.toLowerCase().includes(query)
-        );
-    }
-
-    setFilteredSet(filteredData);
-}, [searchQuery, setData]);
-
-
-
-  // Fetch exams list for show grid data
   const fetchExams = async () => {
-    debugger;
-    if (!loginData.tenantId) {
-      console.warn("No loginData available, skipping fetch");
+    if (!loginData?.tenantId) {
+      console.warn("No tenantId available, skipping fetch");
       return;
     }
 
@@ -116,35 +145,104 @@ useEffect(() => {
         },
       });
 
+      if (!res.ok) throw new Error("Failed to fetch exams");
+
       const data = await res.json();
-      console.log("Exam data", data)
-      const options = data.map(exam => ({
+      console.log("Exam Grid Data", data)
+      const formattedExams = data.map(exam => ({
         id: exam.Id,
         setName: exam.SetName,
         examName: exam.ExamName,
         setId: exam.SetId,
         totalMark: exam.TotalMark,
-        examTime: exam.ExamTime
+        totalQn: exam.TotalQn,
+        examTime: exam.ExamTime,
+        fromDate: exam.FromDate,
+        toDate: exam.ToDate
       }));
-
-      console.log("option", options)
-      setExam(options);
-      setSetData(options); 
-      setFilteredSet(options); 
-
+      console.log("Exam Grid formatted Data", formattedExams)
+      setExams(formattedExams);
+      setFilteredExams(formattedExams);
     } catch (err) {
-      console.error(err);
+      console.error("Error fetching exams:", err);
       toast.error("Failed to load exams");
     }
   };
 
-  // Load data on component mount
-  useEffect(() => {
-    if (loginData?.tenantId) {
-      fetchQuestionSets();
-      fetchExams();
+  //Fetches detailed exam data for view
+
+  const fetchExamById = async (id) => {
+    if (!id || !loginData?.tenantId) return;
+
+    try {
+      const response = await fetch(`${config.API_BASE_URL}api/Procedure/GetData`, {
+        method: "POST",
+        headers: {
+          TenantId: loginData.tenantId,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          operation: "",
+          procedureName: "SP_ExamManage",
+          parameters: { QueryChecker: 1, Id: id },
+        }),
+      });
+
+      if (!response.ok) throw new Error("Failed to fetch exam data");
+
+      const data = await response.json();
+
+      if (!Array.isArray(data) || data.length === 0) {
+        toast.error("No data found for this exam");
+        setViewData(null);
+        return;
+      }
+
+      // Group questions by QuestionId to handle multiple options
+      const questionMap = new Map();
+
+      data.forEach((item) => {
+        const key = item.QuestionId ?? `no-id-${item.Id}-${Math.random()}`;
+        if (!questionMap.has(key)) {
+          questionMap.set(key, {
+            qnId: item.QuestionId ?? item.Id,
+            subjectName: item.SubjectName ?? "",
+            question: item.Question || "No Question Text",
+            qnType: item.QnType ?? "MCQ",
+            qnMark: item.Mark ?? 0,
+            qnImage: item.Sketch || null,
+            options: item.OptionText ? [{ text: item.OptionText, isCorrect: item.isCorrect }] : [],
+          });
+        } else {
+          const existing = questionMap.get(key);
+          if (item.OptionText && !existing.options.some(o => o.text === item.OptionText)) {
+            existing.options.push({ text: item.OptionText, isCorrect: item.isCorrect });
+          }
+        }
+      });
+
+      const exam = {
+        Id: data[0].ExamId,
+        ExamName: data[0].ExamName || "Untitled Exam",
+        SetName: data[0].SetName || "No Set Name",
+        TotalMark: data[0].TotalMark ?? 0,
+        TotalQuestions: questionMap.size,
+        ExamTime: data[0].ExamTime || "00:00",
+        ExamFromDate: data[0].ExamFromDate ? new Date(data[0].ExamFromDate).toISOString().split("T")[0] : "",
+        ExamToDate: data[0].ExamToDate ? new Date(data[0].ExamToDate).toISOString().split("T")[0] : "",
+        Questions: Array.from(questionMap.values()),
+      };
+
+      setViewData(exam);
+      setIsViewModalOpen(true);
+    } catch (error) {
+      console.error("Error fetching exam details:", error);
+      toast.error(error.message || "Failed to load exam data");
+      setViewData(null);
     }
-  }, [loginData?.tenantId]);
+  };
+
+  //Handles form submission for both add and edit operations
 
   const handleSubmit = async (e) => {
     debugger;
@@ -152,8 +250,11 @@ useEffect(() => {
     setLoading(true);
 
     try {
+      // Input validation
       if (!formData.setId) throw new Error("Please select a question set.");
-      if (!formData.name.trim()) throw new Error("Exam name cannot be empty.");
+      if (!formData.name?.trim()) throw new Error("Exam name cannot be empty.");
+
+      // Format exam time safely
       let examTime = null;
       if (examHour || examMinute) {
         const hh = String(examHour).padStart(2, "0");
@@ -161,20 +262,28 @@ useEffect(() => {
         examTime = `${hh}:${mm}:00`;
       }
 
-
       const payload = {
         Id: formData.id,
         SetId: Number(formData.setId),
         Name: formData.name.trim(),
         TotalMark: Number(formData.totalMark),
-        ExamTime: examTime, 
+        ExamFromDate: formData.examFromDate ? new Date(formData.examFromDate).toISOString() : null,
+        ExamToDate: formData.examToDate ? new Date(formData.examToDate).toISOString() : null,
+        ExamTime: examTime,
         ...(isEdit
           ? { UpdateBy: loginData?.UserId }
           : { EntryBy: loginData?.UserId }),
         IsActive: true,
       };
 
-      console.log("Payload to submit:", payload);
+      console.log("Exam play load Data", payload)
+      if (formData.examFromDate && formData.examToDate) {
+        if (new Date(formData.examToDate) < new Date(formData.examFromDate)) {
+          toast.error("Exam To Date cannot be earlier than Exam From Date.");
+          setLoading(false);
+          return;
+        }
+      }
 
       const apiUrl = isEdit
         ? `${config.API_BASE_URL}api/Exam/UpdateExam`
@@ -189,21 +298,22 @@ useEffect(() => {
         body: JSON.stringify(payload),
       });
 
-      const result = await response.json(); 
+      const result = await response.json();
       if (!response.ok) throw new Error(result?.error || "Failed to save exam");
 
       toast.success(isEdit ? "Exam updated successfully!" : "Exam added successfully!");
       resetForm();
       setShowModal(false);
-      fetchExams();
+      fetchExams(); // Refresh the exam list
     } catch (err) {
-      console.error(err);
+      console.error("Error saving exam:", err);
       toast.error(err.message);
     } finally {
       setLoading(false);
     }
   };
 
+  //Resets form to initial state
 
   const resetForm = () => {
     setFormData({
@@ -211,31 +321,36 @@ useEffect(() => {
       name: "",
       setId: "",
       totalMark: 0,
-      remarks: "",
+      totalQn: 0,
       examTime: "00:00",
+      examFromDate: "",
+      examToDate: "",
       entryBy: loginData?.UserId,
       isActive: true
     });
-
     setExamHour("00");
     setExamMinute("00");
-
     setIsEdit(false);
     setEditId(null);
   };
 
-  // Open modal for adding new exam
+
+  //Opens modal for adding new exam
+
   const handleOpenModal = () => {
     resetForm();
     setShowModal(true);
   };
 
-  // Open modal for editing exam
+
+  //Opens modal for editing existing exam
+
   const openEditModal = async (exam) => {
     if (!exam?.id) {
       console.error("Invalid Exam ID");
       return;
     }
+
     try {
       setIsEdit(true);
       setEditId(exam.id);
@@ -250,28 +365,41 @@ useEffect(() => {
       if (!res.ok) throw new Error("Failed to fetch exam data");
 
       const data = await res.json();
-
       setFormData({
         id: data.Id,
         name: data.Name || "",
         setId: data.SetId || "",
         totalMark: data.TotalMark || 0,
+        totalQn: data.TotalQn || 0,
         examTime: data.ExamTime,
-        remarks: data.Remarks || "",
+        examFromDate: data.ExamFromDate ? data.ExamFromDate.split("T")[0] : "",
+        examToDate: data.ExamToDate ? data.ExamToDate.split("T")[0] : "",
         entryBy: data.EntryBy || loginData?.UserId,
         isActive: data.IsActive ?? true,
       });
+
       const [hh, mm] = exam.examTime ? exam.examTime.split(":") : ["00", "00"];
       setExamHour(hh);
       setExamMinute(mm);
       setShowModal(true);
     } catch (err) {
-      console.error("Error fetching exam details:", err);
+      console.error("Error fetching exam for edit:", err);
       toast.error("Failed to load exam data for editing");
     }
   };
 
-  // Open delete confirmation modal
+
+  // Opens view modal with exam details
+
+  const openViewModal = (exam) => {
+    if (!exam?.id) return;
+    fetchExamById(exam.id);
+  };
+
+
+
+  //Opens delete confirmation modal
+
   const openDeleteModal = (exam) => {
     if (!exam?.id) return;
     setDeleteId(exam.id);
@@ -279,9 +407,10 @@ useEffect(() => {
     setIsDeleteModalOpen(true);
   };
 
-  // Handle exam deletion
+  // Handles exam deletion after confirmation
+
   const handleConfirmDelete = async () => {
-    if (!deleteId) return;
+    if (!deleteId || !loginData?.tenantId) return;
 
     try {
       const response = await fetch(
@@ -303,13 +432,15 @@ useEffect(() => {
 
       setDeleteSuccessMsg("Exam deleted successfully.");
       setTimeout(() => setIsDeleteModalOpen(false), 1500);
-      fetchExams();
+      fetchExams(); // Refresh the exam list
     } catch (error) {
-      console.error(error);
+      console.error("Error deleting exam:", error);
       toast.error("Delete failed. Please try again.");
       setIsDeleteModalOpen(false);
     }
   };
+
+  // ========== RENDER COMPONENT ==========
 
   return (
     <div className="overflow-x-auto p-3">
@@ -344,7 +475,7 @@ useEffect(() => {
       <div className="rounded-md font-roboto overflow-hidden">
         <div className="bg-gradient-to-r from-[#2c3e50] to-[#3498db] sticky top-0 z-20 shadow-md">
 
-          {/* Header with search and actions */}
+          {/* Search Input */}
           <div className="px-3 py-2 flex flex-wrap justify-between items-center gap-2">
             <div className='flex items-center gap-3'>
               <div className="relative flex items-center w-full sm:w-auto min-w-[180px] max-w-[300px]">
@@ -370,7 +501,7 @@ useEffect(() => {
               </div>
             </div>
 
-            {/* Action buttons */}
+
             <div className='flex items-center gap-3'>
               <Link onClick={handleOpenModal} href="#" passHref className="text-lg text-gray-50 cursor-pointer">
                 <IoMdAddCircle className="text-xl" />
@@ -383,30 +514,51 @@ useEffect(() => {
           <table className="min-w-full text-sm text-left text-gray-600">
             <thead className="bg-gray-100 text-xs uppercase text-gray-700">
               <tr className="border-b">
-                <th className="px-4 py-2 text-center">SL</th>
-                <th className="px-4 py-2 text-center">Set Name</th>
-                <th className="px-4 py-2 text-center">Exam Name</th>
-                <th className="px-4 py-2 text-center">Total Mark</th>
-                <th className="px-4 py-2 text-center">Exam Time</th>
-                <th className="px-4 py-2 text-center">Actions</th>
+                <th className="px-4 py-2 text-center whitespace-nowrap">SL</th>
+                <th className="px-4 py-2 whitespace-nowrap">Set Name</th>
+                <th className="px-4 py-2 whitespace-nowrap">Exam Name</th>
+                <th className="px-4 py-2 whitespace-nowrap">Total Ques</th>
+                <th className="px-4 py-2 whitespace-nowrap">Total Mark</th>
+                <th className="px-4 py-2 whitespace-nowrap">From Date</th>
+                <th className="px-4 py-2 whitespace-nowrap">To Date</th>
+                <th className="px-4 py-2 whitespace-nowrap">Exam Time</th>
+                <th className="px-4 py-2 text-center whitespace-nowrap">Actions</th>
               </tr>
             </thead>
-
             <tbody className="bg-white text-xs text-gray-700">
-              {filteredSet.length === 0 ? (
+              {filteredExams.length === 0 ? (
                 <tr key="no-exams">
-                  <td colSpan="4" className="text-center py-4">No exams found</td>
+                  <td colSpan="7" className="text-center py-4">No exams found</td>
                 </tr>
               ) : (
-                filteredSet.map((item, index) => (
+                filteredExams.map((item, index) => (
                   <tr key={item.id} className="border-b border-gray-300 hover:bg-gray-50">
                     <td data-label="SL" className="px-4 py-2 text-center">{index + 1}</td>
-                    <td data-label="Set Name" className="px-4 py-2 text-center">{item.setName}</td>
-                    <td data-label="Exam Name" className="px-4 py-2 text-center">{item.examName}</td>
-                    <td data-label="Total Mark" className="px-4 py-2 text-center">{item.totalMark}</td>
-                    <td data-label="Exam Time" className="px-4 py-2 text-center">{item.examTime}</td>
+                    <td data-label="Set Name" className="px-4 py-2 ">{item.setName}</td>
+                    <td data-label="Exam Name" className="px-4 py-2 ">{item.examName}</td>
+                    <td data-label="Total Ques" className="px-4 py-2 ">{item.totalQn}</td>
+                    <td data-label="Total Mark" className="px-4 py-2 ">{item.totalMark}</td>
+                    {/* <td data-label="From Date" className="px-4 py-2 text-center">{item.fromDate}</td>
+                    <td data-label="To Date" className="px-4 py-2 text-center">{item.toDate}</td> */}
+                    <td data-label="From Date" className="px-4 py-2 ">
+                      {item.fromDate ? new Date(item.fromDate).toLocaleDateString("en-GB") : "-"}
+                    </td>
+                    <td data-label="To Date" className="px-4 py-2 ">
+                      {item.toDate ? new Date(item.toDate).toLocaleDateString("en-GB") : "-"}
+                    </td>
+
+
+                    <td data-label="Exam Time" className="px-4 py-2">{item.examTime}</td>
                     <td data-label="Actions" className="px-4 py-2 text-center">
                       <div className="flex justify-center gap-3">
+                        {/* View Button */}
+                        <button
+                          onClick={() => openViewModal(item)}
+                          className="flex items-center gap-1 px-3 py-1.5 text-sm font-medium border border-blue-500 text-blue-500 rounded hover:bg-blue-500 hover:text-white transition-colors duration-200">
+                          <FiEye />
+                        </button>
+
+                        {/* Edit Button */}
                         <button
                           onClick={() => openEditModal(item)}
                           title="Edit Exam"
@@ -414,6 +566,8 @@ useEffect(() => {
                         >
                           <FiEdit className="text-base" />
                         </button>
+
+                        {/* Delete Button */}
                         <button
                           onClick={() => openDeleteModal(item)}
                           title="Delete Exam"
@@ -451,25 +605,27 @@ useEffect(() => {
             <form onSubmit={handleSubmit} className="space-y-4 text-sm">
               {/* Question Set Selection */}
               <div className='flex items-center gap-2 mt-2'>
-                <label className="w-1/3 text-sm font-semibold text-gray-700">Select Set</label>
+                <label className="w-1/3 text-sm font-semibold text-gray-700">Select Set: <span className="text-red-500">*</span></label>
                 <Select
                   options={questionSet}
                   value={questionSet.find(opt => opt.value === formData.setId) || null}
                   onChange={(option) => setFormData({
                     ...formData,
                     setId: option?.value,
-                    totalMark: option?.totalMark || 0
+                    totalMark: option?.totalMark || 0,
+                    totalQn: option?.totalQn || 0
                   })}
                   placeholder="Select or search question set..."
                   className="w-full"
                   isClearable
                   isSearchable
+                  required
                 />
               </div>
 
               {/* Exam Name Input */}
               <div className='flex items-center gap-2 mt-2'>
-                <label className="w-1/3 text-sm font-semibold text-gray-700">Exam Name</label>
+                <label className="w-1/3 text-sm font-semibold text-gray-700">Exam Name: <span className="text-red-500">*</span></label>
                 <input
                   type="text"
                   value={formData.name}
@@ -479,21 +635,55 @@ useEffect(() => {
                   required
                 />
               </div>
-
-              {/* Total Mark Display */}
-              <div className="flex items-center gap-3">
-                <label className="w-1/3 text-sm font-semibold text-gray-700">Total Mark</label>
+              {/* Exam From Date */}
+              <div className='flex items-center gap-2 mt-2'>
+                <label className="w-1/3 text-sm font-semibold text-gray-700">Exam From Date:</label>
                 <input
-                  type="number"
-                  value={formData.totalMark}
-                  readOnly
-                  className="w-full border px-3 py-2 rounded bg-gray-100 text-gray-600"
+                  type="date"
+                  value={formData.examFromDate || ""}
+                  onChange={(e) => setFormData({ ...formData, examFromDate: e.target.value })}
+                  className="w-full border px-3 py-2 rounded"
                 />
               </div>
 
+              {/* Exam To Date */}
+              <div className='flex items-center gap-2 mt-2'>
+                <label className="w-1/3 text-sm font-semibold text-gray-700">Exam To Date:</label>
+                <input
+                  type="date"
+                  value={formData.examToDate || ""}
+                  onChange={(e) => setFormData({ ...formData, examToDate: e.target.value })}
+                  className="w-full border px-3 py-2 rounded"
+                />
+              </div>
+
+              {/* Total Mark and Questions Display */}
+              <div className="flex items-center gap-6">
+                <div className="flex items-center gap-3 w-1/2">
+                  <label className="w-1/3 text-sm font-semibold text-gray-700">Total Mark</label>
+                  <input
+                    type="number"
+                    value={formData.totalMark ?? 0}
+                    readOnly
+                    className="w-2/3 border px-3 py-2 rounded bg-gray-100 text-gray-600"
+                  />
+                </div>
+
+                <div className="flex items-center gap-3 w-1/2">
+                  <label className="w-1/3 text-sm font-semibold text-gray-700">Total Ques</label>
+                  <input
+                    type="number"
+                    value={formData.totalQn ?? 0}
+                    readOnly
+                    className="w-2/3 border px-3 py-2 rounded bg-gray-100 text-gray-600"
+                  />
+                </div>
+              </div>
+
+              {/* Exam Time Input */}
               <div className="flex items-center gap-3">
                 <label className="w-1/3 text-sm font-semibold text-gray-700">Exam Time</label>
-                <div className="flex gap-2">
+                <div className="flex gap-2 items-center">
                   <input
                     type="number"
                     min="0"
@@ -502,8 +692,9 @@ useEffect(() => {
                     onChange={(e) => setExamHour(e.target.value)}
                     className="w-16 border px-2 py-1 rounded text-center"
                     placeholder="hh"
-                  />hh
-                  <span className="flex items-center">:</span>
+                  />
+                  <span>hh</span>
+                  <span>:</span>
                   <input
                     type="number"
                     min="0"
@@ -512,10 +703,10 @@ useEffect(() => {
                     onChange={(e) => setExamMinute(e.target.value)}
                     className="w-16 border px-2 py-1 rounded text-center"
                     placeholder="mm"
-                  />mm
+                  />
+                  <span>mm</span>
                 </div>
               </div>
-
 
               {/* Form Actions */}
               <div className="flex justify-end space-x-2 pt-4">
@@ -528,12 +719,136 @@ useEffect(() => {
                 </button>
                 <button
                   type="submit"
-                  className="px-3 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+                  disabled={loading}
+                  className="px-3 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 disabled:opacity-50"
                 >
-                  {isEdit ? 'Update' : 'Save'}
+                  {loading ? 'Saving...' : isEdit ? 'Update' : 'Save'}
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* View Exam Details Modal */}
+      {isViewModalOpen && viewData && (
+        <div className="fixed inset-0 bg-black/40 z-50 flex items-center justify-center">
+          <div
+            data-aos="zoom-in"
+            className="bg-white rounded-2xl shadow-2xl w-full max-w-4xl relative overflow-y-auto max-h-[90vh] p-6"
+          >
+            {/* Close Button */}
+            <button
+              onClick={() => setIsViewModalOpen(false)}
+              className="absolute top-4 right-4 text-gray-400 hover:text-gray-700 font-bold transition"
+            >
+              ✕
+            </button>
+
+            {/* Header */}
+            <div className="mb-6 text-center">
+              <h3 className="text-2xl font-bold text-gray-800">Exam Name</h3>
+              <span className="font-normal">{viewData.ExamName}</span>
+            </div>
+
+            {/* Basic Info */}
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 text-gray-700 text-medium font-medium mb-6">
+              {/* First Row */}
+              <span>
+                <b>Set Name: </b>
+                <span className="font-normal">{viewData.SetName}</span>
+              </span>
+              <span>
+                <b>Total Questions: </b>
+                <span className="font-normal">{viewData.TotalQuestions}</span>
+              </span>
+              <span>
+                <b>Total Mark: </b>
+                <span className="font-normal">{viewData.TotalMark}</span>
+              </span>
+
+              {/* Second Row */}
+              {viewData.ExamFromDate && (
+                <span>
+                  <b>From Date: </b>
+                  <span className="font-normal">{viewData.ExamFromDate}</span>
+                </span>
+              )}
+              {viewData.ExamToDate && (
+                <span>
+                  <b>To Date: </b>
+                  <span className="font-normal">{viewData.ExamToDate}</span>
+                </span>
+              )}
+              {viewData.ExamTime && (
+                <span>
+                  <b>Exam Time: </b>
+                  <span className="font-normal">{viewData.ExamTime}</span>
+                </span>
+              )}
+            </div>
+
+
+            {/* Questions List */}
+            <div className="space-y-6">
+              {viewData.Questions && viewData.Questions.length > 0 ? (
+                viewData.Questions.map((q, index) => (
+                  <div key={q.qnId || index}>
+                    {/* Question Header */}
+                    <div className="mb-4 relative">
+                      <h4 className="font-normal ">
+                        {index + 1}. {q.question}
+                      </h4>
+                      <span className="absolute top-0 right-0 font-normal">
+                        Mark: {q.qnMark}
+                      </span>
+                    </div>
+
+                    {/* Question Image */}
+                    {q.qnImage && (
+                      <div className="mb-3 flex justify-start">
+                        <img
+                          src={q.qnImage}
+                          alt="Question"
+                          className="rounded-md object-contain border border-gray-200"
+                          style={{ maxHeight: "150px" }}
+                        />
+                      </div>
+                    )}
+
+                    {/* MCQ Options */}
+                    {q.qnType === "MCQ" && q.options && q.options.length > 0 && (
+                      <ul className="ml-4 space-y-1">
+                        {q.options.map((opt, i) => (
+                          <li
+                            key={i}
+                            className="p-2 rounded text-sm text-gray-700 hover:bg-gray-100 flex items-center"
+                          >
+                            <span className="font-medium mr-1">{String.fromCharCode(65 + i)}.</span>
+                            {opt.text}
+                            {opt.isCorrect && (
+                              <span className="ml-2 text-green-600 font-semibold">✓</span>
+                            )}
+                          </li>
+                        ))}
+                      </ul>
+                    )}
+                  </div>
+                ))
+              ) : (
+                <p className="text-center text-gray-500 py-6 text-lg">No questions found.</p>
+              )}
+            </div>
+
+            {/* Close Button */}
+            <div className="flex justify-end mt-6">
+              <button
+                onClick={() => setIsViewModalOpen(false)}
+                className="px-5 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition"
+              >
+                Close
+              </button>
+            </div>
           </div>
         </div>
       )}

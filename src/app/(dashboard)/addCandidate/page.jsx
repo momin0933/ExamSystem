@@ -13,6 +13,7 @@ import AOS from 'aos';
 import 'aos/dist/aos.css';
 import Select from 'react-select';
 
+
 export default function AddCandidate() {
     const { loginData } = useContext(AuthContext);
 
@@ -22,13 +23,16 @@ export default function AddCandidate() {
     const [isEdit, setIsEdit] = useState(false);
     const [editId, setEditId] = useState(null);
     const [showModal, setShowModal] = useState(false);
+    const [showQuestionModal, setShowQuestionModal] = useState(false);
     const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+    const [participateQuestionPaper, setParticipateQuestionPaper] = useState([]);
     const [selectedId, setSelectedId] = useState(null);
     const [deleteSuccessMsg, setDeleteSuccessMsg] = useState("");
     const [exam, setExam] = useState([]);
     const [candidates, setCandidates] = useState([]);
     const [filteredSet, setFilteredSet] = useState([]);
     const [setData, setSetData] = useState([]);
+    const [isEditMode, setIsEditMode] = useState(false);
 
     const [formData, setFormData] = useState({
         id: "",
@@ -53,15 +57,17 @@ export default function AddCandidate() {
             filteredData = filteredData.filter(candidate =>
                 candidate.name.toLowerCase().includes(query) ||
                 candidate.userId.toLowerCase().includes(query) ||
-                candidate.examName.toLowerCase().includes(query)  ||
+                candidate.examName.toLowerCase().includes(query) ||
                 candidate.mobileNo.toLowerCase().includes(query) ||
-                candidate.email.toLowerCase().includes(query) 
+                candidate.email.toLowerCase().includes(query) ||
+                candidate.isActive.toString().toLowerCase().includes(query)
             );
         }
         setFilteredSet(filteredData);
     }, [searchQuery, candidates]);
 
 
+    //For Exam Dropdown
     const fetchExams = async () => {
         if (!loginData.tenantId) return;
 
@@ -86,6 +92,63 @@ export default function AddCandidate() {
         }
     };
 
+    //For View
+    // const fetchParticipateQuestionPaper = async (userAutoId) => {
+    //     debugger;
+    //     try {
+    //         const response = await fetch(`${config.API_BASE_URL}api/Procedure/GetData`, {
+    //             method: "POST",
+    //             headers: {
+    //                 TenantId: loginData.tenantId,
+    //                 "Content-Type": "application/json",
+    //             },
+    //             body: JSON.stringify({
+    //                 operation: "",
+    //                 procedureName: "SP_CandidateManage",
+    //                 parameters: { QueryChecker: 3, UserAccountId: userAutoId },
+    //             }),
+    //         });
+    //         console.log("Check Response", response);
+    //         const data = await response.json();
+    //         console.log("Participate Question Paper", data);
+
+    //         if (Array.isArray(data)) {
+    //             const groupedData = data.reduce((acc, item) => {
+    //                 // Check if question already added
+    //                 let existing = acc.find(q => q.question === item.Question);
+
+    //                 if (!existing) {
+    //                     acc.push({
+    //                         userId: item.Id,
+    //                         examName: item.ExamName,
+    //                         totalMark: item.TotalMark,
+    //                         qnMark: item.Mark,
+    //                         setName: item.SetName,
+    //                         question: item.Question,
+    //                         qnType: item.QnType,
+    //                         // collect first option if present
+    //                         options: item.OptionText ? [item.OptionText] : [],
+    //                         userInfo: {
+    //                             name: item.ParticipateName,
+    //                         },
+    //                     });
+    //                 } else if (item.OptionText && !existing.options.includes(item.OptionText)) {
+    //                     existing.options.push(item.OptionText);
+    //                 }
+
+    //                 return acc;
+    //             }, []);
+
+    //             console.log("Grouped Question Paper Data", groupedData);
+    //             setParticipateQuestionPaper(groupedData);
+    //         }
+    //     } catch (error) {
+    //         console.error(error);
+    //         toast.error("Failed to load participate question paper");
+    //     }
+    // };
+
+    //For Grid Table
     const fetchCandidateWithExam = async () => {
         if (!loginData.tenantId) return;
 
@@ -117,10 +180,12 @@ export default function AddCandidate() {
                 name: candidate.Name,
                 password: candidate.Password,
                 examName: candidate.ExamName,
+                setName: candidate.SetName,
                 userId: candidate.UserId,
                 userRole: candidate.UserRole,
                 email: candidate.Email,
                 mobileNo: candidate.MobileNo,
+                isActive: candidate.IsActive
             }));
 
             //  Sort by id descending
@@ -136,6 +201,43 @@ export default function AddCandidate() {
         }
     };
 
+    const handleToggleActive = async (candidate) => {
+        try {
+            const newStatus = !candidate.isActive;
+
+            const response = await fetch(`${config.API_BASE_URL}api/Procedure/GetData`, {
+                method: "POST",
+                headers: {
+                    TenantId: loginData.tenantId,
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify({
+                    operation: "",
+                    procedureName: "SP_CandidateManage",
+                    parameters: {
+                        QueryChecker: 4,
+                        UserAccountId: candidate.id,
+                        IsActive: !candidate.isActive
+                    },
+                }),
+            });
+
+            if (response.ok) {
+                toast.success(`User ${newStatus ? "activated" : "deactivated"} successfully`);
+                // Update UI instantly
+                setFilteredSet((prev) =>
+                    prev.map((item) =>
+                        item.id === candidate.id ? { ...item, isActive: newStatus } : item
+                    )
+                );
+            } else {
+                toast.error("Failed to update user status");
+            }
+        } catch (err) {
+            console.error(err);
+            toast.error("Error updating user status");
+        }
+    };
 
     const generatePassword = () => {
         // random 4 chars + current timestamp in base36 to make it unique
@@ -174,7 +276,7 @@ export default function AddCandidate() {
 
 
 
-
+    //for fetch data for  Edit
     const openEditCandidateModal = async (candidate) => {
 
         if (!candidate?.id) {
@@ -242,6 +344,181 @@ export default function AddCandidate() {
         }
     };
 
+    //For Pdf Download
+
+    const handleDownload = async () => {
+        if (!participateQuestionPaper || participateQuestionPaper.length === 0) return;
+
+        const doc = new jsPDF({
+            orientation: "portrait",
+            unit: "mm",
+            format: "a4",
+        });
+
+        const pageWidth = 210;
+        const pageHeight = 297;
+        const margin = 14;
+        const topMargin = 14;
+        const bottomMargin = 14;
+        const usableWidth = pageWidth - 2 * margin;
+        let y = topMargin;
+
+        // Title - Candidate Name
+        doc.setFontSize(12);
+        doc.setFont("times", "bold");
+        doc.text(`${participateQuestionPaper[0].userInfo.name}`, pageWidth / 2, y, { align: "center" });
+        y += 6;
+        doc.text(`Exam Name: ${participateQuestionPaper[0].examName}`, pageWidth / 2, y, { align: "center" });
+
+
+        // Total Score - Top Right
+        const totalScore = participateQuestionPaper.reduce((sum, q) => sum + (parseFloat(q.ansMark) || 0), 0);
+        const totalMark = participateQuestionPaper.reduce((sum, q) => sum + (parseFloat(q.qnMark) || 0), 0);
+        doc.setFontSize(12);
+        doc.setFont("times", "bold");
+        doc.text(`Total Scored: ${totalScore} / ${totalMark}`, pageWidth - margin, y, { align: "right" });
+        y += 8;
+
+        // Candidate Info
+        const infoText = `Current Organization: ${participateQuestionPaper[0].userInfo.org} |Current Salary: ${participateQuestionPaper[0].userInfo.salary} | Notice Period: ${participateQuestionPaper[0].userInfo.noticePeriod} days`;
+        const infoLines = doc.splitTextToSize(infoText, usableWidth);
+        infoLines.forEach(line => {
+            doc.text(line, pageWidth / 2, y, { align: "center" });
+            y += 6;
+        });
+        y += 4;
+
+        // Helper: Convert image URL to Base64
+        const getBase64FromUrl = (url) => {
+            return new Promise((resolve, reject) => {
+                const img = new Image();
+                img.crossOrigin = 'Anonymous';
+                img.src = url;
+                img.onload = function () {
+                    const canvas = document.createElement('canvas');
+                    canvas.width = img.width;
+                    canvas.height = img.height;
+                    const ctx = canvas.getContext('2d');
+                    ctx.drawImage(img, 0, 0);
+                    resolve(canvas.toDataURL('image/jpeg'));
+                };
+                img.onerror = function (err) {
+                    reject(err);
+                };
+            });
+        };
+
+        // Questions Loop
+        for (const [index, q] of participateQuestionPaper.entries()) {
+            if (y + 10 > pageHeight - bottomMargin) {
+                doc.addPage();
+                y = topMargin;
+            }
+
+            // Question text (Bold, consistent font size)
+            doc.setFontSize(10);
+            doc.setFont("times", "bold");
+            const questionLines = doc.splitTextToSize(`${index + 1}. ${q.question}`, usableWidth - 50);
+            questionLines.forEach((line, i) => {
+                doc.text(line, margin, y);
+
+                if (i === 0) {
+
+                    doc.setFont("times", "bold");
+                    doc.setFontSize(10);
+                    const markText = `Mark: ${q.qnMark} | Score: ${q.ansMark || 0}`;
+                    doc.text(markText, pageWidth - margin, y, { align: "right" });
+                }
+                y += 6;
+            });
+
+            // Question image
+            if (q.qnImage) {
+                try {
+                    const imgBase64 = await getBase64FromUrl(q.qnImage);
+                    const imgProps = doc.getImageProperties(imgBase64);
+                    const imgWidth = 50;
+                    const imgHeight = (imgProps.height * imgWidth) / imgProps.width;
+
+                    if (y + imgHeight > pageHeight - bottomMargin) {
+                        doc.addPage();
+                        y = topMargin;
+                    }
+
+                    doc.addImage(imgBase64, 'JPEG', margin, y, imgWidth, imgHeight);
+                    y += imgHeight + 5;
+                } catch (err) {
+                    console.error("Failed to add image", err);
+                }
+            }
+
+            // MCQ options with symbol
+            if (q.qnType === "MCQ" && q.options.length > 0) {
+                doc.setFontSize(8);
+                doc.setFont("times", "normal");
+                q.options.forEach((opt, i) => {
+                    const prefix = String.fromCharCode(65 + i) + ". ";
+                    let symbol = "";
+
+                    if (opt.adminAnswer) symbol = "(Correct Ans)";
+                    else if (q.participateAns === opt.text) symbol = "(Applicant Ans)";
+
+                    const optionText = `${prefix}${opt.text}${symbol ? " " + symbol : ""}`;
+                    const optionLines = doc.splitTextToSize(optionText, usableWidth - 4);
+
+                    optionLines.forEach(line => {
+                        if (y + 5 > pageHeight - bottomMargin) {
+                            doc.addPage();
+                            y = topMargin;
+                        }
+                        doc.text(line, margin + 4, y);
+                        y += 5;
+                    });
+                });
+            }
+
+            // Descriptive Answer - Justified
+            if (q.qnType !== "MCQ") {
+                doc.setFontSize(8);
+                // ensure sentence has spaces between words
+                let rawText = q.participateAns || "No Answer Provided";
+                rawText = rawText.replace(/([a-z])([A-Z])/g, '$1 $2').replace(/\s+/g, ' ').trim();
+
+                const text = `Answer: ${rawText}`;
+                const words = text.split(" ");
+
+                // Bold "Answer:" only
+                doc.setFont("times", "bold");
+                doc.text("Answer:", margin, y);
+                const answerLabelWidth = doc.getTextWidth("Answer: ");
+                doc.setFont("times", "normal");
+
+                let x = margin + answerLabelWidth;
+                const lineHeight = 5;
+
+                words.slice(1).forEach(word => {
+                    const wordWidth = doc.getTextWidth(word + " ");
+                    if (x + wordWidth > margin + usableWidth) {
+                        y += lineHeight;
+                        if (y + lineHeight > pageHeight - bottomMargin) {
+                            doc.addPage();
+                            y = topMargin;
+                        }
+                        x = margin;
+                    }
+                    doc.text(word, x, y);
+                    x += wordWidth;
+                });
+
+                y += 8;
+            }
+
+            y += 6; // spacing after each question
+        }
+
+        // Save PDF
+        doc.save(`${participateQuestionPaper[0].userInfo.name}_answers.pdf`);
+    };
 
     useEffect(() => {
         if (!loginData?.tenantId) return;
@@ -273,14 +550,14 @@ export default function AddCandidate() {
         setShowModal(true);
     };
 
-
+    //Insert and Update
     const handleSubmit = async (e) => {
         e.preventDefault();
 
         // Basic validation
         if (!formData.name.trim()) return toast.error("Name is required");
         if (!formData.email.trim()) return toast.error("Email is required");
-        if (!formData.mobileNo.trim()) return toast.error("Mobile No is required");
+        // if (!formData.mobileNo.trim()) return toast.error("Mobile No is required");
 
         // Prepare payload
         const payload = {
@@ -415,7 +692,12 @@ export default function AddCandidate() {
         XLSX.utils.book_append_sheet(workbook, worksheet, 'Questions');
         XLSX.writeFile(workbook, 'Questions_Report.xlsx');
     };
-
+    useEffect(() => {
+        document.body.style.overflow = 'hidden';
+        return () => {
+            document.body.style.overflow = 'unset';
+        };
+    }, []);
     return (
         <div className="overflow-x-auto p-3">
             <style jsx>{`
@@ -483,69 +765,127 @@ export default function AddCandidate() {
                             <FaFileExcel onClick={handleDownloadExcel} className="text-lg cursor-pointer text-gray-50" />
                         </div>
                     </div>
-
-                    <table className="min-w-full text-sm text-left text-gray-600">
-                        <thead className="bg-gray-100 text-xs uppercase text-gray-700">
-                            <tr className="border-b">
-                                <th className="px-4 py-2 text-center">SL</th>
-                                <th className="px-4 py-2 ">Name</th>
-                                <th className="px-4 py-2 text-center">User Id</th>
-                                <th className="px-4 py-2 text-center">Password</th>
-                                <th className="px-4 py-2 ">Exam</th>
-                                <th className="px-4 py-2 text-center">Email</th>
-                                <th className="px-4 py-2 text-center">Mobile No</th>
-                                <th className="px-4 py-2 text-center">Actions</th>
-                            </tr>
-                        </thead>
-
-                        <tbody className="bg-white text-xs text-gray-700">
-                            {filteredSet.length === 0 ? (
-                                <tr key="no-data">
-                                    <td colSpan="6" className="text-center py-4">
-                                        No data found
-                                    </td>
+                    <div className="border border-gray-300 rounded-b-md overflow-hidden max-h-[68vh] overflow-y-auto">
+                        <table className="min-w-full text-sm text-left text-gray-600">
+                            <thead className="bg-gray-100 text-xs uppercase text-gray-700 sticky top-0 z-10">
+                                <tr className="border-b">
+                                    <th className="px-4 py-2 text-center">SL</th>
+                                    <th className="px-4 py-2 ">Name</th>
+                                    <th className="px-4 py-2 ">User Id</th>
+                                    <th className="px-4 py-2 ">Password</th>
+                                    <th className="px-4 py-2 ">Exam</th>
+                                    <th className="px-4 py-2 ">Set</th>
+                                    <th className="px-4 py-2 ">Email</th>
+                                    <th className="px-4 py-2 text-center">Mobile No</th>
+                                    <th className="px-4 py-2 text-center">Is Active</th>
+                                    <th className="px-4 py-2 text-center">Actions</th>
                                 </tr>
-                            ) : (
-                                filteredSet.map((candidate, index) => (
-                                    <tr
-                                        key={candidate.id ?? index}
-                                        className="border-b border-gray-300 hover:bg-gray-50"
-                                    >
-                                        <td className="px-4 py-2 text-center">{index + 1}</td>
-                                        <td className="px-4 py-2">{candidate.name}</td>
-                                        <td className="px-4 py-2 text-center">{candidate.userId}</td>
-                                        <td className="px-4 py-2 text-center">{candidate.password}</td>
-                                        <td className="px-4 py-2 ">{candidate.examName}</td>
-                                        <td className="px-4 py-2 text-center">{candidate.email}</td>
-                                        <td className="px-4 py-2 text-center">{candidate.mobileNo}</td>
-                                        <td className="px-4 py-2 text-center">
-                                            <div className="flex items-center justify-center gap-3">
-                                                {/* <button
-                                onClick={() => openViewModal(candidate)}
-                                className="flex items-center gap-1 px-3 py-1.5 text-sm font-medium border border-blue-500 text-blue-500 rounded hover:bg-blue-500 hover:text-white transition-colors duration-200"
-                            >
-                                <FiEye className="text-base" />
-                            </button> */}
-                                                <button
-                                                    onClick={() => openEditCandidateModal(candidate)}
-                                                    className="flex items-center gap-1 px-3 py-1.5 text-sm font-medium border border-[#00925a] text-[#00925a] rounded hover:bg-[#00925a] hover:text-white transition-colors duration-200"
+                            </thead>
+
+                            <tbody className="bg-white text-xs text-gray-700">
+                                {filteredSet.length === 0 ? (
+                                    <tr key="no-data">
+                                        <td colSpan="6" className="text-center py-4">
+                                            No data found
+                                        </td>
+                                    </tr>
+                                ) : (
+                                    filteredSet.map((candidate, index) => (
+                                        <tr
+                                            key={candidate.id ?? index}
+                                            className="border-b border-gray-300 hover:bg-gray-50"
+                                        >
+                                            <td className="px-4 py-2 text-center">{index + 1}</td>
+                                            <td className="px-4 py-2">{candidate.name}</td>
+                                            <td className="px-4 py-2 ">{candidate.userId}</td>
+                                            <td className="px-4 py-2 ">{candidate.password}</td>
+                                            <td className="px-4 py-2 ">{candidate.examName}</td>
+                                            <td className="px-4 py-2 ">{candidate.setName}</td>
+                                            <td className="px-4 py-2 ">{candidate.email}</td>
+                                            <td className="px-4 py-2 text-center">{candidate.mobileNo}</td>
+
+                                            {/* <td className="px-4 py-2 text-center">
+                                            {candidate.isActive ? "Active" : "Inactive"}
+                                        </td> */}
+                                            {/* <td className="px-4 py-2 text-center">
+                                            <button
+                                                onClick={() => handleToggleActive(candidate)}
+                                                className={`px-3 py-1 rounded-full text-xs font-semibold ${candidate.isActive
+                                                    ? "bg-green-100 text-green-700 border border-green-500"
+                                                    : "bg-red-100 text-red-700 border border-red-500"
+                                                    }`}
+                                            >
+                                                {candidate.isActive ? "Active" : "Inactive"}
+                                            </button>
+                                        </td> */}
+                                            {/* <td className="px-4 py-2 text-center">
+                                            <label className="relative inline-flex items-center cursor-pointer">
+                                                <input
+                                                    type="checkbox"
+                                                    className="sr-only peer"
+                                                    checked={candidate.isActive}
+                                                    onChange={() => handleToggleActive(candidate)}
+                                                />
+                                                <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:bg-green-500 transition-colors duration-300"></div>
+                                                <span
+                                                    className={`absolute left-[4px] top-[4px] bg-white w-4 h-4 rounded-full transition-transform duration-300 ${candidate.isActive ? "translate-x-5" : ""
+                                                        }`}
+                                                ></span>
+                                            </label>
+                        
+                                        </td> */}
+
+                                            <td className="px-4 py-2 text-center">
+                                                <label className="inline-flex items-center cursor-pointer">
+                                                    <div className="relative">
+                                                        <input
+                                                            type="checkbox"
+                                                            checked={candidate.isActive}
+                                                            onChange={() => handleToggleActive(candidate)}
+                                                            className="sr-only peer"
+                                                        />
+                                                        <div className="w-8 h-4 bg-gray-300 rounded-full peer-checked:bg-green-500 transition-all duration-300"></div>
+                                                        <div
+                                                            className={`absolute top-[2px] left-[2px] w-3 h-3 bg-white rounded-full transition-transform duration-300 ${candidate.isActive ? "translate-x-4" : ""
+                                                                }`}
+                                                        ></div>
+                                                    </div>
+                                                </label>
+                                            </td>
+
+
+                                            <td className="px-4 py-2 text-center">
+                                                <div className="flex items-center justify-center gap-3">
+                                                    {/* <button
+                                                    onClick={async () => {
+                                                        await fetchParticipateQuestionPaper(candidate.id);
+                                                        setIsEditMode(false);
+                                                        setShowQuestionModal(true);
+                                                    }}
+                                                    className="flex items-center gap-1 px-3 py-1.5 text-sm font-medium border border-blue-500 text-blue-500 rounded hover:bg-blue-500 hover:text-white transition-colors duration-200"
                                                 >
-                                                    <FiEdit className="text-base" />
-                                                </button>
-                                                {/* <button
+                                                    <FiEye className="text-base" />
+                                                </button> */}
+                                                    <button
+                                                        onClick={() => openEditCandidateModal(candidate)}
+                                                        className="flex items-center gap-1 px-3 py-1.5 text-sm font-medium border border-[#00925a] text-[#00925a] rounded hover:bg-[#00925a] hover:text-white transition-colors duration-200"
+                                                    >
+                                                        <FiEdit className="text-base" />
+                                                    </button>
+                                                    {/* <button
                                 onClick={() => openDeleteModal(candidate)}
                                 className="flex items-center gap-1 px-3 py-1.5 text-sm font-medium border border-red-500 text-red-500 rounded hover:bg-red-500 hover:text-white transition-colors duration-200"
                             >
                                 <FiTrash2 className="text-base" />
                             </button> */}
-                                            </div>
-                                        </td>
-                                    </tr>
-                                ))
-                            )}
-                        </tbody>
-                    </table>
-
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    ))
+                                )}
+                            </tbody>
+                        </table>
+                    </div>
 
                 </div>
             </div>
@@ -577,7 +917,7 @@ export default function AddCandidate() {
                         <form onSubmit={handleSubmit} className="space-y-4 text-sm">
                             {/* Full Name */}
                             <div className="flex items-center gap-2">
-                                <label className="w-1/3 font-semibold text-gray-700">Full Name</label>
+                                <label className="w-1/3 font-semibold text-gray-700">Full Name: <span className="text-red-500">*</span></label>
                                 <input
                                     type="text"
                                     name="name"
@@ -603,7 +943,7 @@ export default function AddCandidate() {
 
                             {/* Email */}
                             <div className="flex items-center gap-2">
-                                <label className="w-1/3 font-semibold text-gray-700">Email</label>
+                                <label className="w-1/3 font-semibold text-gray-700">Email: <span className="text-red-500">*</span></label>
                                 <input
                                     type="email"
                                     name="email"
@@ -629,7 +969,7 @@ export default function AddCandidate() {
                                     }
                                     className="w-full border rounded p-2"
                                     placeholder="Enter mobile number"
-                                    required
+
                                 />
                             </div>
 
@@ -646,7 +986,7 @@ export default function AddCandidate() {
 
                             {/* Exam Dropdown */}
                             <div className="flex items-center gap-2 mt-2">
-                                <label className="w-1/3 text-sm font-semibold text-gray-700">Select Exam</label>
+                                <label className="w-1/3 text-sm font-semibold text-gray-700">Select Exam: <span className="text-red-500">*</span></label>
                                 <Select
                                     options={exam.map((ex) => ({
                                         value: ex.id,
@@ -668,6 +1008,7 @@ export default function AddCandidate() {
                                     className="w-full"
                                     isClearable
                                     isSearchable
+                                    required
                                 />
                             </div>
 
@@ -692,6 +1033,156 @@ export default function AddCandidate() {
                 </div>
 
             )}
+
+
+            {showQuestionModal && (
+                <div className="fixed inset-0 bg-black/40 flex items-start justify-center z-50 p-4 overflow-y-auto">
+                    <div className="bg-white rounded-xl p-6 w-full max-w-4xl mt-10 relative">
+                        {/* Close button */}
+                        <button
+                            onClick={() => {
+                                setShowQuestionModal(false);
+                                setIsEditMode(false);
+                            }}
+                            className="absolute top-4 right-4 text-gray-500 hover:text-gray-800 text-lg font-bold"
+                        >
+                            ✕
+                        </button>
+
+                        {participateQuestionPaper.length > 0 ? (
+                            <>
+                                {/* ==== User Info & Exam Info ==== */}
+                                <div className="mb-8 p-4 bg-blue-50 rounded-lg text-center mt-5">
+                                    <div className="relative">
+                                        <h2 className="text-2xl font-semibold text-center flex flex-col items-center justify-center">
+                                            <span className="text-blue-700">{participateQuestionPaper[0]?.userInfo?.name}</span>
+                                            <span className="text-black">
+                                                Exam Name: {participateQuestionPaper[0]?.examName}
+                                            </span>
+                                        </h2>
+
+                                        {/* <div className="absolute top-1/2 right-4 -translate-y-1/2 font-semibold text-gray-800 border-3 border-gray-400 rounded-lg p-2">
+                                Total Scored:{" "}
+                                {participateQuestionPaper.reduce(
+                                    (sum, q) => sum + (parseFloat(q.ansMark) || 0),
+                                    0
+                                )}{" "}
+                                /{" "}
+                                {participateQuestionPaper.reduce(
+                                    (sum, q) => sum + (parseFloat(q.qnMark) || 0),
+                                    0
+                                )}
+                            </div> */}
+                                    </div>
+
+                                    {/* <p className="text-sm text-gray-700 mt-1">
+                            <span className="font-medium">Current Organization:</span>{" "}
+                            {participateQuestionPaper[0]?.userInfo?.org || "N/A"} |{" "}
+                            <span className="font-medium">Current Salary:</span> ৳
+                            {participateQuestionPaper[0]?.userInfo?.salary || "N/A"} |{" "}
+                            <span className="font-medium">Notice Period:</span>{" "}
+                            {participateQuestionPaper[0]?.userInfo?.noticePeriod || "N/A"} days
+                        </p> */}
+                                </div>
+
+                                {/* ==== Question List ==== */}
+                                <div className="space-y-4">
+                                    {participateQuestionPaper.map((q, index) => (
+                                        <div key={index} className="p-4 border border-gray-100 rounded-lg shadow-sm">
+                                            {/* Question Header + Marks */}
+                                            <div className="flex justify-between items-start mb-2">
+                                                <div>
+                                                    <h3 className="font-semibold text-gray-800 text-lg">
+                                                        {index + 1}. {q.question}
+                                                    </h3>
+                                                    <span className="text-sm text-gray-500 font-medium">{q.qnType}</span>
+                                                </div>
+                                                <div className="text-sm text-gray-600 flex gap-4 mt-1">
+                                                    <span>Mark: {q.qnMark ?? "-"}</span>
+                                                    {/* <span>Scored: {q.ansMark ?? "-"}</span> */}
+                                                </div>
+                                            </div>
+
+                                            {/* MCQ Options */}
+                                            {q.qnType === "MCQ" && q.options?.length > 0 && (
+                                                <ul className="ml-4 space-y-1">
+                                                    {q.options.map((opt, i) => {
+                                                        const isSelected = q.participateAns === opt;
+                                                        return (
+                                                            <li
+                                                                key={i}
+                                                                className={`p-2 rounded text-sm items-center ${isSelected
+                                                                    ? "bg-blue-100 text-blue-800 font-medium"
+                                                                    : "text-gray-700"
+                                                                    }`}
+                                                            >
+                                                                <span className="font-medium mr-1">
+                                                                    {String.fromCharCode(65 + i)}.
+                                                                </span>
+                                                                {opt}
+                                                            </li>
+                                                        );
+                                                    })}
+                                                </ul>
+                                            )}
+
+                                            {/* Question Image */}
+                                            {q.qnImage && (
+                                                <div className="mb-2 flex justify-start">
+                                                    <img
+                                                        src={q.qnImage}
+                                                        alt="Question"
+                                                        className="rounded-md object-contain"
+                                                        style={{ maxHeight: "150px" }}
+                                                    />
+                                                </div>
+                                            )}
+
+                                            {/* Written Answer */}
+                                            {q.qnType !== "MCQ" && (
+                                                <div className="mt-2 ml-2 text-sm pl-2">
+                                                    <span className="font-bold">Answer:</span>{" "}
+                                                    <span style={{ textAlign: "justify", display: "block" }}>
+                                                        {q.participateAns || "No Answer Provided"}
+                                                    </span>
+                                                </div>
+                                            )}
+                                        </div>
+                                    ))}
+                                </div>
+                            </>
+                        ) : (
+                            <p className="text-center text-gray-500 py-12 text-lg">
+                                No questions found.
+                            </p>
+                        )}
+
+                        {/* ==== Footer Buttons ==== */}
+                        <div className="flex justify-end space-x-2 pt-4">
+                            {!isEditMode && (
+                                <button
+                                    type="button"
+                                    onClick={handleDownload}
+                                    className="px-3 py-1 bg-blue-600 text-white rounded hover:bg-blue-700"
+                                >
+                                    Download
+                                </button>
+                            )}
+                            <button
+                                type="button"
+                                onClick={() => {
+                                    setShowQuestionModal(false);
+                                    setIsEditMode(false);
+                                }}
+                                className="px-3 py-1 bg-gray-500 text-white rounded hover:bg-gray-600"
+                            >
+                                Close
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
         </div>
     );
 }

@@ -16,6 +16,8 @@ import Select from 'react-select';
 export default function AddQuestion() {
     const { loginData } = useContext(AuthContext);
 
+    // State Declaration 
+
     const [questionData, setQuestionData] = useState([]);
     const [filteredQuestion, setFilteredQuestion] = useState([]);
     const [loading, setLoading] = useState(false);
@@ -29,12 +31,15 @@ export default function AddQuestion() {
     const [subjectData, setSubjectData] = useState([]);
     const [isViewModalOpen, setIsViewModalOpen] = useState(false);
     const [viewData, setViewData] = useState(null);
-    const [questionImage, setQuestionImage] = useState(null);
-    const [isUploading, setIsUploading] = useState(false);
-    const [existingImage, setExistingImage] = useState(null);
     const [selectedSubject, setSelectedSubject] = useState("");
+    const [previewQuestions, setPreviewQuestions] = useState([]);
 
-    const [formData, setFormData] = useState({
+    const [questionImage, setQuestionImage] = useState(null);
+    const [existingImage, setExistingImage] = useState(null);
+    const [descriptiveMode, setDescriptiveMode] = useState("");
+    const [isUploading, setIsUploading] = useState(false);
+
+    const initialFormData = {
         id: 0,
         subId: "",
         qnTypeId: "",
@@ -43,11 +48,14 @@ export default function AddQuestion() {
         remarks: "",
         sketch: null,
         options: [{ optionText: "", isCorrect: false }],
-    });
+    };
+    const [formData, setFormData] = useState({ ...initialFormData });
 
     useEffect(() => {
         AOS.init({ duration: 800, once: true });
     }, []);
+
+    // Fetch data when tenantId is available
 
     useEffect(() => {
         if (!loginData?.tenantId) return;
@@ -55,6 +63,7 @@ export default function AddQuestion() {
         fetchQuestionsBySubject();
     }, [loginData?.tenantId]);
 
+    // Filter questions based on search query
     useEffect(() => {
         const lowerSearch = searchQuery.toLowerCase();
         const filtered = questionData.filter(q => {
@@ -65,6 +74,8 @@ export default function AddQuestion() {
         });
         setFilteredQuestion(filtered);
     }, [searchQuery, questionData]);
+
+    // API functions
 
     const fetchSubjectData = async () => {
         try {
@@ -126,24 +137,135 @@ export default function AddQuestion() {
         }
     };
 
+    const fetchQuestionById = async (questionId) => {
+        try {
+            const response = await fetch(`${config.API_BASE_URL}api/Procedure/GetData`, {
+                method: 'POST',
+                headers: {
+                    TenantId: loginData.tenantId,
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    operation: '',
+                    procedureName: 'SP_QuestionManage',
+                    parameters: {
+                        QueryChecker: 6,
+                        Id: questionId,
+                    },
+                }),
+            });
+
+            if (!response.ok) throw new Error(await response.text());
+
+            const data = await response.json();
+            const question = data.length ? {
+                QuestionId: data[0].QuestionId,
+                Name: data[0].Name,
+                Mark: data[0].Mark,
+                QnType: data[0].QnType,
+                Remarks: data[0].Remarks,
+                SubjectId: data[0].SubjectId,
+                SubjectName: data[0].SubjectName,
+                Sketch: data[0].Sketch,
+                IsActive: data[0].IsActive,
+                Options: data.filter(d => d.OptionText).map(d => ({
+                    optionText: d.OptionText,
+                    isCorrect: d.Answer
+                })),
+            } : null;
+
+            setViewData(question);
+        } catch (err) {
+            console.error(`Error fetching question:`, err);
+            toast.error('Failed to load question data');
+            setViewData(null);
+        }
+    };
+
+    // Modal handlers
+
     const handleOpenModal = () => {
         setShowModal(true);
         setIsEdit(false);
         setEditId(null);
-        setFormData({
-            id: 0,
-            subId: "",
-            qnTypeId: "",
-            name: "",
-            mark: 0,
-            remarks: "",
-            sketch: null,
-            options: [{ optionText: "", isCorrect: false }],
-        });
+        setFormData({ ...initialFormData });
         setQuestionImage(null);
         setExistingImage(null);
+        setDescriptiveMode("");
     };
 
+    const openEditModal = async (question) => {
+        if (!question?.QuestionId) return console.error("Invalid question ID");
+
+        setIsEdit(true);
+        setEditId(question.QuestionId);
+
+        let options = [{ optionText: "", isCorrect: false }];
+
+        if (question.QnType === "MCQ") {
+            try {
+                const res = await fetch(
+                    `${config.API_BASE_URL}api/Question/GetByQuestion/${question.QuestionId}`,
+                    {
+                        headers: {
+                            TenantId: loginData.tenantId,
+                            "Content-Type": "application/json",
+                        },
+                    }
+                );
+
+                if (res.ok) {
+                    const apiOptions = await res.json();
+                    options = apiOptions.map((opt) => ({
+                        id: opt.Id || 0,
+                        optionText: opt.OptionText || "",
+                        isCorrect: opt.Answer ?? false,
+                    }));
+
+                    if (options.length < 2) options.push({ optionText: "", isCorrect: false });
+                }
+            } catch (err) {
+                console.error("Error fetching MCQ options:", err);
+            }
+        }
+
+        setFormData({
+            id: question.QuestionId,
+            subId: question.SubjectId || "",
+            qnTypeId: question.QnType === "Descriptive" ? "1" : "2",
+            name: question.Name || "",
+            mark: question.Mark ?? 0,
+            remarks: question.Remarks || "",
+            sketch: null, // new file
+            options: options,
+        });
+
+        // FIX: Store the existing image as is (could be full path or filename)
+        setExistingImage(question.Sketch || null);
+        setQuestionImage(null);
+        // if (question.QnType === "Descriptive") {
+        //     setDescriptiveMode("manual");
+        // } else {
+        //     setDescriptiveMode("");
+        // }
+        setDescriptiveMode(question.QnType === "Descriptive" ? "manual" : "");
+        setShowModal(true);
+    };
+
+    const openViewModal = async (question) => {
+        if (!question?.QuestionId) return;
+        await fetchQuestionById(question.QuestionId);
+        setIsViewModalOpen(true);
+    };
+
+    const openDeleteModal = (question) => {
+        if (!question?.QuestionId) return;
+        setSelectedId(question.QuestionId);
+        setDeleteSuccessMsg("");
+        setIsDeleteModalOpen(true);
+    };
+
+    // Form handlers
     const handleChange = (e) => {
         const { name, value, type } = e.target;
         setFormData((prev) => ({
@@ -228,142 +350,149 @@ export default function AddQuestion() {
         }));
     };
 
-    const handleSubmit = async (e) => {
-        e.preventDefault();
-        setLoading(true);
 
+    // Excel handling
+    const handleExcelUpload = (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+
+        const reader = new FileReader();
+        reader.onload = (evt) => {
+            const data = evt.target.result;
+            const workbook = XLSX.read(data, { type: "binary" });
+            const sheetName = workbook.SheetNames[0];
+            const worksheet = workbook.Sheets[sheetName];
+            const json = XLSX.utils.sheet_to_json(worksheet);
+
+            const questions = json.map((row) => ({
+                question: row.Question || "No Question Text",
+                mark: row.Mark || 1,
+                image: row.Image || null,
+            }));
+
+            setPreviewQuestions(questions);
+        };
+        reader.readAsBinaryString(file);
+    };
+
+    const handleDownloadExcel = () => {
+        if (filteredQuestion.length === 0) return alert('No data available to export!');
+        const worksheet = XLSX.utils.json_to_sheet(filteredQuestion);
+        const workbook = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(workbook, worksheet, 'Questions');
+        XLSX.writeFile(workbook, 'Questions_Report.xlsx');
+    };
+
+
+    const handleSubmit = async ({ isBulk = false }) => {
+        debugger;
         try {
-            if (!formData.subId) throw new Error("Please select a subject.");
-            if (!formData.qnTypeId) throw new Error("Please select a question type.");
-            if (!formData.name.trim()) throw new Error("Question text cannot be empty.");
-            if (!formData.mark) throw new Error("Question Mark cannot be empty.");
+            setLoading(true);
 
-            if (formData.qnTypeId === "2" && formData.options.length < 2)
-                throw new Error("MCQ must have at least 2 options.");
+            let questionsToSave = [];
 
-            // FIX: Consistent path handling for new images
-            let sketchPath = null;
-            if (formData.sketch) {
-                sketchPath = `/images/questionImage/${formData.sketch}`;
+            if (isBulk) {
+                // Bulk mode: Excel upload
+                if (!previewQuestions || previewQuestions.length === 0) {
+                    throw new Error("No questions to save in bulk mode");
+                }
+
+                questionsToSave = previewQuestions.map((q) => {
+                    const sketchPath = q.sketch ? `/images/questionImage/${q.sketch}` : null;
+
+                    return {
+                        SubId: Number(formData.subId),
+                        Name: q.name?.trim() || q.question?.trim(),
+                        QnType: "Descriptive",
+                        Mark: q.mark ?? 0,
+                        Remarks: q.remarks ?? "",
+                        EntryBy: loginData?.UserId,
+                        Sketch: sketchPath,
+                        Options: null,
+                    };
+                });
+            } else {
+                // Manual single question
+                if (!formData.subId) throw new Error("Please select a subject.");
+                if (!formData.qnTypeId) throw new Error("Please select a question type.");
+                if (!formData.name?.trim()) throw new Error("Question text cannot be empty.");
+                if (formData.mark === undefined || formData.mark === null) throw new Error("Question Mark cannot be empty.");
+
+                if (formData.qnTypeId.toString() === "2" && formData.options.length < 2)
+                    throw new Error("MCQ must have at least 2 options.");
+
+                const sketchPath = formData.sketch ? `/images/questionImage/${formData.sketch}` : null;
+
+                questionsToSave = [
+                    {
+                        SubId: Number(formData.subId),
+                        Name: formData.name.trim(),
+                        QnType: formData.qnTypeId.toString() === "1" ? "Descriptive" : "MCQ",
+                        Mark: formData.mark ?? 0,
+                        Remarks: formData.remarks ?? "",
+                        EntryBy: loginData?.UserId,
+                        Sketch: sketchPath,
+                        Options:
+                            formData.qnTypeId.toString() === "2"
+                                ? formData.options
+                                    .filter((opt) => opt.optionText && opt.optionText.trim() !== "")
+                                    .map((opt) => ({
+                                        OptionText: opt.optionText.trim(),
+                                        Answer: opt.isCorrect ?? false,
+                                    }))
+                                : null,
+                    },
+                ];
             }
 
-            const payload = {
-                SubId: Number(formData.subId),
-                Name: formData.name.trim(),
-                QnType: formData.qnTypeId === "1" ? "Descriptive" : "MCQ",
-                Mark: formData.mark ?? 0,
-                Remarks: formData.remarks ?? "",
-                EntryBy: loginData?.UserId,
-                Sketch: sketchPath, // Use the consistent path
-                Options: formData.qnTypeId === "2"
-                    ? formData.options
-                        .filter(opt => opt.optionText && opt.optionText.trim() !== "")
-                        .map(opt => ({
-                            OptionText: opt.optionText.trim(),
-                            Answer: opt.isCorrect ?? false
-                        }))
-                    : null
-            };
+            // Determine endpoint
+            const endpoint = isBulk
+                ? `${config.API_BASE_URL}api/Question/SaveBulk`
+                : `${config.API_BASE_URL}api/Question/Add`;
 
-            console.log("Add Payload:", payload);
-
-            const response = await fetch(`${config.API_BASE_URL}api/Question/Add`, {
+            const response = await fetch(endpoint, {
                 method: "POST",
                 headers: {
-                    'Content-Type': 'application/json',
+                    "Content-Type": "application/json",
                     TenantId: loginData.tenantId,
                 },
-                body: JSON.stringify(payload),
+                // body: JSON.stringify(questionsToSave),
+                body: JSON.stringify(isBulk ? questionsToSave : questionsToSave[0]),
+
             });
 
-            const result = await response.json();
-            if (!response.ok) throw new Error(result?.error || "Insert failed");
+            let result = null;
+            const text = await response.text();
+            if (text) result = JSON.parse(text);
 
-            toast.success("Question added successfully");
+            if (!response.ok) throw new Error(result?.error || "Failed to save questions");
 
-            // Reset form and refresh data
-            setFormData({
-                id: 0,
-                subId: "",
-                qnTypeId: "",
-                name: "",
-                mark: 0,
-                remarks: "",
-                sketch: null,
-                options: [{ optionText: "", isCorrect: false }],
-            });
-            setQuestionImage(null);
-            //fetchQuestionsBySubject();
-            if (selectedSubject && selectedSubject !== "") {
+            toast.success(isBulk ? "Questions saved successfully!" : "Question added successfully!");
 
-                await fetchQuestionsBySubject(selectedSubject);
+            // Reset form and preview
+            if (!isBulk) {
+                setFormData({ ...initialFormData });
+                setQuestionImage(null);
+                setExistingImage(null);
+                setShowModal(false);
             } else {
-
-                await fetchQuestionsBySubject();
+                setPreviewQuestions([]);
             }
-
+            setShowModal(false);
+            // Refresh questions list
+            await fetchQuestionsBySubject(selectedSubject || "");
         } catch (err) {
             console.error(err);
             toast.error(err.message);
         } finally {
             setLoading(false);
-            setShowModal(false);
         }
     };
 
-    const openEditModal = async (question) => {
-        if (!question?.QuestionId) return console.error("Invalid question ID");
 
-        setIsEdit(true);
-        setEditId(question.QuestionId);
-
-        let options = [{ optionText: "", isCorrect: false }];
-
-        if (question.QnType === "MCQ") {
-            try {
-                const res = await fetch(
-                    `${config.API_BASE_URL}api/Question/GetByQuestion/${question.QuestionId}`,
-                    {
-                        headers: {
-                            TenantId: loginData.tenantId,
-                            "Content-Type": "application/json",
-                        },
-                    }
-                );
-
-                if (res.ok) {
-                    const apiOptions = await res.json();
-                    options = apiOptions.map((opt) => ({
-                        id: opt.Id || 0,
-                        optionText: opt.OptionText || "",
-                        isCorrect: opt.Answer ?? false,
-                    }));
-
-                    if (options.length < 2) options.push({ optionText: "", isCorrect: false });
-                }
-            } catch (err) {
-                console.error("Error fetching MCQ options:", err);
-            }
-        }
-
-        setFormData({
-            id: question.QuestionId,
-            subId: question.SubjectId || "",
-            qnTypeId: question.QnType === "Descriptive" ? "1" : "2",
-            name: question.Name || "",
-            mark: question.Mark ?? 0,
-            remarks: question.Remarks || "",
-            sketch: null, // new file
-            options: options,
-        });
-
-        // FIX: Store the existing image as is (could be full path or filename)
-        setExistingImage(question.Sketch || null);
-        setQuestionImage(null);
-        setShowModal(true);
-    };
 
     const handleUpdateSubmit = async (e) => {
+        debugger;
         e.preventDefault();
         setLoading(true);
 
@@ -461,153 +590,72 @@ export default function AddQuestion() {
         }
     };
 
-    const openDeleteModal = (question) => {
-        if (!question?.QuestionId) return;
-        setSelectedId(question.QuestionId);
-        setDeleteSuccessMsg("");
-        setIsDeleteModalOpen(true);
-    };
+
 
     const handleConfirmDelete = async () => {
-        debugger;
         if (!selectedId) return;
 
         try {
             const response = await fetch(`${config.API_BASE_URL}api/Question/Delete/${selectedId}`, {
                 method: 'DELETE',
-                // headers: { TenantId: loginData.tenantId },
                 headers: {
                     TenantId: loginData.tenantId,
                     'Content-Type': 'application/json'
                 },
             });
 
+            const responseText = await response.text();
+
             if (!response.ok) {
-                let errorMessage = "Delete failed. Please try again.";
+               
+                if (responseText.includes("used in a question set")) {
+                    const message = "This question cannot be deleted because it is already used in a question set.";
+                    setDeleteSuccessMsg(message);
 
-                try {
-                    const errorText = await response.text();
+                   
+                    setTimeout(() => {
+                        setIsDeleteModalOpen(false);
+                        setDeleteSuccessMsg("");
+                    }, 2000);
 
-                    // Check for specific error messages
-                    if (errorText.includes("used in a question set")) {
-                        errorMessage = "This question cannot be deleted because it is already used in a question set.";
-                    } else if (errorText.includes("Question not found")) {
-                        errorMessage = "Question not found.";
-                    }
-
-                } catch (textError) {
-                    // If we can't read the response text, use default message
-                    console.error("Could not read error response:", textError);
+                    return; 
+                } else if (responseText.includes("Question not found")) {
+                    const message = "Question not found.";
+                    toast.error(message);
+                    return;
                 }
 
-                throw new Error(errorMessage);
+                // Default error
+                toast.error("Delete failed. Please try again.");
+                return;
             }
 
+            // Success
             setDeleteSuccessMsg("Item deleted successfully.");
-            setTimeout(() => setIsDeleteModalOpen(false), 1000);
+            setTimeout(() => {
+                setIsDeleteModalOpen(false);
+                setDeleteSuccessMsg("");
+            }, 2000);
 
             if (selectedSubject && selectedSubject !== "") {
                 await fetchQuestionsBySubject(selectedSubject);
             } else {
                 await fetchQuestionsBySubject();
             }
-        } catch (error) {
-            // Don't log to console if it's our expected error
-            if (!error.message.includes("used in a question set")) {
-                console.error("Delete error:", error);
-            }
 
-            toast.error(error.message);
+        } catch (error) {
+            console.error("Delete error:", error);
+            toast.error(error.message || "Delete failed. Please try again.");
             setIsDeleteModalOpen(false);
         }
     };
-    // const handleConfirmDelete = async () => {
-    //     debugger;
-    //     if (!selectedId) return;
 
-    //     try {
-    //         const response = await fetch(`${config.API_BASE_URL}api/Question/Delete/${selectedId}`, {
-    //             method: 'DELETE',
-    //             headers: { TenantId: loginData.tenantId },
-    //         });
-
-    //         if (!response.ok) throw new Error('Failed to delete');
-
-    //         setDeleteSuccessMsg("Item deleted successfully.");
-    //         setTimeout(() => setIsDeleteModalOpen(false), 2000);
-    //         //fetchQuestionsBySubject();
-    //         if (selectedSubject && selectedSubject !== "") {
-
-    //             await fetchQuestionsBySubject(selectedSubject);
-    //         } else {
-
-    //             await fetchQuestionsBySubject();
-    //         }
-    //     } catch (error) {
-    //         console.error(error);
-    //         toast.error("Delete failed. Please try again.");
-    //         setIsDeleteModalOpen(false);
-    //     }
-    // };
-
-    const fetchQuestionById = async (questionId) => {
-        try {
-            const response = await fetch(`${config.API_BASE_URL}api/Procedure/GetData`, {
-                method: 'POST',
-                headers: {
-                    TenantId: loginData.tenantId,
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({
-                    operation: '',
-                    procedureName: 'SP_QuestionManage',
-                    parameters: {
-                        QueryChecker: 6,
-                        Id: questionId,
-                    },
-                }),
-            });
-
-            if (!response.ok) throw new Error(await response.text());
-
-            const data = await response.json();
-            const question = data.length ? {
-                QuestionId: data[0].QuestionId,
-                Name: data[0].Name,
-                Mark: data[0].Mark,
-                QnType: data[0].QnType,
-                Remarks: data[0].Remarks,
-                SubjectId: data[0].SubjectId,
-                SubjectName: data[0].SubjectName,
-                Sketch: data[0].Sketch,
-                IsActive: data[0].IsActive,
-                Options: data.filter(d => d.OptionText).map(d => ({
-                    optionText: d.OptionText,
-                    isCorrect: d.Answer
-                })),
-            } : null;
-
-            setViewData(question);
-        } catch (err) {
-            console.error(`Error fetching question:`, err);
-            toast.error('Failed to load question data');
-            setViewData(null);
-        }
-    };
-
-    const openViewModal = async (question) => {
-        if (!question?.QuestionId) return;
-        await fetchQuestionById(question.QuestionId);
-        setIsViewModalOpen(true);
-    };
-
-    const handleDownloadExcel = () => {
-        if (filteredQuestion.length === 0) return alert('No data available to export!');
-        const worksheet = XLSX.utils.json_to_sheet(filteredQuestion);
-        const workbook = XLSX.utils.book_new();
-        XLSX.utils.book_append_sheet(workbook, worksheet, 'Questions');
-        XLSX.writeFile(workbook, 'Questions_Report.xlsx');
-    };
+    useEffect(() => {
+        document.body.style.overflow = 'hidden';
+        return () => {
+            document.body.style.overflow = 'unset';
+        };
+    }, []);
 
     return (
         <div className="overflow-x-auto p-3">
@@ -640,7 +688,9 @@ export default function AddQuestion() {
                     .fixed-table td:last-child { border-bottom: none; }
                 }
             `}</style>
-
+            <div className="mb-4">
+                <h1 className="text-2xl font-bold text-gray-800">Question Bank</h1>
+            </div>
             <div className="rounded-md font-roboto overflow-hidden">
                 <div className="bg-gradient-to-r from-[#2c3e50] to-[#3498db] sticky top-0 z-20 shadow-md">
                     <div className="px-3 py-2 flex flex-wrap justify-between items-center gap-2">
@@ -667,36 +717,14 @@ export default function AddQuestion() {
                                 )}
                             </div>
 
-                            {/* <div className="w-full sm:w-auto min-w-[180px] max-w-[300px]">
-                                {subjectData.length > 0 && (
-                                    <Select
-                                        name="subId"
-                                        value={formData.subId === "" 
-                                            ? { value: "", label: "All Subjects" } 
-                                            : subjectData.find(s => s.value === formData.subId) || null}
-                                        onChange={(selected) => {
-                                            const subId = selected?.value || "";
-                                            setFormData(prev => ({ ...prev, subId }));
-                                            fetchQuestionsBySubject(subId);
-                                        }}
-                                        options={[
-                                            { value: "", label: "All Subjects" },
-                                            ...subjectData
-                                        ]}
-                                        placeholder="Select or search subject..."
-                                        className="w-full"
-                                        isClearable
-                                        isSearchable
-                                    />
-                                )}
-                            </div> */}
+
                             <div className="w-full sm:w-auto min-w-[180px] max-w-[300px]">
                                 {subjectData.length > 0 && (
                                     <Select
                                         name="filterSubject"
                                         value={
                                             selectedSubject === ""
-                                                ? { value: "", label: "All Subjects" }
+                                                ? { value: "", label: "All Position" }
                                                 : subjectData.find(s => s.value === selectedSubject) || null
                                         }
                                         onChange={(selected) => {
@@ -705,10 +733,10 @@ export default function AddQuestion() {
                                             fetchQuestionsBySubject(subId);
                                         }}
                                         options={[
-                                            { value: "", label: "All Subjects" },
+                                            { value: "", label: "All Position" },
                                             ...subjectData
                                         ]}
-                                        placeholder="Select or search subject..."
+                                        placeholder="Select or search position..."
                                         className="w-full"
                                         isClearable
                                         isSearchable
@@ -724,59 +752,61 @@ export default function AddQuestion() {
                             <FaFileExcel onClick={handleDownloadExcel} className="text-lg cursor-pointer text-gray-50" />
                         </div>
                     </div>
-
-                    <table className="min-w-full text-sm text-left text-gray-600">
-                        <thead className="bg-gray-100 text-xs uppercase text-gray-700">
-                            <tr className="border-b">
-                                <th className="px-4 py-2 text-center">SL</th>
-                                <th className="px-4 py-2">Subject</th>
-                                <th className="px-4 py-2">Question</th>
-                                <th className="px-4 py-2">Type</th>
-                                <th className="px-4 py-2">Mark</th>
-                                <th className="px-4 py-2 text-center">Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody className="bg-white text-xs text-gray-700">
-                            {filteredQuestion.length === 0 ? (
-                                <tr>
-                                    <td colSpan="6" className="text-center py-4">No data found</td>
+                    <div className="border border-gray-300 rounded-b-md overflow-hidden max-h-[59vh] overflow-y-auto">
+                        <table className="min-w-full text-sm text-left text-gray-600">
+                            {/* <thead className="bg-gray-100 text-xs uppercase text-gray-700"> */}
+                            <thead className="bg-gray-100 text-xs uppercase text-gray-700 sticky top-0">
+                                <tr className="border-b">
+                                    <th className="px-4 py-2 text-center">SL</th>
+                                    <th className="px-4 py-2">Position</th>
+                                    <th className="px-4 py-2">Question</th>
+                                    <th className="px-4 py-2">Type</th>
+                                    <th className="px-4 py-2">Mark</th>
+                                    <th className="px-4 py-2 text-center">Actions</th>
                                 </tr>
-                            ) : (
-                                filteredQuestion.map((question, index) => (
-                                    <tr key={index} className="border-b border-gray-300 hover:bg-gray-50">
-                                        <td data-label="SL" className="px-4 py-2 text-center">{index + 1}</td>
-                                        <td data-label="Subject" className="px-4 py-2">{question.SubjectName}</td>
-                                        <td data-label="Question" className="px-4 py-2">{question.Name}</td>
-                                        <td data-label="Type" className="px-4 py-2">{question.QnType}</td>
-                                        <td data-label="Mark" className="px-4 py-2">{question.Mark}</td>
-                                        <td data-label="Actions" className="px-4 py-2 text-center">
-                                            <div className="flex justify-center gap-3">
-                                                <button
-                                                    onClick={() => openViewModal(question)}
-                                                    className="flex items-center gap-1 px-3 py-1.5 text-sm font-medium border border-blue-500 text-blue-500 rounded hover:bg-blue-500 hover:text-white transition-colors duration-200"
-                                                >
-                                                    <FiEye className="text-base" />
-                                                </button>
-                                                <button
-                                                    onClick={() => openEditModal(question)}
-                                                    title="Edit"
-                                                    className="flex items-center gap-1 px-3 py-1.5 text-sm font-medium border border-[#00925a] text-[#00925a] rounded hover:bg-[#00925a] hover:text-white transition-colors duration-200"
-                                                >
-                                                    <FiEdit className="text-base" />
-                                                </button>
-                                                <button
-                                                    onClick={() => openDeleteModal(question)}
-                                                    className="flex items-center gap-1 px-3 py-1.5 text-sm font-medium border border-red-500 text-red-500 rounded hover:bg-red-500 hover:text-white transition-colors duration-200"
-                                                >
-                                                    <FiTrash2 className="text-base" />
-                                                </button>
-                                            </div>
-                                        </td>
+                            </thead>
+                            <tbody className="bg-white text-xs text-gray-700">
+                                {filteredQuestion.length === 0 ? (
+                                    <tr>
+                                        <td colSpan="6" className="text-center py-4">No data found</td>
                                     </tr>
-                                ))
-                            )}
-                        </tbody>
-                    </table>
+                                ) : (
+                                    filteredQuestion.map((question, index) => (
+                                        <tr key={index} className="border-b border-gray-300 hover:bg-gray-50">
+                                            <td data-label="SL" className="px-4 py-2 text-center">{index + 1}</td>
+                                            <td data-label="Subject" className="px-4 py-2">{question.SubjectName}</td>
+                                            <td data-label="Question" className="px-4 py-2">{question.Name}</td>
+                                            <td data-label="Type" className="px-4 py-2">{question.QnType}</td>
+                                            <td data-label="Mark" className="px-4 py-2 text-center">{question.Mark}</td>
+                                            <td data-label="Actions" className="px-4 py-2 text-center">
+                                                <div className="flex justify-center gap-3">
+                                                    <button
+                                                        onClick={() => openViewModal(question)}
+                                                        className="flex items-center gap-1 px-3 py-1.5 text-sm font-medium border border-blue-500 text-blue-500 rounded hover:bg-blue-500 hover:text-white transition-colors duration-200"
+                                                    >
+                                                        <FiEye className="text-base" />
+                                                    </button>
+                                                    <button
+                                                        onClick={() => openEditModal(question)}
+                                                        title="Edit"
+                                                        className="flex items-center gap-1 px-3 py-1.5 text-sm font-medium border border-[#00925a] text-[#00925a] rounded hover:bg-[#00925a] hover:text-white transition-colors duration-200"
+                                                    >
+                                                        <FiEdit className="text-base" />
+                                                    </button>
+                                                    <button
+                                                        onClick={() => openDeleteModal(question)}
+                                                        className="flex items-center gap-1 px-3 py-1.5 text-sm font-medium border border-red-500 text-red-500 rounded hover:bg-red-500 hover:text-white transition-colors duration-200"
+                                                    >
+                                                        <FiTrash2 className="text-base" />
+                                                    </button>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    ))
+                                )}
+                            </tbody>
+                        </table>
+                    </div>
 
                 </div>
             </div>
@@ -791,15 +821,39 @@ export default function AddQuestion() {
             {showModal && (
                 <div className="fixed inset-0 bg-black/20 bg-opacity-40 z-50 flex items-center justify-center">
                     <div data-aos="zoom-in" className="bg-white rounded-lg shadow-md  w-full max-w-xl relative overflow-y-auto max-h-[90vh] p-6">
-                        <button onClick={() => setShowModal(false)} className="btn btn-sm btn-circle btn-ghost absolute right-2 top-2">✕</button>
+                        <button
+                            onClick={() => {
+
+                                setFormData({ ...initialFormData });
+                                setQuestionImage(null);
+                                setExistingImage(null);
+                                setDescriptiveMode("");
+                                setIsUploading(false);
+                                setShowModal(false);
+                            }}
+                            className="btn btn-sm btn-circle btn-ghost absolute right-2 top-2"
+                        >
+                            ✕
+                        </button>
+
 
                         <div className="border-b border-gray-300 pb-2 mb-4">
                             <h3 className="font-bold text-lg"> {isEdit ? "Update Question" : "Question Entry"}</h3>
                         </div>
 
-                        <form onSubmit={isEdit ? handleUpdateSubmit : handleSubmit} className="space-y-4 text-sm">
+                        <form
+                            onSubmit={(e) => {
+                                e.preventDefault();
+                                if (isEdit) {
+                                    handleUpdateSubmit(e);
+                                } else {
+                                    handleSubmit({ isBulk: descriptiveMode === "excel" });
+                                }
+                            }}
+                            className="space-y-4 text-sm"
+                        >
                             <div className="flex items-center gap-2 mt-2">
-                                <label className="w-1/3 text-sm font-semibold text-gray-700">Subject Name</label>
+                                <label className="w-1/3 text-sm font-semibold text-gray-700">Position Name</label>
                                 <Select
                                     name="subId"
                                     value={subjectData.find((s) => s.value === formData.subId) || null}
@@ -820,17 +874,55 @@ export default function AddQuestion() {
                                 </select>
                             </div>
 
-                            {formData.qnTypeId === "1" && (
-                                <>
-                                    <div className="flex items-center gap-2 mt-2">
+
+
+                            {formData.qnTypeId === "1" && !isEdit && (
+                                <div className="flex items-center gap-2 mt-2">
+                                    <label className="w-1/3 text-sm font-semibold text-gray-700">Add Mode</label>
+                                    <select
+                                        value={descriptiveMode}
+                                        onChange={(e) => setDescriptiveMode(e.target.value)}
+                                        className="w-full border rounded p-2"
+                                    >
+                                        <option value="">-- Select Mode --</option>
+                                        <option value="manual">Add Manual Question</option>
+                                        <option value="excel">Upload Excel File</option>
+                                    </select>
+                                </div>
+                            )}
+
+                            {/* --- Manual Question Mode --- */}
+                            {descriptiveMode === "manual" && (
+                                <div className="mt-2 space-y-2">
+                                    {/* Question Text */}
+                                    <div className="flex items-center gap-2">
                                         <label className="w-1/3 text-sm font-semibold text-gray-700">Question</label>
-                                        <textarea name="name" value={formData.name} onChange={handleChange} className="w-full border px-3 py-2 rounded" rows={3} required />
+                                        <textarea
+                                            name="name"
+                                            value={formData.name}
+                                            onChange={handleChange}
+                                            className="w-full border px-3 py-2 rounded"
+                                            rows={3}
+                                            required
+                                        />
                                     </div>
 
-                                    <div className="flex items-center gap-2 mt-2">
+                                    {/* Mark */}
+                                    <div className="flex items-center gap-2">
                                         <label className="w-1/3 text-sm font-semibold text-gray-700">Mark</label>
-                                        <input type="number" name="mark" value={formData.mark ?? ""} onChange={handleChange} className="w-full border px-3 py-2 rounded" required min="0" step="0.1" />
+                                        <input
+                                            type="number"
+                                            name="mark"
+                                            value={formData.mark ?? ""}
+                                            onChange={handleChange}
+                                            className="w-full border px-3 py-2 rounded"
+                                            required
+                                            min="0"
+                                            step="0.1"
+                                        />
                                     </div>
+
+
 
                                     <div className="w-full h-40 rounded-lg border border-gray-300 flex flex-col items-center justify-center overflow-hidden relative">
                                         {questionImage ? (
@@ -877,9 +969,48 @@ export default function AddQuestion() {
                                             </button>
                                         )}
                                     </div>
+                                </div>
+                            )}
 
-                                    {isUploading && <p className="text-xs text-gray-500 mt-1">Uploading...</p>}
-                                </>
+                            {/* --- Excel Upload Mode --- */}
+                            {descriptiveMode === "excel" && (
+                                <div className="mt-4 space-y-2">
+                                    <div className="flex items-center gap-2 mt-2">
+                                        <label className="w-1/3 text-sm font-semibold text-gray-700">
+                                            Upload Excel File
+                                        </label>
+                                        <input
+                                            type="file"
+                                            accept=".xlsx, .xls"
+                                            onChange={handleExcelUpload}
+                                            className="w-full border rounded p-2"
+                                        />
+                                    </div>
+
+
+
+                                    {previewQuestions.length > 0 && (
+                                        <div className="mt-2">
+                                            <h5 className="font-semibold text-gray-700 mb-1">Preview Questions</h5>
+                                            <div className="space-y-2">
+                                                {previewQuestions.map((q, idx) => (
+                                                    <div key={idx} className="p-2 border rounded bg-gray-50">
+                                                        <div className="flex justify-between items-start">
+                                                            <p>{idx + 1}. {q.question}</p>
+                                                            <span className="text-gray-600 font-semibold">Mark: {q.mark}</span>
+                                                        </div>
+                                                        {q.image && (
+
+                                                            <img src={`data:image/png;base64,${q.image}`} alt="Question" className="mt-1 w-full h-32 object-cover rounded" />
+
+
+                                                        )}
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        </div>
+                                    )}
+                                </div>
                             )}
 
                             {formData.qnTypeId === "2" && (
@@ -971,7 +1102,18 @@ export default function AddQuestion() {
 
                             {formData.qnTypeId && (
                                 <div className="flex justify-end space-x-2 pt-4">
-                                    <button type="button" onClick={() => setShowModal(false)} className="px-3 py-1 bg-gray-500 text-white rounded hover:bg-gray-600">
+                                    <button
+                                        type="button"
+                                        onClick={() => {
+
+                                            setFormData({ ...initialFormData });
+                                            setQuestionImage(null);
+                                            setExistingImage(null);
+                                            setDescriptiveMode("");
+                                            setShowModal(false);
+                                        }}
+                                        className="px-3 py-1 bg-gray-500 text-white rounded hover:bg-gray-600"
+                                    >
                                         Cancel
                                     </button>
                                     <button type="submit" className="px-3 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">
@@ -1002,9 +1144,9 @@ export default function AddQuestion() {
                         </div>
 
                         <div className="space-y-4 text-sm text-gray-700">
-                            {/* Subject */}
+                            {/* Position */}
                             <div className="flex items-center gap-2">
-                                <span className="w-32 font-semibold text-gray-800">Subject</span>
+                                <span className="w-32 font-semibold text-gray-800">Position</span>
                                 <span className="flex-1">{subjectData.find(s => s.value === viewData.SubjectId)?.label || "-"}</span>
                             </div>
 

@@ -17,6 +17,8 @@ export const AuthProvider = ({ children }) => {
   }, []);
 
   const login = async (credentials, tenantId) => {
+
+    debugger;
     setLoading(true);
     setError("");
     if (!credentials.UserId || !credentials.password || !tenantId) {
@@ -26,6 +28,7 @@ export const AuthProvider = ({ children }) => {
     }
     try {
       const response = await fetch(`${config.API_BASE_URL}api/token`, {
+        
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -36,10 +39,13 @@ export const AuthProvider = ({ children }) => {
           password: credentials.password,
         }),
       });
+      debugger;
       if (!response.ok) throw new Error("Invalid login credentials");
       const data = await response.json()
       const { accessToken: token, userData } = data;
 
+      console.log("Login Data",data)
+debugger;
         // Check if the user is active
     if (userData.IsActive === 0 || userData.IsActive === false) {
       throw new Error("Your account is inactive. Please contact the administrator.");

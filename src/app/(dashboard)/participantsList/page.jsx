@@ -30,7 +30,7 @@ export default function AddExam() {
         AOS.init({ duration: 800, once: true });
     }, []);
 
-
+    // for grid table
     const fetchParticipate = async () => {
         try {
             const response = await fetch(`${config.API_BASE_URL}api/Procedure/GetData`, {
@@ -53,12 +53,15 @@ export default function AddExam() {
                 const formatted = data.map(item => ({
                     id: item.Id,
                     value: item.UserId,
-                    examName:item.ExamName,
+                    examName: item.ExamName,
                     label: item.Name,
                     password: item.Password,
                     org: item.CurrentOrg,
                     salary: item.CurrentSalary,
+                    totalQnMark: item.TotalQnMark,
                     noticePeriod: item.NoticePeriod,
+                    mobileNo: item.MobileNo,
+                    experience: item.Experience
                 }));
                 console.log("Participate formatted  List", formatted);
 
@@ -72,7 +75,7 @@ export default function AddExam() {
         }
     };
 
-
+    //for view and evaluate
     const fetchParticipateQuestionPaper = async (participateId) => {
         debugger;
         try {
@@ -88,12 +91,11 @@ export default function AddExam() {
                     parameters: { QueryChecker: 2, ParticipateId: participateId },
                 }),
             });
-            console.log("Question Paper Response", response)
             const data = await response.json();
             console.log("Participate Question Paper", data);
 
             if (Array.isArray(data)) {
-                debugger;
+
                 const groupedData = data.reduce((acc, item) => {
                     let existing = acc.find(q => q.qnId === item.QnId);
                     if (!existing) {
@@ -103,6 +105,7 @@ export default function AddExam() {
                             qnId: item.QnId,
                             question: item.Question,
                             qnType: item.QnType,
+                            examName: item.ExamName,
                             // options: item.OptionText ? [item.OptionText] : [],
                             options: item.OptionText ? [{ text: item.OptionText, adminAnswer: item.AdminAnswer }] : [],
                             participateAns: item.ParticipateAns,
@@ -138,11 +141,11 @@ export default function AddExam() {
     };
 
     const handleSaveMarks = async (e) => {
-  
+
         e.preventDefault();
         // setLoading(true);
         try {
-         
+
             const payload = participateQuestionPaper.map((q) => ({
                 Id: q.id,
                 ParticipateId: q.participateId,
@@ -183,21 +186,21 @@ export default function AddExam() {
     };
 
     useEffect(() => {
-    
-    let searchData = participateList;
-    if (searchQuery.trim() !== '') {
-        const query = searchQuery.toLowerCase();
-        searchData = searchData.filter(item =>
-            item.label.toLowerCase().includes(query)||
-            item.examName.toLowerCase().includes(query)||
-            item.value.toLowerCase().includes(query)||
-            item.org.toLowerCase().includes(query) ||
-            item.password.toLowerCase().includes(query)||
-            item.salary.toString().toLowerCase().includes(query)
-        );
-    }
-    setFilteredSet(searchData);
-}, [searchQuery, participateList]);
+
+        let searchData = participateList;
+        if (searchQuery.trim() !== '') {
+            const query = searchQuery.toLowerCase();
+            searchData = searchData.filter(item =>
+                item.label.toLowerCase().includes(query) ||
+                item.examName.toLowerCase().includes(query) ||
+                item.value.toLowerCase().includes(query) ||
+                item.org.toLowerCase().includes(query) ||
+                item.password.toLowerCase().includes(query) ||
+                item.salary.toString().toLowerCase().includes(query)
+            );
+        }
+        setFilteredSet(searchData);
+    }, [searchQuery, participateList]);
 
     useEffect(() => {
         if (loginData?.tenantId) {
@@ -208,177 +211,186 @@ export default function AddExam() {
     }, [loginData?.tenantId]);
 
     const handleDownload = async () => {
-    if (!participateQuestionPaper || participateQuestionPaper.length === 0) return;
+        if (!participateQuestionPaper || participateQuestionPaper.length === 0) return;
 
-    const doc = new jsPDF({
-        orientation: "portrait",
-        unit: "mm",
-        format: "a4",
-    });
-
-    const pageWidth = 210;
-    const pageHeight = 297; 
-    const margin = 14;
-    const topMargin = 14;
-    const bottomMargin = 14;
-    const usableWidth = pageWidth - 2 * margin;
-    let y = topMargin;
-
-    // Title - Candidate Name
-    doc.setFontSize(12);
-    doc.setFont("times", "bold");
-    doc.text(`${participateQuestionPaper[0].userInfo.name}`, pageWidth / 2, y, { align: "center" });
-
-    // Total Score - Top Right
-    const totalScore = participateQuestionPaper.reduce((sum, q) => sum + (parseFloat(q.ansMark) || 0), 0);
-    const totalMark = participateQuestionPaper.reduce((sum, q) => sum + (parseFloat(q.qnMark) || 0), 0);
-    doc.setFontSize(12);
-    doc.setFont("times", "bold");
-    doc.text(`Total Scored: ${totalScore} / ${totalMark}`, pageWidth - margin, y, { align: "right" });
-    y += 10;
-
-    // Candidate Info
-    const infoText = `Current Organization: ${participateQuestionPaper[0].userInfo.org} |Current Salary: ${participateQuestionPaper[0].userInfo.salary} | Notice Period: ${participateQuestionPaper[0].userInfo.noticePeriod} days`;
-    const infoLines = doc.splitTextToSize(infoText, usableWidth);
-    infoLines.forEach(line => {
-        doc.text(line, pageWidth / 2, y, { align: "center" });
-        y += 6;
-    });
-    y += 4;
-
-    // Helper: Convert image URL to Base64
-    const getBase64FromUrl = (url) => {
-        return new Promise((resolve, reject) => {
-            const img = new Image();
-            img.crossOrigin = 'Anonymous';
-            img.src = url;
-            img.onload = function () {
-                const canvas = document.createElement('canvas');
-                canvas.width = img.width;
-                canvas.height = img.height;
-                const ctx = canvas.getContext('2d');
-                ctx.drawImage(img, 0, 0);
-                resolve(canvas.toDataURL('image/jpeg'));
-            };
-            img.onerror = function (err) {
-                reject(err);
-            };
+        const doc = new jsPDF({
+            orientation: "portrait",
+            unit: "mm",
+            format: "a4",
         });
-    };
 
-    // Questions Loop
-    for (const [index, q] of participateQuestionPaper.entries()) {
-         if (y + 10 > pageHeight - bottomMargin) {
-            doc.addPage();
-            y = topMargin;
-        }
+        const pageWidth = 210;
+        const pageHeight = 297;
+        const margin = 14;
+        const topMargin = 14;
+        const bottomMargin = 14;
+        const usableWidth = pageWidth - 2 * margin;
+        let y = topMargin;
 
-        // Question text (Bold, consistent font size)
-        doc.setFontSize(10);
+        // Title - Candidate Name
+        doc.setFontSize(12);
         doc.setFont("times", "bold");
-        const questionLines = doc.splitTextToSize(`${index + 1}. ${q.question}`, usableWidth - 50);
-        questionLines.forEach((line, i) => {
-            doc.text(line, margin, y);
+        doc.text(`${participateQuestionPaper[0].userInfo.name}`, pageWidth / 2, y, { align: "center" });
+        y += 6;
+        doc.text(`Exam Name: ${participateQuestionPaper[0].examName}`, pageWidth / 2, y, { align: "center" });
 
-            if (i === 0) {
-                
-                doc.setFont("times", "bold");
-                doc.setFontSize(10);
-                const markText = `Mark: ${q.qnMark} | Score: ${q.ansMark || 0}`;
-                doc.text(markText, pageWidth - margin, y, { align: "right" });
-            }
+
+        // Total Score - Top Right
+        const totalScore = participateQuestionPaper.reduce((sum, q) => sum + (parseFloat(q.ansMark) || 0), 0);
+        const totalMark = participateQuestionPaper.reduce((sum, q) => sum + (parseFloat(q.qnMark) || 0), 0);
+        doc.setFontSize(12);
+        doc.setFont("times", "bold");
+        doc.text(`Total Scored: ${totalScore} / ${totalMark}`, pageWidth - margin, y, { align: "right" });
+        y += 8;
+
+        // Candidate Info
+        const infoText = `Current Organization: ${participateQuestionPaper[0].userInfo.org} |Current Salary: ${participateQuestionPaper[0].userInfo.salary} | Notice Period: ${participateQuestionPaper[0].userInfo.noticePeriod} days`;
+        const infoLines = doc.splitTextToSize(infoText, usableWidth);
+        infoLines.forEach(line => {
+            doc.text(line, pageWidth / 2, y, { align: "center" });
             y += 6;
         });
+        y += 4;
 
-        // Question image
-        if (q.qnImage) {
-            try {
-                const imgBase64 = await getBase64FromUrl(q.qnImage);
-                const imgProps = doc.getImageProperties(imgBase64);
-                const imgWidth = 50;
-                const imgHeight = (imgProps.height * imgWidth) / imgProps.width;
+        // Helper: Convert image URL to Base64
+        const getBase64FromUrl = (url) => {
+            return new Promise((resolve, reject) => {
+                const img = new Image();
+                img.crossOrigin = 'Anonymous';
+                img.src = url;
+                img.onload = function () {
+                    const canvas = document.createElement('canvas');
+                    canvas.width = img.width;
+                    canvas.height = img.height;
+                    const ctx = canvas.getContext('2d');
+                    ctx.drawImage(img, 0, 0);
+                    resolve(canvas.toDataURL('image/jpeg'));
+                };
+                img.onerror = function (err) {
+                    reject(err);
+                };
+            });
+        };
 
-                if (y + imgHeight > pageHeight - bottomMargin) {
-                    doc.addPage();
-                    y = topMargin;
-                }
-
-                doc.addImage(imgBase64, 'JPEG', margin, y, imgWidth, imgHeight);
-                y += imgHeight + 5;
-            } catch (err) {
-                console.error("Failed to add image", err);
+        // Questions Loop
+        for (const [index, q] of participateQuestionPaper.entries()) {
+            if (y + 10 > pageHeight - bottomMargin) {
+                doc.addPage();
+                y = topMargin;
             }
-        }
 
-        // MCQ options with symbol
-        if (q.qnType === "MCQ" && q.options.length > 0) {
-            doc.setFontSize(8);
-            doc.setFont("times", "normal");
-            q.options.forEach((opt, i) => {
-                const prefix = String.fromCharCode(65 + i) + ". ";
-                let symbol = "";
-
-                if (opt.adminAnswer) symbol = "(Correct Ans)";
-                else if (q.participateAns === opt.text) symbol = "(Applicant Ans)";
-
-                const optionText = `${prefix}${opt.text}${symbol ? " " + symbol : ""}`;
-                const optionLines = doc.splitTextToSize(optionText, usableWidth - 4);
-
-                optionLines.forEach(line => {
-                      if (y + 5 > pageHeight - bottomMargin) {
-                        doc.addPage();
-                        y = topMargin;
-                    }
-                    doc.text(line, margin + 4, y);
-                    y += 5;
-                });
-            });
-        }
-
-        // Descriptive Answer - Justified
-        if (q.qnType !== "MCQ") {
-            doc.setFontSize(8);
-            // ensure sentence has spaces between words
-            let rawText = q.participateAns || "No Answer Provided";
-            rawText = rawText.replace(/([a-z])([A-Z])/g, '$1 $2').replace(/\s+/g, ' ').trim();
-
-            const text = `Answer: ${rawText}`;
-            const words = text.split(" ");
-
-            // Bold "Answer:" only
+            // Question text (Bold, consistent font size)
+            doc.setFontSize(10);
             doc.setFont("times", "bold");
-            doc.text("Answer:", margin, y);
-            const answerLabelWidth = doc.getTextWidth("Answer: ");
-            doc.setFont("times", "normal");
+            const questionLines = doc.splitTextToSize(`${index + 1}. ${q.question}`, usableWidth - 50);
+            questionLines.forEach((line, i) => {
+                doc.text(line, margin, y);
 
-            let x = margin + answerLabelWidth;
-            const lineHeight = 5;
+                if (i === 0) {
 
-            words.slice(1).forEach(word => {
-                const wordWidth = doc.getTextWidth(word + " ");
-                  if (x + wordWidth > margin + usableWidth) {
-                    y += lineHeight;
-                    if (y + lineHeight > pageHeight - bottomMargin) {
+                    doc.setFont("times", "bold");
+                    doc.setFontSize(10);
+                    const markText = `Mark: ${q.qnMark} | Score: ${q.ansMark || 0}`;
+                    doc.text(markText, pageWidth - margin, y, { align: "right" });
+                }
+                y += 6;
+            });
+
+            // Question image
+            if (q.qnImage) {
+                try {
+                    const imgBase64 = await getBase64FromUrl(q.qnImage);
+                    const imgProps = doc.getImageProperties(imgBase64);
+                    const imgWidth = 50;
+                    const imgHeight = (imgProps.height * imgWidth) / imgProps.width;
+
+                    if (y + imgHeight > pageHeight - bottomMargin) {
                         doc.addPage();
                         y = topMargin;
                     }
-                    x = margin;
-                }
-                doc.text(word, x, y);
-                x += wordWidth;
-            });
 
-            y += 8;
+                    doc.addImage(imgBase64, 'JPEG', margin, y, imgWidth, imgHeight);
+                    y += imgHeight + 5;
+                } catch (err) {
+                    console.error("Failed to add image", err);
+                }
+            }
+
+            // MCQ options with symbol
+            if (q.qnType === "MCQ" && q.options.length > 0) {
+                doc.setFontSize(8);
+                doc.setFont("times", "normal");
+                q.options.forEach((opt, i) => {
+                    const prefix = String.fromCharCode(65 + i) + ". ";
+                    let symbol = "";
+
+                    if (opt.adminAnswer) symbol = "(Correct Ans)";
+                    else if (q.participateAns === opt.text) symbol = "(Applicant Ans)";
+
+                    const optionText = `${prefix}${opt.text}${symbol ? " " + symbol : ""}`;
+                    const optionLines = doc.splitTextToSize(optionText, usableWidth - 4);
+
+                    optionLines.forEach(line => {
+                        if (y + 5 > pageHeight - bottomMargin) {
+                            doc.addPage();
+                            y = topMargin;
+                        }
+                        doc.text(line, margin + 4, y);
+                        y += 5;
+                    });
+                });
+            }
+
+            // Descriptive Answer - Justified
+            if (q.qnType !== "MCQ") {
+                doc.setFontSize(8);
+                // ensure sentence has spaces between words
+                let rawText = q.participateAns || "No Answer Provided";
+                rawText = rawText.replace(/([a-z])([A-Z])/g, '$1 $2').replace(/\s+/g, ' ').trim();
+
+                const text = `Answer: ${rawText}`;
+                const words = text.split(" ");
+
+                // Bold "Answer:" only
+                doc.setFont("times", "bold");
+                doc.text("Answer:", margin, y);
+                const answerLabelWidth = doc.getTextWidth("Answer: ");
+                doc.setFont("times", "normal");
+
+                let x = margin + answerLabelWidth;
+                const lineHeight = 5;
+
+                words.slice(1).forEach(word => {
+                    const wordWidth = doc.getTextWidth(word + " ");
+                    if (x + wordWidth > margin + usableWidth) {
+                        y += lineHeight;
+                        if (y + lineHeight > pageHeight - bottomMargin) {
+                            doc.addPage();
+                            y = topMargin;
+                        }
+                        x = margin;
+                    }
+                    doc.text(word, x, y);
+                    x += wordWidth;
+                });
+
+                y += 8;
+            }
+
+            y += 6; // spacing after each question
         }
 
-        y += 6; // spacing after each question
-    }
-
-    // Save PDF
-    doc.save(`${participateQuestionPaper[0].userInfo.name}_answers.pdf`);
-};
+        // Save PDF
+        doc.save(`${participateQuestionPaper[0].userInfo.name}_answers.pdf`);
+    };
 
 
+    useEffect(() => {
+        document.body.style.overflow = 'hidden';
+        return () => {
+            document.body.style.overflow = 'unset';
+        };
+    }, []);
 
     return (
         <div className="overflow-x-auto p-3">
@@ -413,7 +425,6 @@ export default function AddExam() {
             <div className="rounded-md font-roboto overflow-hidden">
                 <div className="mb-6">
                     <h1 className="text-2xl font-bold text-gray-800">Participant Management</h1>
-                    <p className="text-gray-600 mt-2">View and manage participant exam papers</p>
                 </div>
                 <div className="bg-gradient-to-r from-[#2c3e50] to-[#3498db] sticky top-0 z-20 shadow-md">
 
@@ -453,71 +464,78 @@ export default function AddExam() {
                     </div>
 
                     {/* Participate  table */}
-                    <table className="min-w-full text-sm text-left text-gray-600">
-                        <thead className="bg-gray-100 text-xs uppercase text-gray-700">
-                            <tr className="border-b">
-                                <th className="px-4 py-2">SL</th>
-                                <th className="px-4 py-2">Exam Name</th>
-                                <th className="px-4 py-2">Name</th>
-                                <th className="px-4 py-2">User ID</th>
-                                <th className="px-4 py-2">Password</th>
-                                <th className="px-4 py-2">Organization</th>
-                                <th className="px-4 py-2">Salary</th>
-                                <th className="px-4 py-2 text-center">Notice Period (days)</th>
-                                <th className="px-4 py-2 text-center">Exam Paper</th>
-                            </tr>
-                        </thead>
-
-                        <tbody className="bg-white text-xs text-gray-700">
-                            {filteredSet.length === 0 ? (
-                                <tr key="no-participants">
-                                    <td colSpan="7" className="text-center py-4">No participants found</td>
+                    <div className="border border-gray-300 rounded-b-md overflow-hidden max-h-[58vh] overflow-y-auto">
+                        <table className="min-w-full text-sm text-left text-gray-600">
+                            <thead className="bg-gray-100 text-xs uppercase text-gray-700 sticky top-0 z-10">
+                                <tr className="border-b">
+                                    <th className="px-4 py-2">SL</th>
+                                    <th className="px-4 py-2">Exam Name</th>
+                                    <th className="px-4 py-2">Name</th>
+                                    {/* <th className="px-4 py-2">User ID</th>
+                                    <th className="px-4 py-2">Password</th> */}
+                                    <th className="px-4 py-2">Organization</th>
+                                    <th className="px-4 py-2">Salary</th>
+                                    <th className="px-4 py-2">Mobile No</th>
+                                    <th className="px-4 py-2">Experience</th>
+                                    <th className="px-4 py-2 text-center">Notice Period (days)</th>
+                                    <th className="px-4 py-2">Qn Mark</th>
+                                    <th className="px-4 py-2 text-center">Exam Paper</th>
                                 </tr>
-                            ) : (
-                                filteredSet.map((item, index) => (
-                                    <tr key={`${item.value}-${index}`} className="border-b border-gray-300 hover:bg-gray-50">
-                                        <td data-label="SL" className="px-4 py-2">{index + 1}</td>
-                                        <td data-label="Name" className="px-4 py-2">{item.examName}</td>
-                                        <td data-label="Name" className="px-4 py-2">{item.label}</td>
-                                        <td data-label="User ID" className="px-4 py-2">{item.value}</td>
-                                        <td data-label="Password" className="px-4 py-2">{item.password}</td>
-                                        <td data-label="Organization" className="px-4 py-2">{item.org}</td>
-                                        <td data-label="Salary" className="px-4 py-2">৳ {item.salary}</td>
-                                        <td data-label="Notice Period" className="px-4 py-2 text-center">{item.noticePeriod}</td>
-                                        <td data-label="Actions" className="px-4 py-2 text-center">
-                                            <div className="flex justify-center gap-3">
+                            </thead>
 
-                                                <button
-                                                    onClick={async () => {
-                                                        await fetchParticipateQuestionPaper(item.id);
-                                                        setIsEditMode(false);
-                                                        setShowQuestionModal(true);
-                                                    }}
-                                                    className="flex items-center gap-1 px-3 py-1.5 text-sm font-medium border border-blue-500 text-blue-500 rounded hover:bg-blue-500 hover:text-white transition-colors duration-200"
-                                                >
-                                                    <FiEye className="text-base" />
-                                                </button>
-
-                                                <button
-                                                    onClick={async () => {
-                                                        await fetchParticipateQuestionPaper(item.id);
-                                                        setIsEditMode(true);
-                                                        setShowQuestionModal(true);
-                                                    }}
-                                                    className="flex items-center gap-1 px-3 py-1.5 text-sm font-medium border border-green-500 text-green-500 rounded hover:bg-green-500 hover:text-white transition-colors duration-200"
-                                                >
-                                                    <FiCheckCircle className="text-base" />
-                                                </button>
-
-                                            </div>
-                                        </td>
+                            <tbody className="bg-white text-xs text-gray-700">
+                                {filteredSet.length === 0 ? (
+                                    <tr key="no-participants">
+                                        <td colSpan="7" className="text-center py-4">No participants found</td>
                                     </tr>
-                                ))
+                                ) : (
+                                    filteredSet.map((item, index) => (
+                                        <tr key={`${item.value}-${index}`} className="border-b border-gray-300 hover:bg-gray-50">
+                                            <td data-label="SL" className="px-4 py-2">{index + 1}</td>
+                                            <td data-label="Name" className="px-4 py-2">{item.examName}</td>
+                                            <td data-label="Name" className="px-4 py-2">{item.label}</td>
+                                            {/* <td data-label="User ID" className="px-4 py-2">{item.value}</td>
+                                        <td data-label="Password" className="px-4 py-2">{item.password}</td> */}
+                                            <td data-label="Organization" className="px-4 py-2">{item.org}</td>
+                                            <td data-label="Salary" className="px-4 py-2">৳ {item.salary}</td>
+                                            <td data-label="Mobile No" className="px-4 py-2">{item.mobileNo}</td>
+                                            <td data-label="Experience" className="px-4 py-2">{item.experience}</td>
+                                            <td data-label="Notice Period" className="px-4 py-2 text-center">{item.noticePeriod}</td>
+                                            <td data-label="Qn Mark" className="px-4 py-2 text-center">{item.totalQnMark}</td>
+                                            <td data-label="Actions" className="px-4 py-2 text-center">
+                                                <div className="flex justify-center gap-3">
 
-                            )}
-                        </tbody>
-                    </table>
+                                                    <button
+                                                        onClick={async () => {
+                                                            await fetchParticipateQuestionPaper(item.id);
+                                                            setIsEditMode(false);
+                                                            setShowQuestionModal(true);
+                                                        }}
+                                                        className="flex items-center gap-1 px-3 py-1.5 text-sm font-medium border border-blue-500 text-blue-500 rounded hover:bg-blue-500 hover:text-white transition-colors duration-200"
+                                                    >
+                                                        <FiEye className="text-base" />
+                                                    </button>
 
+                                                    <button
+                                                        onClick={async () => {
+                                                            await fetchParticipateQuestionPaper(item.id);
+                                                            setIsEditMode(true);
+                                                            setShowQuestionModal(true);
+                                                        }}
+                                                        className="flex items-center gap-1 px-3 py-1.5 text-sm font-medium border border-green-500 text-green-500 rounded hover:bg-green-500 hover:text-white transition-colors duration-200"
+                                                    >
+                                                        <FiCheckCircle className="text-base" />
+                                                    </button>
+
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    ))
+
+                                )}
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
             </div>
 
@@ -538,15 +556,14 @@ export default function AddExam() {
 
                         {participateQuestionPaper.length > 0 ? (
                             <>
-                                {/* Candidate Info */}
+
                                 <div className="mb-8 p-4 bg-blue-50 rounded-lg text-center mt-5">
                                     <div className="relative ">
-                                        {/* Name - centered */}
-                                        <h2 className="text-2xl font-semibold text-blue-700 text-center">
-                                            {participateQuestionPaper[0]?.userInfo.name}
+                                        <h2 className="text-2xl font-semibold text-center flex flex-col items-center justify-center">
+                                            <span className="text-blue-700">{participateQuestionPaper[0]?.userInfo.name}</span>
+                                            <span className="text-black">Exam Name: {participateQuestionPaper[0]?.examName}</span>
                                         </h2>
 
-                                        {/* Total Score - right aligned */}
                                         <div className="absolute top-1/2 right-4 -translate-y-1/2 font-semibold text-gray-800 border-3 border-black-400 rounded-lg p-2">
                                             Total Scored:{" "}
                                             {participateQuestionPaper.reduce((sum, q) => sum + (parseFloat(q.ansMark) || 0), 0)}{" "}

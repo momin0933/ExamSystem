@@ -30,11 +30,13 @@ export default function DashboardLayout({ children }) {
               <aside className="hidden sm:block">
                 <Sidebar />
               </aside>
-              <div className="flex-1">
+              {/* <div className="flex-1 "> */}
+               <div className="flex-1 flex flex-col min-h-screen">
                 <header className="sticky top-0 z-50">
                   <Navbar />
                 </header>
-                <main className="bg-[#ECF0F4] min-h-[calc(120vh-232px)] ">
+                {/* <main className="bg-[#ECF0F4] min-h-[calc(120vh-232px)] "> */}
+                <main className="bg-[#ECF0F4] flex-1">
                   {children}
                 </main>
                 <footer>
