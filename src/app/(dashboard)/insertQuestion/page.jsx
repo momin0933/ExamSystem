@@ -25,6 +25,9 @@ export default function InsertQuestion() {
     const [previewQuestions, setPreviewQuestions] = useState([]);
     const [isEdit, setIsEdit] = useState(false);
 
+    // Remove mounted state and use a different approach
+    const [isClient, setIsClient] = useState(false);
+
     const initialFormData = {
         id: 0,
         subId: "",
@@ -36,6 +39,17 @@ export default function InsertQuestion() {
         options: [{ optionText: "", isCorrect: false }],
     };
     const [formData, setFormData] = useState({ ...initialFormData });
+
+    // Set client state and handle body overflow only on client
+    useEffect(() => {
+        setIsClient(true);
+
+        // Only run on client
+        document.body.style.overflow = 'hidden';
+        return () => {
+            document.body.style.overflow = 'unset';
+        };
+    }, []);
 
     // Fetch subjects when tenantId is available
     useEffect(() => {
@@ -82,98 +96,6 @@ export default function InsertQuestion() {
             toast.error("Failed to load subjects");
         }
     };
-
-    // const fetchQuestionData = async (questionId) => {
-    //     try {
-    //         setLoading(true);
-
-    //         // Fetch question details
-    //         const response = await fetch(`${config.API_BASE_URL}api/Procedure/GetData`, {
-    //             method: 'POST',
-    //             headers: {
-    //                 TenantId: loginData.tenantId,
-    //                 'Content-Type': 'application/json',
-    //             },
-    //             body: JSON.stringify({
-    //                 operation: '',
-    //                 procedureName: 'SP_QuestionManage',
-    //                 parameters: {
-    //                     QueryChecker: 6,
-    //                     Id: questionId,
-    //                 },
-    //             }),
-    //         });
-
-    //         if (!response.ok) throw new Error(await response.text());
-
-    //         const data = await response.json();
-    //         const question = data.length ? {
-    //             QuestionId: data[0].QuestionId,
-    //             Name: data[0].Name,
-    //             Mark: data[0].Mark,
-    //             QnType: data[0].QnType,
-    //             Remarks: data[0].Remarks,
-    //             SubjectId: data[0].SubjectId,
-    //             SubjectName: data[0].SubjectName,
-    //             Sketch: data[0].Sketch,
-    //             IsActive: data[0].IsActive,
-    //         } : null;
-
-    //         if (question) {
-    //             let options = [{ optionText: "", isCorrect: false }];
-
-    //             // Fetch MCQ options if question is MCQ
-    //             if (question.QnType === "MCQ") {
-    //                 try {
-    //                     const res = await fetch(
-    //                         `${config.API_BASE_URL}api/Question/GetByQuestion/${question.QuestionId}`,
-    //                         {
-    //                             headers: {
-    //                                 TenantId: loginData.tenantId,
-    //                                 "Content-Type": "application/json",
-    //                             },
-    //                         }
-    //                     );
-
-    //                     if (res.ok) {
-    //                         const apiOptions = await res.json();
-    //                         options = apiOptions.map((opt) => ({
-    //                             id: opt.Id || 0,
-    //                             optionText: opt.OptionText || "",
-    //                             isCorrect: opt.Answer ?? false,
-    //                         }));
-
-    //                         if (options.length < 2) options.push({ optionText: "", isCorrect: false });
-    //                     }
-    //                 } catch (err) {
-    //                     console.error("Error fetching MCQ options:", err);
-    //                 }
-    //             }
-
-    //             // Set form data
-    //             setFormData({
-    //                 id: question.QuestionId,
-    //                 subId: question.SubjectId || "",
-    //                 qnTypeId: question.QnType === "Descriptive" ? "1" : "2",
-    //                 name: question.Name || "",
-    //                 mark: question.Mark ?? 0,
-    //                 remarks: question.Remarks || "",
-    //                 sketch: null,
-    //                 options: options,
-    //             });
-
-    //             // Set existing image
-    //             setExistingImage(question.Sketch || null);
-    //             setQuestionImage(question.Sketch || null);
-    //             setDescriptiveMode(question.QnType === "Descriptive" ? "manual" : "");
-    //         }
-    //     } catch (err) {
-    //         console.error(`Error fetching question:`, err);
-    //         toast.error('Failed to load question data');
-    //     } finally {
-    //         setLoading(false);
-    //     }
-    // };
 
     const fetchQuestionData = async (questionId) => {
         try {
@@ -347,9 +269,22 @@ export default function InsertQuestion() {
         setFormData((prev) => ({
             ...prev,
             qnTypeId: type,
-            options: type === "2" ? prev.options.length ? prev.options : [{ optionText: "", isCorrect: false }] : [],
+            options: type === "2" ? (prev.options.length ? prev.options : [{ optionText: "", isCorrect: false }]) : [],
             sketch: type === "1" ? prev.sketch : null
         }));
+    };
+
+    const handleDescriptiveModeChange = (e) => {
+        const val = e.target.value;
+        setDescriptiveMode(val);
+
+        // If user chooses Excel -> force Question Type to Descriptive (1)
+        if (val === "excel") {
+            setFormData((prev) => ({ ...prev, qnTypeId: "1" }));
+        } else {
+            // For manual mode reset question type
+            setFormData((prev) => ({ ...prev, qnTypeId: "" }));
+        }
     };
 
     // Excel handling
@@ -599,275 +534,334 @@ export default function InsertQuestion() {
         }
     };
 
+
+    // if (!isClient) {
+    //     return (
+    //         <div className="overflow-x-auto p-3">
+    //             <div className="mb-2">
+    //                 <h1 className="text-2xl font-bold text-gray-800">
+    //                     {isEdit ? "Edit Question" : "Add New Question"}
+    //                 </h1>
+    //             </div>
+    //             <div className="border border-gray-300 rounded-b-md overflow-hidden max-h-[72vh] overflow-y-auto">
+    //                 <div className="bg-white rounded-lg shadow-md p-6">
+    //                     <div className="text-center py-4">Loading...</div>
+    //                 </div>
+    //             </div>
+    //         </div>
+    //     );
+    // }
+
     return (
         <div className="overflow-x-auto p-3">
-            <div className="mb-2">        
+            <div className="mb-2">
                 <h1 className="text-2xl font-bold text-gray-800">
                     {isEdit ? "Edit Question" : "Add New Question"}
                 </h1>
             </div>
+            <div className="border border-gray-300 rounded-b-md overflow-hidden max-h-[72vh] overflow-y-auto">
+                <div className="bg-white rounded-lg shadow-md p-6">
+                    {loading && !isEdit ? (
+                        <div className="text-center py-4">Loading...</div>
+                    ) : (
+                        <form
+                            onSubmit={(e) => {
+                                e.preventDefault();
+                                handleSubmit({ isBulk: descriptiveMode === "excel" });
+                            }}
+                            className="space-y-4 text-sm"
+                        >
 
-            <div className="bg-white rounded-lg shadow-md p-6">
-                {loading && !isEdit ? (
-                    <div className="text-center py-4">Loading...</div>
-                ) : (
-                    <form
-                        onSubmit={(e) => {
-                            e.preventDefault();
-                            handleSubmit({ isBulk: descriptiveMode === "excel" });
-                        }}
-                        className="space-y-4 text-sm"
-                    >
-                        <div className="flex items-center gap-2">
-                            <label className="w-1/3 text-sm font-semibold text-gray-700">Position Name: <span className="text-red-500">*</span></label>
-                            <Select
-                                name="subId"
-                                value={subjectData.find((s) => s.value === formData.subId) || null}
-                                onChange={(selected) => setFormData((prev) => ({ ...prev, subId: selected?.value || "" }))}
-                                options={subjectData}
-                                placeholder="Select Position"
-                                className="w-full"
-                                isClearable
-                                menuPortalTarget={document.body}
-                                classNamePrefix="custom-select"
-                                styles={{
-                                    control: (base) => ({
-                                        ...base,
-                                        minHeight: "34px",
-                                        borderColor: "#D1D5DB",
-                                        boxShadow: "0 1px 2px rgba(0,0,0,0.05)",
-                                        "&:hover": { borderColor: "#3B82F6" },
-                                    }),
-                                    menuPortal: (base) => ({ ...base, zIndex: 99999 }),
-                                }}
-                                required
-                            />
-                        </div>
-
-                        <div className="flex items-center gap-2">
-                            <label className="w-1/3 text-sm font-semibold text-gray-700">Question Type:<span className="text-red-500">*</span></label>
-                            <select
-                                name="qnTypeId"
-                                value={formData.qnTypeId}
-                                onChange={handleQnTypeChange}
-                                className="w-full border rounded p-2"
-                                required
-                                disabled={isEdit} 
-                            >
-                                <option value="">-- Select Question Type --</option>
-                                <option value="1">Descriptive</option>
-                                <option value="2">MCQ</option>
-                            </select>
-                        </div>
-
-                        {formData.qnTypeId === "1" && !isEdit && (
-                            <div className="flex items-center gap-2">
-                                <label className="w-1/3 text-sm font-semibold text-gray-700">Add Mode: <span className="text-red-500">*</span></label>
-                                <select
-                                    value={descriptiveMode}
-                                    onChange={(e) => setDescriptiveMode(e.target.value)}
-                                    className="w-full border rounded p-2"
-                                    required
-                                >
-                                    <option value="">-- Select Mode --</option>
-                                    <option value="manual">Add Manual Question</option>
-                                    <option value="excel">Upload Excel File</option>
-                                </select>
-                            </div>
-                        )}
-
-                        {/* Manual Question Mode */}
-                        {descriptiveMode === "manual" && (
-                            <div className="space-y-4">
-                                <div className="flex items-center gap-2">
-                                    <label className="w-1/3 text-sm font-semibold text-gray-700">Question: <span className="text-red-500">*</span></label>
-                                    <textarea
-                                        name="name"
-                                        value={formData.name}
-                                        onChange={handleChange}
-                                        className="w-full border px-3 py-2 rounded"
-                                        rows={3}
-                                        required
-                                    />
-                                </div>
-
-                                <div className="flex items-center gap-2">
-                                    <label className="w-1/3 text-sm font-semibold text-gray-700">
-                                        Mark: <span className="text-red-500">*</span>
+                            <div className="flex flex-wrap gap-4">
+                                {/* Position Name */}
+                                <div className="flex items-center gap-2 flex-1 min-w-[200px]">
+                                    <label className="w-32 text-sm font-semibold text-gray-700">
+                                        Position Name: <span className="text-red-500">*</span>
                                     </label>
-                                    <input
-                                        type="number"
-                                        name="mark"
-                                        value={formData.mark ?? ""}
-                                        onChange={(e) => {
-                                            const value = parseFloat(e.target.value);
-                                            if (value < 0) return;
-                                            setFormData((prev) => ({
-                                                ...prev,
-                                                mark: e.target.value,
-                                            }));
+                                    <Select
+                                        name="subId"
+                                        value={subjectData.find((s) => s.value === formData.subId) || null}
+                                        onChange={(selected) => setFormData((prev) => ({ ...prev, subId: selected?.value || "" }))}
+                                        options={subjectData}
+                                        placeholder="Select Position"
+                                        className="flex-1"
+                                        isClearable
+                                        classNamePrefix="custom-select"
+                                        styles={{
+                                            control: (base) => ({
+                                                ...base,
+                                                minHeight: "34px",
+                                                borderColor: "#D1D5DB",
+                                                boxShadow: "0 1px 2px rgba(0,0,0,0.05)",
+                                                "&:hover": { borderColor: "#3B82F6" },
+                                            }),
+                                            menu: (base) => ({
+                                                ...base,
+                                                zIndex: 9999,
+                                            }),
+                                            menuPortal: (base) => ({
+                                                ...base,
+                                                zIndex: 9999,
+                                            }),
                                         }}
-                                        className="w-full border px-3 py-2 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                        menuPortalTarget={isClient ? document.body : null}
                                         required
-                                        min="1"
-                                        step="0.1"
                                     />
                                 </div>
 
-                                <div className="w-full h-40 rounded-lg border border-gray-300 flex flex-col items-center justify-center overflow-hidden relative">
-                                    {questionImage ? (
-                                        <img
-                                            src={questionImage}
-                                            alt="Question Preview"
-                                            className="object-cover w-full h-full"
-                                        />
-                                    ) : (
-                                        <span className="text-gray-400 text-sm">Select Question Image</span>
-                                    )}
-                                    <input
-                                        type="file"
-                                        accept="image/*"
-                                        className="absolute inset-0 opacity-0 cursor-pointer"
-                                        onChange={handleQuestionImageChange}
-                                        disabled={isUploading}
-                                    />
-                                </div>
-
-                                <div className="flex items-center space-x-4">
-                                    <button
-                                        type="button"
-                                        onClick={() => document.querySelector('input[type="file"]').click()}
-                                        className="px-3 py-1 rounded bg-blue-600 text-white text-sm hover:bg-blue-700"
+                                {/* Add Mode */}
+                                <div className="flex items-center gap-2 flex-1 min-w-[200px]">
+                                    <label className="w-32 text-sm font-semibold text-gray-700">
+                                        Add Mode: <span className="text-red-500">*</span>
+                                    </label>
+                                    <select
+                                        value={descriptiveMode}
+                                        onChange={handleDescriptiveModeChange}
+                                        className="flex-1 border rounded p-2"
+                                        required
                                     >
-                                        {questionImage ? "Change" : "Upload"}
-                                    </button>
-
-                                    {questionImage && (
-                                        <button
-                                            type="button"
-                                            onClick={handleRemoveQuestionImage}
-                                            className="text-gray-600 text-sm hover:text-red-500"
-                                        >
-                                            Remove
-                                        </button>
-                                    )}
+                                        <option value="">-- Select Mode --</option>
+                                        <option value="manual">Add Manual Question</option>
+                                        <option value="excel">Upload Excel File</option>
+                                    </select>
                                 </div>
                             </div>
-                        )}
 
-                        {/* Excel Upload Mode */}
-                        {descriptiveMode === "excel" && (
-                            <div className="space-y-4">
-                                <div className="flex items-center gap-2">
-                                    <label className="w-1/3 text-sm font-semibold text-gray-700">
-                                        Upload Excel File
+                            {/* Question Type - Show only when manual mode is selected */}
+                            {descriptiveMode === "manual" && (
+                                <div className="flex items-center gap-2 flex-1 min-w-[200px]">
+                                    <label className="w-32 text-sm font-semibold text-gray-700">
+                                        Question Type:<span className="text-red-500">*</span>
                                     </label>
-                                    <input
-                                        type="file"
-                                        accept=".xlsx, .xls"
-                                        onChange={handleExcelUpload}
-                                        className="w-full border rounded p-2"
+                                    <select
+                                        name="qnTypeId"
+                                        value={formData.qnTypeId}
+                                        onChange={handleQnTypeChange}
+                                        className="flex-1 border rounded p-2"
                                         required
-                                    />
+                                    >
+                                        <option value="">-- Select Question Type --</option>
+                                        <option value="1">Descriptive</option>
+                                        <option value="2">MCQ</option>
+                                    </select>
                                 </div>
+                            )}
 
-                                {previewQuestions.length > 0 && (
-                                    <div>
-                                        <h5 className="font-semibold text-gray-700 mb-2">Preview Questions</h5>
-                                        <div className="space-y-2">
-                                            {previewQuestions.map((q, idx) => (
-                                                <div key={idx} className="p-2 border rounded bg-gray-50">
-                                                    <div className="flex justify-between items-start">
-                                                        <p>{idx + 1}. {q.question}</p>
-                                                        <span className="text-gray-600 font-semibold">Mark: {q.mark}</span>
-                                                    </div>
-                                                    {q.image && (
-                                                        <img src={`data:image/png;base64,${q.image}`} alt="Question" className="mt-1 w-full h-32 object-cover rounded" />
-                                                    )}
-                                                </div>
-                                            ))}
+                            {/* Manual Descriptive Question - Show when manual mode AND descriptive type selected */}
+                            {descriptiveMode === "manual" && formData.qnTypeId === "1" && (
+                                <div className="space-y-4">
+                                    <div className="flex items-center gap-2 flex-1 min-w-[200px]">
+                                        <label className="w-32 text-sm font-semibold text-gray-700">Question: <span className="text-red-500">*</span></label>
+                                        <textarea
+                                            name="name"
+                                            value={formData.name}
+                                            onChange={handleChange}
+                                            className="flex-1 border rounded p-2"
+                                            rows={3}
+                                            required
+                                        />
+                                    </div>
+
+                                    <div className="flex items-center gap-2 flex-1 min-w-[200px]">
+                                        <label className="w-32 text-sm font-semibold text-gray-700">
+                                            Mark: <span className="text-red-500">*</span>
+                                        </label>
+                                        <input
+                                            type="number"
+                                            name="mark"
+                                            value={formData.mark ?? ""}
+                                            onChange={(e) => {
+                                                const value = parseFloat(e.target.value);
+                                                if (value < 0) return;
+                                                setFormData((prev) => ({
+                                                    ...prev,
+                                                    mark: e.target.value,
+                                                }));
+                                            }}
+                                            className="flex-1 border rounded p-2"
+                                            required
+                                            min="1"
+                                            step="0.1"
+                                        />
+                                    </div>
+
+                                    {/* <div className="w-full h-40 rounded-lg border border-gray-300 flex flex-col items-center justify-center overflow-hidden relative">
+                                        {questionImage ? (
+                                            <img
+                                                src={questionImage}
+                                                alt="Question Preview"
+                                                className="object-cover w-full h-full"
+                                            />
+                                        ) : (
+                                            <span className="text-gray-400 text-sm">Select Question Image</span>
+                                        )}
+                                        <input
+                                            type="file"
+                                            accept="image/*"
+                                            className="absolute inset-0 opacity-0 cursor-pointer"
+                                            onChange={handleQuestionImageChange}
+                                            disabled={isUploading}
+                                        />
+                                    </div> */}
+                                    <div className="flex items-center gap-4 w-full">
+                                        {/* Label */}
+                                        <label className="text-sm font-semibold text-gray-700 w-32">
+                                            Question Image:
+                                        </label>
+
+                                        {/* Upload Box */}
+                                        <div className="w-40 h-40 rounded-lg border border-gray-300 flex flex-col items-center justify-center overflow-hidden relative">
+                                            {questionImage ? (
+                                                <img
+                                                    src={questionImage}
+                                                    alt="Question Preview"
+                                                    className="object-cover w-full h-full"
+                                                />
+                                            ) : (
+                                                <span className="text-gray-400 text-sm text-center">
+                                                    Select Image
+                                                </span>
+                                            )}
+
+                                            {/* Bigger clickable area */}
+                                            <input
+                                                id="questionImageInput"
+                                                type="file"
+                                                accept="image/*"
+                                                className="absolute -inset-4 w-[500%] h-[200%] opacity-0 cursor-pointer"
+                                                onChange={handleQuestionImageChange}
+                                                disabled={isUploading}
+                                            />
                                         </div>
                                     </div>
-                                )}
-                            </div>
-                        )}
 
-                        {/* MCQ Mode  */}
-                        {formData.qnTypeId === "2"  && (
-                            <>
-                                <div className="flex items-center gap-2">
-                                    <label className="w-1/3 text-sm font-semibold text-gray-700">Question: <span className="text-red-500">*</span></label>
-                                    <textarea name="name" value={formData.name} onChange={handleChange} className="w-full border px-3 py-2 rounded" rows={3} required />
-                                </div>
-
-                                <div className="flex items-center gap-2">
-                                    <label className="w-1/3 text-sm font-semibold text-gray-700">
-                                        Mark: <span className="text-red-500">*</span>
-                                    </label>
-                                    <input
-                                        type="number"
-                                        name="mark"
-                                        value={formData.mark ?? ""}
-                                        onChange={(e) => {
-                                            const value = parseFloat(e.target.value);
-                                            if (value < 0) return;
-                                            setFormData((prev) => ({
-                                                ...prev,
-                                                mark: e.target.value,
-                                            }));
-                                        }}
-                                        className="w-full border px-3 py-2 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                        required
-                                        min="1"
-                                        step="0.1"
-                                    />
-                                </div>
-
-                                <div className="w-full h-40 rounded-lg border border-gray-300 flex flex-col items-center justify-center overflow-hidden relative">
-                                    {questionImage ? (
-                                        <img
-                                            src={questionImage}
-                                            alt="Question Preview"
-                                            className="object-cover w-full h-full"
-                                        />
-                                    ) : (
-                                        <span className="text-gray-400 text-sm">
-                                            {isEdit && existingImage ? "Image exists (change if needed)" : "Select Question Image"}
-                                        </span>
-                                    )}
-                                    <input
-                                        type="file"
-                                        accept="image/*"
-                                        className="absolute inset-0 opacity-0 cursor-pointer"
-                                        onChange={handleQuestionImageChange}
-                                        disabled={isUploading}
-                                    />
-                                </div>
-
-                                <div className="flex items-center space-x-4">
-                                    <button
-                                        type="button"
-                                        onClick={() => document.querySelector('input[type="file"]').click()}
-                                        className="px-3 py-1 rounded bg-blue-600 text-white text-sm hover:bg-blue-700"
-                                    >
-                                        {questionImage || existingImage ? "Change" : "Upload"}
-                                    </button>
-
-                                    {(questionImage || existingImage) && (
+                                    <div className="flex items-center space-x-4">
                                         <button
                                             type="button"
-                                            onClick={handleRemoveQuestionImage}
-                                            className="text-gray-600 text-sm hover:text-red-500"
+                                            onClick={() => document.querySelector('input[type="file"]').click()}
+                                            className="px-3 py-1 rounded bg-blue-600 text-white text-sm hover:bg-blue-700"
                                         >
-                                            Remove
+                                            {questionImage ? "Change" : "Upload"}
                                         </button>
-                                    )}
+
+                                        {questionImage && (
+                                            <button
+                                                type="button"
+                                                onClick={handleRemoveQuestionImage}
+                                                className="text-gray-600 text-sm hover:text-red-500"
+                                            >
+                                                Remove
+                                            </button>
+                                        )}
+                                    </div>
                                 </div>
+                            )}
 
-                                {isUploading && <p className="text-xs text-gray-500">Uploading...</p>}
+                            {/* Manual MCQ Question - Show when manual mode AND MCQ type selected */}
+                            {descriptiveMode === "manual" && formData.qnTypeId === "2" && (
+                                <>
+                                    <div className="flex items-center gap-2 flex-1 min-w-[200px]">
+                                        <label className="w-32 text-sm font-semibold text-gray-700">Question: <span className="text-red-500">*</span></label>
+                                        <textarea name="name" value={formData.name} onChange={handleChange} className="flex-1 border rounded p-2" rows={3} required />
+                                    </div>
 
-                                {/* MCQ Options */}
-                                {formData.qnTypeId === "2" && (
+                                    <div className="flex items-center gap-2 flex-1 min-w-[200px]">
+                                        <label className="w-32 text-sm font-semibold text-gray-700">
+                                            Mark: <span className="text-red-500">*</span>
+                                        </label>
+                                        <input
+                                            type="number"
+                                            name="mark"
+                                            value={formData.mark ?? ""}
+                                            onChange={(e) => {
+                                                const value = parseFloat(e.target.value);
+                                                if (value < 0) return;
+                                                setFormData((prev) => ({
+                                                    ...prev,
+                                                    mark: e.target.value,
+                                                }));
+                                            }}
+                                            className="flex-1 border rounded p-2"
+                                            required
+                                            min="1"
+                                            step="0.1"
+                                        />
+                                    </div>
+
+                                    {/* <div className="w-full h-40 rounded-lg border border-gray-300 flex flex-col items-center justify-center overflow-hidden relative">
+                                        {questionImage ? (
+                                            <img
+                                                src={questionImage}
+                                                alt="Question Preview"
+                                                className="object-cover w-full h-full"
+                                            />
+                                        ) : (
+                                            <span className="text-gray-400 text-sm">Select Question Image</span>
+                                        )}
+                                        <input
+                                            type="file"
+                                            accept="image/*"
+                                            className="absolute inset-0 opacity-0 cursor-pointer"
+                                            onChange={handleQuestionImageChange}
+                                            disabled={isUploading}
+                                        />
+                                    </div> */}
+
+                                    <div className="flex items-center gap-4 w-full">
+                                        {/* Label */}
+                                        <label className="text-sm font-semibold text-gray-700 w-32">
+                                            Question Image:
+                                        </label>
+
+                                        {/* Upload Box */}
+                                        <div className="w-40 h-40 rounded-lg border border-gray-300 flex flex-col items-center justify-center overflow-hidden relative">
+                                            {questionImage ? (
+                                                <img
+                                                    src={questionImage}
+                                                    alt="Question Preview"
+                                                    className="object-cover w-full h-full"
+                                                />
+                                            ) : (
+                                                <span className="text-gray-400 text-sm text-center">
+                                                    Select Image
+                                                </span>
+                                            )}
+
+                                            {/* Bigger clickable area */}
+                                            <input
+                                                id="questionImageInput"
+                                                type="file"
+                                                accept="image/*"
+                                                className="absolute -inset-4 w-[500%] h-[200%] opacity-0 cursor-pointer"
+                                                onChange={handleQuestionImageChange}
+                                                disabled={isUploading}
+                                            />
+                                        </div>
+                                    </div>
+
+                                    <div className="flex items-center space-x-4">
+                                        <button
+                                            type="button"
+                                            onClick={() => document.querySelector('input[type="file"]').click()}
+                                            className="px-3 py-1 rounded bg-blue-600 text-white text-sm hover:bg-blue-700"
+                                        >
+                                            {questionImage ? "Change" : "Upload"}
+                                        </button>
+
+                                        {questionImage && (
+                                            <button
+                                                type="button"
+                                                onClick={handleRemoveQuestionImage}
+                                                className="text-gray-600 text-sm hover:text-red-500"
+                                            >
+                                                Remove
+                                            </button>
+                                        )}
+                                    </div>
+
+                                    {isUploading && <p className="text-xs text-gray-500">Uploading...</p>}
+
+                                    {/* MCQ Options */}
                                     <div className="mt-3">
                                         <div className="flex gap-2 px-1 mb-1">
                                             <span className="flex-1 text-sm font-semibold text-gray-700">Options</span>
@@ -907,11 +901,53 @@ export default function InsertQuestion() {
                                             Add Option
                                         </button>
                                     </div>
-                                )}
-                            </>
-                        )}
+                                </>
+                            )}
 
-                        {(formData.qnTypeId || isEdit) && (
+                            {/* Excel Upload Mode - Show when excel mode is selected */}
+                            {descriptiveMode === "excel" && (
+                                <div className="space-y-4">
+                                    <div className="flex items-center gap-2">
+                                        <label className="w-1/3 text-sm font-semibold text-gray-700">
+                                            Upload Excel File: <span className="text-red-500">*</span>
+                                        </label>
+                                        <input
+                                            type="file"
+                                            accept=".xlsx, .xls"
+                                            onChange={handleExcelUpload}
+                                            className="w-full border rounded p-2"
+                                            required
+                                        />
+                                    </div>
+
+                                    {previewQuestions.length > 0 && (
+                                        <div>
+                                            <h5 className="font-semibold text-gray-700 mb-2">Preview Questions</h5>
+                                            <div className="space-y-2 max-h-80 overflow-y-auto p-2 border rounded">
+                                                {previewQuestions.map((q, idx) => (
+                                                    <div key={idx} className="p-2 border rounded bg-gray-50">
+                                                        <div className="flex justify-between items-start">
+                                                            <p>{idx + 1}. {q.question}</p>
+                                                            <span className="text-gray-600 font-semibold">Mark: {q.mark}</span>
+                                                        </div>
+
+                                                        {q.image && (
+                                                            <img
+                                                                src={`data:image/png;base64,${q.image}`}
+                                                                alt="Question"
+                                                                className="mt-1 w-full h-32 object-cover rounded"
+                                                            />
+                                                        )}
+                                                    </div>
+                                                ))}
+                                            </div>
+
+                                        </div>
+                                    )}
+                                </div>
+                            )}
+
+                            {/* Submit Buttons */}
                             <div className="flex justify-end space-x-2 pt-4">
                                 <button
                                     type="button"
@@ -925,12 +961,12 @@ export default function InsertQuestion() {
                                     className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
                                     disabled={loading}
                                 >
-                                    {loading ? "Saving..." : (isEdit ? "Update" : "Save")}
+                                    {loading ? (isEdit ? "Updating..." : "Saving...") : (isEdit ? "Update" : "Save")}
                                 </button>
                             </div>
-                        )}
-                    </form>
-                )}
+                        </form>
+                    )}
+                </div>
             </div>
         </div>
     );
