@@ -1010,15 +1010,15 @@ export default function InsertQuestion() {
                             {/* Excel Upload Mode - Show when excel mode is selected */}
                             {descriptiveMode === "excel" && (
                                 <div className="space-y-4">
-                                    <div className="flex items-center gap-2">
-                                        <label className="w-1/3 text-sm font-semibold text-gray-700">
+                                    <div className="flex items-center gap-2 flex-1 min-w-[200px]">
+                                        <label className="w-33 text-sm font-semibold text-gray-700">
                                             Upload Excel File: <span className="text-red-500">*</span>
                                         </label>
                                         <input
                                             type="file"
                                             accept=".xlsx, .xls"
                                             onChange={handleExcelUpload}
-                                            className="w-full border rounded p-2"
+                                           className="flex-1 border rounded p-2"
                                             required
                                         />
                                     </div>

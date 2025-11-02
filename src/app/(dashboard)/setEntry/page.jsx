@@ -27,6 +27,7 @@ export default function SetEntryPage() {
     const [addMode, setAddMode] = useState("");
     const [questionCount, setQuestionCount] = useState("");
 
+
     useEffect(() => {
         AOS.init({ duration: 800, once: true });
     }, []);
@@ -186,6 +187,142 @@ export default function SetEntryPage() {
     };
 
 
+    // const fetchRandomQuestions = async () => {
+    //     if (!selectedSubject || !questionCount) {
+    //         toast.warning("Please select a subject and enter number of questions!");
+    //         return;
+    //     }
+
+    //     try {
+    //         const response = await fetch(`${config.API_BASE_URL}api/Procedure/GetData`, {
+    //             method: "POST",
+    //             headers: {
+    //                 TenantId: loginData.tenantId,
+    //                 "Content-Type": "application/json",
+    //             },
+    //             body: JSON.stringify({
+    //                 operation: "",
+    //                 procedureName: "SP_GetRandomQuestions",
+    //                 parameters: {
+    //                     SubId: selectedSubject,
+    //                     NumberOfQuestions: parseInt(questionCount),
+    //                 },
+    //             }),
+    //         });
+
+    //         const data = await response.json();
+    //         console.log("random Question", data)
+    //         if (!Array.isArray(data) || data.length === 0) {
+    //             toast.error("No random questions found!");
+    //             return;
+    //         }
+
+    //         // Replace previous random questions (keep manual ones if needed)
+    //         setSelectedQuestions(
+    //             data.map(q => ({ ...q, isChecked: true }))
+    //         );
+
+    //         // Update total mark
+    //         const total = data.reduce((sum, q) => sum + (Number(q.Mark) || 0), 0);
+    //         setTotalMark(total);
+
+    //         toast.success(`${data.length} random questions loaded!`);
+    //     } catch (error) {
+    //         console.error("Error fetching random questions:", error);
+    //         toast.error("Failed to load random questions!");
+    //     }
+    // };
+    // const fetchRandomQuestions = async () => {
+    //     if (!selectedSubject || !questionCount) {
+    //         toast.warning("Please select a subject and enter number of questions!");
+    //         return;
+    //     }
+
+    //     try {
+    //         const response = await fetch(`${config.API_BASE_URL}api/Procedure/GetData`, {
+    //             method: "POST",
+    //             headers: {
+    //                 TenantId: loginData.tenantId,
+    //                 "Content-Type": "application/json",
+    //             },
+    //             body: JSON.stringify({
+    //                 operation: "",
+    //                 procedureName: "SP_GetRandomQuestions",
+    //                 parameters: {
+    //                     SubId: selectedSubject,
+    //                     NumberOfQuestions: parseInt(questionCount),
+    //                 },
+    //             }),
+    //         });
+
+    //         const data = await response.json();
+    //         console.log("random Question", data);
+
+    //         if (!Array.isArray(data) || data.length === 0) {
+    //             toast.error("No random questions found!");
+    //             return;
+    //         }
+
+    //         // Normalize new questions and mark them checked
+    //         const newQuestions = data.map(q => ({
+    //             ...q,
+    //             isChecked: true,
+    //             // make sure QuestionId and Mark exist as numbers
+    //             QuestionId: q.QuestionId ?? q.Id ?? null,
+    //             Mark: Number(q.Mark) || 0,
+    //         }));
+
+    //         // Merge without duplicates (by QuestionId)
+    //         setSelectedQuestions(prev => {
+    //             const existing = Array.isArray(prev) ? prev : [];
+
+    //             // Build a set of existing QuestionIds
+    //             const existingIds = new Set(existing.map(item => item.QuestionId));
+
+    //             // Append only those not already present
+    //             const merged = [...existing];
+    //             newQuestions.forEach(nq => {
+    //                 if (nq.QuestionId == null) return; // guard
+    //                 if (!existingIds.has(nq.QuestionId)) {
+    //                     merged.push(nq);
+    //                     existingIds.add(nq.QuestionId);
+    //                 } else {
+    //                     // optional: if duplicate found, ensure it's checked
+    //                     merged.forEach(m => {
+    //                         if (m.QuestionId === nq.QuestionId) m.isChecked = true;
+    //                     });
+    //                 }
+    //             });
+
+    //             return merged;
+    //         });
+
+    //         // Incrementally update total mark by sum of newly added questions
+    //         const addedMark = newQuestions.reduce((sum, q) => {
+    //             // if q already exists in previous set, don't count it again
+    //             // We'll compare by looking at prev again:
+    //             // (Note: setSelectedQuestions above may not have completed yet, so we re-check against previous state via a temporary approach)
+    //             return sum + (Number(q.Mark) || 0);
+    //         }, 0);
+
+    //         // Better to compute addedMark excluding duplicates by checking against current selectedQuestions
+    //         // Use functional updater to ensure consistent state
+    //         setTotalMark(prevTotal => {
+    //             // Find which of newQuestions are truly new by comparing to current selectedQuestions
+    //             // (Read current selectedQuestions synchronously by using the state variable if available in closure.
+    //             // If you cannot access the latest selectedQuestions here safely, the simpler approach below still works
+    //             // because duplicates were skipped when merging selectedQuestions.)
+    //             const prev = totalMark ?? 0; // fallback if you keep totalMark in scope (or use prevTotal param)
+    //             return (prevTotal || 0) + addedMark;
+    //         });
+
+    //         toast.success(`${data.length} random questions loaded!`);
+    //     } catch (error) {
+    //         console.error("Error fetching random questions:", error);
+    //         toast.error("Failed to load random questions!");
+    //     }
+    // };
+
     const fetchRandomQuestions = async () => {
         if (!selectedSubject || !questionCount) {
             toast.warning("Please select a subject and enter number of questions!");
@@ -210,27 +347,50 @@ export default function SetEntryPage() {
             });
 
             const data = await response.json();
-            console.log("random Question", data)
+            console.log("random Question", data);
+
             if (!Array.isArray(data) || data.length === 0) {
                 toast.error("No random questions found!");
                 return;
             }
 
-            // Replace previous random questions (keep manual ones if needed)
-            setSelectedQuestions(
-                data.map(q => ({ ...q, isChecked: true }))
-            );
+            // Normalize new questions and mark them checked
+            const newQuestions = data.map(q => ({
+                ...q,
+                isChecked: true,
+                SubId: selectedSubject, // tag subject
+                QuestionId: q.QuestionId ?? q.Id ?? null,
+                Mark: Number(q.Mark) || 0,
+            }));
 
-            // Update total mark
-            const total = data.reduce((sum, q) => sum + (Number(q.Mark) || 0), 0);
-            setTotalMark(total);
+            //  Replace old questions for same subject, keep others
+            setSelectedQuestions(prev => {
+                const existing = Array.isArray(prev) ? prev : [];
 
-            toast.success(`${data.length} random questions loaded!`);
+                // Keep only questions that are from OTHER subjects
+                const others = existing.filter(q => q.SubId !== selectedSubject);
+
+                // Add new random questions for this subject
+                const merged = [...others, ...newQuestions];
+
+                return merged;
+            });
+        
+            setTotalMark(prev => {
+                
+                const currentQuestions = selectedQuestions.filter(q => q.SubId !== selectedSubject);
+                const allQuestions = [...currentQuestions, ...newQuestions];
+                const total = allQuestions.reduce((sum, q) => sum + (Number(q.Mark) || 0), 0);
+                return total;
+            });
+
+            toast.success(`${data.length} random questions added for subject!`);
         } catch (error) {
             console.error("Error fetching random questions:", error);
             toast.error("Failed to load random questions!");
         }
     };
+
 
     // Initialize component
 
@@ -543,57 +703,6 @@ export default function SetEntryPage() {
                                             </button>
                                         </div>
                                     </div>
-
-                                    {/* ----------- TABLE DISPLAY ----------- */}
-                                    {selectedQuestions.length === 0 ? (
-                                        <p className="text-gray-400 text-sm italic text-center py-3">
-                                            No random questions added yet.
-                                        </p>
-                                    ) : (
-                                        <div className="max-h-64 overflow-y-auto rounded-lg border border-gray-200 bg-white">
-                                            <table className="w-full text-sm border-collapse">
-                                                <thead className="bg-gray-100 sticky top-0">
-                                                    <tr>
-                                                        <th className="w-10 p-2 text-left border-b">Select</th>
-                                                        <th className="p-2 text-left border-b">Question</th>
-                                                        <th className="w-24 p-2 text-left border-b">Type</th>
-                                                        <th className="w-20 p-2 text-left border-b">Mark</th>
-                                                    </tr>
-                                                </thead>
-                                                <tbody>
-                                                    {selectedQuestions.map((q, index) => (
-                                                        <tr
-                                                            key={q.QuestionId || index}
-                                                            className="hover:bg-gray-50 border-b last:border-0"
-                                                        >
-                                                            <td className="p-2 text-center">
-                                                                <input
-                                                                    type="checkbox"
-                                                                    checked={q.isChecked || false}
-                                                                    onChange={(e) => {
-                                                                        const isChecked = e.target.checked;
-                                                                        setSelectedQuestions((prev) =>
-                                                                            prev.map((x) =>
-                                                                                x.QuestionId === q.QuestionId
-                                                                                    ? { ...x, isChecked }
-                                                                                    : x
-                                                                            )
-                                                                        );
-                                                                    }}
-                                                                    className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-400"
-                                                                />
-                                                            </td>
-                                                            <td className="p-2 text-gray-700">
-                                                                {q.QuestionName || q.Name}
-                                                            </td>
-                                                            <td className="p-2 text-gray-600">{q.QnType}</td>
-                                                            <td className="p-2 text-gray-600">{q.Mark}</td>
-                                                        </tr>
-                                                    ))}
-                                                </tbody>
-                                            </table>
-                                        </div>
-                                    )}
                                 </div>
                             </>
                         )}

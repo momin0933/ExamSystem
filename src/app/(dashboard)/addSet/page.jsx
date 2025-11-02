@@ -282,9 +282,16 @@ export default function AddSet() {
 
                         {/* Add New Set Button & Excel */}
                         <div className='flex items-center gap-3'>
-                            <button onClick={() => router.push('/setEntry')} className="text-lg text-gray-50 cursor-pointer flex items-center gap-1">
+                            {/* <button onClick={() => router.push('/setEntry')} className="text-lg text-gray-50 cursor-pointer flex items-center gap-1">
                                 <IoMdAddCircle className="text-xl" />
-                            </button>
+                            </button> */}
+                            <Link
+                                href="/setEntry"
+                                className="text-lg text-gray-50 cursor-pointer flex items-center gap-1"
+
+                            >
+                                <IoMdAddCircle className="text-xl" />
+                            </Link>
                             <FaFileExcel onClick={handleDownloadExcel} className="text-lg cursor-pointer text-gray-50" />
                         </div>
                     </div>
