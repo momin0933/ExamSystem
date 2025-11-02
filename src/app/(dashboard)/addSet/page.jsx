@@ -302,14 +302,15 @@ export default function AddSet() {
                             {/* <thead className="bg-gray-100 text-xs uppercase text-gray-700"> */}
                             <thead className="bg-gray-100 text-xs uppercase text-gray-700 sticky top-0 z-10">
                                 <tr className="border-b">
-                                    <th className="px-4 py-2 text-center w-[5%]">SL</th>
-                                    <th className="px-4 py-2 text-center w-[25%]">Set Name</th>
-                                    <th className="px-4 py-2 text-center w-[25%]">Total Questions</th>
-                                    <th className="px-4 py-2 text-center w-[15%]">Total Marks</th>
-                                    <th className="px-4 py-2 text-center w-[30%]">Actions</th>
+                                    <th className="px-4 py-2 text-center ">SL</th>
+                                    <th className="px-4 py-2 text-center ">Set Name</th>
+                                     <th className="px-4 py-2">Position Name</th>
+                                    <th className="px-4 py-2 text-center ">Total Questions</th>
+                                    <th className="px-4 py-2 text-center ">Total Marks</th>
+                                    <th className="px-4 py-2 text-center ">Actions</th>
                                 </tr>
                             </thead>
-                            <tbody className="bg-white text-xs text-gray-700">
+                            {/* <tbody className="bg-white text-xs text-gray-700">
                                 {filteredSet.length === 0 ? (
                                     <tr><td colSpan="5" className="text-center py-4">No data found</td></tr>
                                 ) : (
@@ -339,7 +340,40 @@ export default function AddSet() {
                                         </tr>
                                     ))
                                 )}
+                            </tbody> */}
+                            <tbody className="bg-white text-xs text-gray-700">
+                                {filteredSet.length === 0 ? (
+                                    <tr><td colSpan="5" className="text-center py-4">No data found</td></tr>
+                                ) : (
+                                    filteredSet.map((set, index) => (
+                                        <tr key={set.Id} className="border-b border-gray-300 hover:bg-gray-50">
+                                            <td className="px-4 py-2 text-center">{index + 1}</td>
+                                            <td className="px-4 py-2 text-center">{set.Name}</td>
+                                            <td className="px-4 py-2 ">{set.SubjectSummary}</td>
+                                            <td className="px-4 py-2 text-center">{set.TotalQn}</td>
+                                            <td className="px-4 py-2 text-center">{set.TotalMark}</td>
+                                            <td className="px-4 py-2 text-center flex justify-center gap-2">
+                                                <button onClick={() => openViewModal(set)} className="flex items-center gap-1 px-3 py-1.5 text-sm font-medium border border-blue-500 text-blue-500 rounded hover:bg-blue-500 hover:text-white transition-colors duration-200">
+                                                    <FiEye />
+                                                </button>
+                                                <button onClick={() => router.push(`/setEntry?id=${set.Id}`)} className="px-3 py-1.5 border border-[#00925a] text-[#00925a] rounded hover:bg-[#00925a] hover:text-white transition">
+                                                    <FiEdit />
+                                                </button>
+                                                <button onClick={() => openDeleteModal(set)} className="px-3 py-1.5 border border-red-500 text-red-500 rounded hover:bg-red-500 hover:text-white transition">
+                                                    <FiTrash2 />
+                                                </button>
+                                                <DeleteConfirmModal
+                                                    isOpen={isDeleteModalOpen}
+                                                    onClose={() => setIsDeleteModalOpen(false)}
+                                                    onConfirm={handleConfirmDelete}
+                                                    statusMessage={deleteSuccessMsg}
+                                                />
+                                            </td>
+                                        </tr>
+                                    ))
+                                )}
                             </tbody>
+
                         </table>
                     </div>
                 </div>
