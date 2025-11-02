@@ -304,7 +304,7 @@ export default function AddSet() {
                                 <tr className="border-b">
                                     <th className="px-4 py-2 text-center ">SL</th>
                                     <th className="px-4 py-2 text-center ">Set Name</th>
-                                     <th className="px-4 py-2">Position Name</th>
+                                    <th className="px-4 py-2">Position Name</th>
                                     <th className="px-4 py-2 text-center ">Total Questions</th>
                                     <th className="px-4 py-2 text-center ">Total Marks</th>
                                     <th className="px-4 py-2 text-center ">Actions</th>
@@ -415,24 +415,13 @@ export default function AddSet() {
 
                             {/* Questions */}
                             <div className="space-y-6">
-                                {viewData.Questions && viewData.Questions.length > 0 ? (
+                                {/* {viewData.Questions && viewData.Questions.length > 0 ? (
                                     viewData.Questions.map((q, index) => (
                                         <div
                                             key={q.qnId || index}
                                             className=""
                                         >
-                                            {/* Question Header */}
-                                            {/* <div className="flex justify-between items-center mb-2">
-                                         
-                                            <h4 className="font-semibold text-gray-800 text-lg">
-                                                {index + 1}. {q.question}
-                                            </h4>
-
-                                          
-                                            <span className="text-sm text-gray-600 font-medium">
-                                                Mark: {q.qnMark}
-                                            </span>
-                                        </div> */}
+         
 
                                             <div className="mb-4 relative">
                                                 <h4 className="font-semibold text-gray-800 text-lg pr-16">
@@ -442,11 +431,6 @@ export default function AddSet() {
                                                     Mark: {q.qnMark}
                                                 </span>
                                             </div>
-
-
-
-
-                                            {/* Question Image */}
                                             {q.qnImage && (
                                                 <div className="mb-3 flex justify-start">
                                                     <img
@@ -458,7 +442,7 @@ export default function AddSet() {
                                                 </div>
                                             )}
 
-                                            {/* MCQ Options */}
+                                      
                                             {q.qnType === "MCQ" && q.options && q.options.length > 0 && (
                                                 <ul className="ml-4 space-y-1">
                                                     {q.options.map((opt, i) => (
@@ -479,7 +463,60 @@ export default function AddSet() {
                                     ))
                                 ) : (
                                     <p className="text-center text-gray-500 py-6 text-lg">No questions found.</p>
+                                )} */}
+
+                                {viewData.Questions && viewData.Questions.length > 0 ? (
+                                    Object.entries(
+                                        viewData.Questions.reduce((acc, q) => {
+                                            if (!acc[q.subjectName]) acc[q.subjectName] = [];
+                                            acc[q.subjectName].push(q);
+                                            return acc;
+                                        }, {})
+                                    ).map(([subject, questions]) => (
+                                        <div key={subject} className="mb-6">
+                                            {/* Subject Header */}
+                                            <h4 className="text-lg font-bold text-gray-800 mb-3">{subject} ({questions.length})</h4>
+
+                                            {/* Questions under this subject */}
+                                            {questions.map((q, index) => (
+                                                <div key={q.qnId || index} className="mb-4 relative">
+                                                    <h5 className="font-semibold text-gray-700 pr-16">
+                                                        {index + 1}. {q.question}
+                                                    </h5>
+                                                    <span className="absolute top-0 right-0 text-gray-600 font-semibold">
+                                                        Mark: {q.qnMark}
+                                                    </span>
+
+                                                    {q.qnImage && (
+                                                        <div className="mb-3 flex justify-start">
+                                                            <img
+                                                                src={q.qnImage}
+                                                                alt="Question"
+                                                                className="rounded-md object-contain border border-gray-200"
+                                                                style={{ maxHeight: "150px" }}
+                                                            />
+                                                        </div>
+                                                    )}
+
+                                                    {q.qnType === "MCQ" && q.options && q.options.length > 0 && (
+                                                        <ul className="ml-4 space-y-1">
+                                                            {q.options.map((opt, i) => (
+                                                                <li key={i} className="p-2 rounded text-sm text-gray-700 hover:bg-gray-100 flex items-center">
+                                                                    <span className="font-medium mr-1">{String.fromCharCode(65 + i)}.</span>
+                                                                    {opt.text}
+                                                                    {opt.isCorrect && <span className="ml-2 text-green-600 font-semibold">✓</span>}
+                                                                </li>
+                                                            ))}
+                                                        </ul>
+                                                    )}
+                                                </div>
+                                            ))}
+                                        </div>
+                                    ))
+                                ) : (
+                                    <p className="text-center text-gray-500 py-6 text-lg">No questions found.</p>
                                 )}
+
                             </div>
 
                             {/* Close Button */}
