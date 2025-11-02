@@ -418,8 +418,22 @@ export default function AddQuestion() {
                 if (!formData.name?.trim()) throw new Error("Question text cannot be empty.");
                 if (formData.mark === undefined || formData.mark === null) throw new Error("Question Mark cannot be empty.");
 
-                if (formData.qnTypeId.toString() === "2" && formData.options.length < 2)
-                    throw new Error("MCQ must have at least 2 options.");
+                // if (formData.qnTypeId.toString() === "2" && formData.options.length < 2)
+                //     throw new Error("MCQ must have at least 2 options.");
+                if (formData.qnTypeId.toString() === "2") {
+                    if (formData.options.length < 2) {
+                        toast.error("MCQ must have at least 2 options.");
+                        setLoading(false);
+                        return;
+                    }
+
+                    const hasCorrectAnswer = formData.options.some(opt => opt.isCorrect);
+                    if (!hasCorrectAnswer) {
+                        toast.error("Please select at least one correct answer for MCQ.");
+                        setLoading(false);
+                        return;
+                    }
+                }
 
                 const sketchPath = formData.sketch ? `/images/questionImage/${formData.sketch}` : null;
 
@@ -501,8 +515,22 @@ export default function AddQuestion() {
             if (!formData.qnTypeId) throw new Error("Please select a question type.");
             if (!formData.name.trim()) throw new Error("Question text cannot be empty.");
             if (!formData.mark) throw new Error("Question Mark cannot be empty.");
-            if (formData.qnTypeId === "2" && formData.options.length < 2)
-                throw new Error("MCQ must have at least 2 options.");
+            // if (formData.qnTypeId === "2" && formData.options.length < 2)
+            //     throw new Error("MCQ must have at least 2 options.");
+            if (formData.qnTypeId.toString() === "2") {
+                if (formData.options.length < 2) {
+                    toast.error("MCQ must have at least 2 options.");
+                    setLoading(false);
+                    return;
+                }
+
+                const hasCorrectAnswer = formData.options.some(opt => opt.isCorrect);
+                if (!hasCorrectAnswer) {
+                    toast.error("Please select at least one correct answer for MCQ.");
+                    setLoading(false);
+                    return;
+                }
+            }
 
             let finalSketch = existingImage;
 
@@ -607,18 +635,18 @@ export default function AddQuestion() {
             const responseText = await response.text();
 
             if (!response.ok) {
-               
+
                 if (responseText.includes("used in a question set")) {
                     const message = "This question cannot be deleted because it is already used in a question set.";
                     setDeleteSuccessMsg(message);
 
-                   
+
                     setTimeout(() => {
                         setIsDeleteModalOpen(false);
                         setDeleteSuccessMsg("");
                     }, 2000);
 
-                    return; 
+                    return;
                 } else if (responseText.includes("Question not found")) {
                     const message = "Question not found.";
                     toast.error(message);
@@ -688,10 +716,10 @@ export default function AddQuestion() {
                     .fixed-table td:last-child { border-bottom: none; }
                 }
             `}</style>
-            <div className="mb-4">
+            <div className="mb-1">
                 <h1 className="text-2xl font-bold text-gray-800">Question Bank</h1>
             </div>
-            <div className="rounded-md font-roboto overflow-hidden">
+            <div className="rounded-sm font-roboto overflow-hidden">
                 <div className="bg-gradient-to-r from-[#2c3e50] to-[#3498db] sticky top-0 z-20 shadow-md">
                     <div className="px-3 py-2 flex flex-wrap justify-between items-center gap-2">
                         <div className='flex items-center gap-3'>
@@ -702,7 +730,7 @@ export default function AddQuestion() {
                                     </svg>
                                 </div>
                                 <input
-                                    className="block w-full pl-10 pr-3 py-[6px] border border-gray-300 rounded-md leading-5 bg-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 sm:text-sm transition-all duration-200 shadow-sm"
+                                    className="block w-full pl-10 pr-3 py-[6px] border border-gray-300 rounded-sm leading-5 bg-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 sm:text-sm transition-all duration-200 shadow-sm"
                                     type="text"
                                     placeholder="Search"
                                     value={searchQuery}
@@ -718,31 +746,49 @@ export default function AddQuestion() {
                             </div>
 
 
-                            <div className="w-full sm:w-auto min-w-[180px] max-w-[300px]">
+                            <div className="w-full sm:w-auto min-w-[180px] max-w-[280px]">
                                 {subjectData.length > 0 && (
                                     <Select
                                         name="filterSubject"
                                         value={
                                             selectedSubject === ""
                                                 ? { value: "", label: "All Position" }
-                                                : subjectData.find(s => s.value === selectedSubject) || null
+                                                : subjectData.find((s) => s.value === selectedSubject) || null
                                         }
                                         onChange={(selected) => {
                                             const subId = selected?.value || "";
                                             setSelectedSubject(subId);
                                             fetchQuestionsBySubject(subId);
                                         }}
-                                        options={[
-                                            { value: "", label: "All Position" },
-                                            ...subjectData
-                                        ]}
+                                        options={[{ value: "", label: "All Position" }, ...subjectData]}
                                         placeholder="Select or search position..."
                                         className="w-full"
+                                        classNamePrefix="custom-select"
                                         isClearable
                                         isSearchable
+                                        menuPortalTarget={document.body}
+                                        styles={{
+                                            control: (base) => ({
+                                                ...base,
+                                                minHeight: "34px",
+                                                height: "28px",
+                                                // borderRadius: "0.25rem", 
+                                                borderColor: "#D1D5DB",
+                                                boxShadow: "0 1px 2px rgba(0,0,0,0.05)",
+                                                "&:hover": {
+                                                    borderColor: "#3B82F6",
+                                                },
+                                            }),
+                                            menuPortal: (base) => ({
+                                                ...base,
+                                                zIndex: 9999,
+                                            }),
+
+                                        }}
                                     />
                                 )}
                             </div>
+
                         </div>
 
                         <div className='flex items-center gap-3'>
@@ -752,7 +798,7 @@ export default function AddQuestion() {
                             <FaFileExcel onClick={handleDownloadExcel} className="text-lg cursor-pointer text-gray-50" />
                         </div>
                     </div>
-                    <div className="border border-gray-300 rounded-b-md overflow-hidden max-h-[59vh] overflow-y-auto">
+                    <div className="border border-gray-300 rounded-b-md overflow-hidden max-h-[64vh] overflow-y-auto">
                         <table className="min-w-full text-sm text-left text-gray-600">
                             {/* <thead className="bg-gray-100 text-xs uppercase text-gray-700"> */}
                             <thead className="bg-gray-100 text-xs uppercase text-gray-700 sticky top-0">
@@ -820,7 +866,7 @@ export default function AddQuestion() {
 
             {showModal && (
                 <div className="fixed inset-0 bg-black/20 bg-opacity-40 z-50 flex items-center justify-center">
-                    <div data-aos="zoom-in" className="bg-white rounded-lg shadow-md  w-full max-w-xl relative overflow-y-auto max-h-[90vh] p-6">
+                    <div data-aos="zoom-in" className="bg-white rounded-sm shadow-md  w-full max-w-xl relative overflow-y-auto max-h-[90vh] p-6">
                         <button
                             onClick={() => {
 
@@ -853,8 +899,8 @@ export default function AddQuestion() {
                             className="space-y-4 text-sm"
                         >
                             <div className="flex items-center gap-2 mt-2">
-                                <label className="w-1/3 text-sm font-semibold text-gray-700">Position Name</label>
-                                <Select
+                                <label className="w-1/3 text-sm font-semibold text-gray-700">Position Name: <span className="text-red-500">*</span></label>
+                                {/* <Select
                                     name="subId"
                                     value={subjectData.find((s) => s.value === formData.subId) || null}
                                     onChange={(selected) => setFormData((prev) => ({ ...prev, subId: selected?.value || "" }))}
@@ -862,12 +908,36 @@ export default function AddQuestion() {
                                     placeholder="Select Subject"
                                     className="w-full"
                                     isClearable
+                                /> */}
+                                <Select
+                                    name="subId"
+                                    value={subjectData.find((s) => s.value === formData.subId) || null}
+                                    onChange={(selected) =>
+                                        setFormData((prev) => ({ ...prev, subId: selected?.value || "" }))
+                                    }
+                                    options={subjectData}
+                                    placeholder="Select Position"
+                                    className="w-full"
+                                    isClearable
+                                    menuPortalTarget={document.body}
+                                    classNamePrefix="custom-select"
+                                    styles={{
+                                        control: (base) => ({
+                                            ...base,
+                                            minHeight: "34px",
+                                            borderColor: "#D1D5DB",
+                                            boxShadow: "0 1px 2px rgba(0,0,0,0.05)",
+                                            "&:hover": { borderColor: "#3B82F6" },
+                                        }),
+                                        menuPortal: (base) => ({ ...base, zIndex: 99999 }),
+                                    }}
                                 />
+
                             </div>
 
                             <div className="flex items-center gap-2 mt-2">
-                                <label className="w-1/3 text-sm font-semibold text-gray-700">Question Type</label>
-                                <select name="qnTypeId" value={formData.qnTypeId} onChange={handleQnTypeChange} className="w-full border rounded p-2">
+                                <label className="w-1/3 text-sm font-semibold text-gray-700">Question Type:<span className="text-red-500">*</span></label>
+                                <select name="qnTypeId" value={formData.qnTypeId} onChange={handleQnTypeChange} className="w-full border rounded p-2" required>
                                     <option value="">-- Select Question Type --</option>
                                     <option value="1">Descriptive</option>
                                     <option value="2">MCQ</option>
@@ -878,11 +948,12 @@ export default function AddQuestion() {
 
                             {formData.qnTypeId === "1" && !isEdit && (
                                 <div className="flex items-center gap-2 mt-2">
-                                    <label className="w-1/3 text-sm font-semibold text-gray-700">Add Mode</label>
+                                    <label className="w-1/3 text-sm font-semibold text-gray-700">Add Mode: <span className="text-red-500">*</span></label>
                                     <select
                                         value={descriptiveMode}
                                         onChange={(e) => setDescriptiveMode(e.target.value)}
                                         className="w-full border rounded p-2"
+                                        required
                                     >
                                         <option value="">-- Select Mode --</option>
                                         <option value="manual">Add Manual Question</option>
@@ -896,7 +967,7 @@ export default function AddQuestion() {
                                 <div className="mt-2 space-y-2">
                                     {/* Question Text */}
                                     <div className="flex items-center gap-2">
-                                        <label className="w-1/3 text-sm font-semibold text-gray-700">Question</label>
+                                        <label className="w-1/3 text-sm font-semibold text-gray-700">Question: <span className="text-red-500">*</span></label>
                                         <textarea
                                             name="name"
                                             value={formData.name}
@@ -908,8 +979,8 @@ export default function AddQuestion() {
                                     </div>
 
                                     {/* Mark */}
-                                    <div className="flex items-center gap-2">
-                                        <label className="w-1/3 text-sm font-semibold text-gray-700">Mark</label>
+                                    {/* <div className="flex items-center gap-2">
+                                        <label className="w-1/3 text-sm font-semibold text-gray-700">Mark: <span className="text-red-500">*</span></label>
                                         <input
                                             type="number"
                                             name="mark"
@@ -917,10 +988,34 @@ export default function AddQuestion() {
                                             onChange={handleChange}
                                             className="w-full border px-3 py-2 rounded"
                                             required
-                                            min="0"
+                                            min=""
+                                            step="0.1"
+                                        />
+                                    </div> */}
+                                    <div className="flex items-center gap-2">
+                                        <label className="w-1/3 text-sm font-semibold text-gray-700">
+                                            Mark: <span className="text-red-500">*</span>
+                                        </label>
+                                        <input
+                                            type="number"
+                                            name="mark"
+                                            value={formData.mark ?? ""}
+                                            onChange={(e) => {
+                                                const value = parseFloat(e.target.value);
+                                                // Prevent negative or zero values
+                                                if (value < 0) return;
+                                                setFormData((prev) => ({
+                                                    ...prev,
+                                                    mark: e.target.value,
+                                                }));
+                                            }}
+                                            className="w-full border px-3 py-2 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                            required
+                                            min="1"
                                             step="0.1"
                                         />
                                     </div>
+
 
 
 
@@ -1016,13 +1111,37 @@ export default function AddQuestion() {
                             {formData.qnTypeId === "2" && (
                                 <>
                                     <div className="flex items-center gap-2 mt-2">
-                                        <label className="w-1/3 text-sm font-semibold text-gray-700">Question</label>
+                                        <label className="w-1/3 text-sm font-semibold text-gray-700">Question: <span className="text-red-500">*</span></label>
                                         <textarea name="name" value={formData.name} onChange={handleChange} className="w-full border px-3 py-2 rounded" rows={3} required />
                                     </div>
 
-                                    <div className="flex items-center gap-2 mt-2">
-                                        <label className="w-1/3 text-sm font-semibold text-gray-700">Mark</label>
+                                    {/* <div className="flex items-center gap-2 mt-2">
+                                        <label className="w-1/3 text-sm font-semibold text-gray-700">Mark: <span className="text-red-500">*</span></label>
                                         <input type="number" name="mark" value={formData.mark ?? ""} onChange={handleChange} className="w-full border px-3 py-2 rounded" required min="0" step="0.1" />
+                                    </div> */}
+
+                                    <div className="flex items-center gap-2">
+                                        <label className="w-1/3 text-sm font-semibold text-gray-700">
+                                            Mark: <span className="text-red-500">*</span>
+                                        </label>
+                                        <input
+                                            type="number"
+                                            name="mark"
+                                            value={formData.mark ?? ""}
+                                            onChange={(e) => {
+                                                const value = parseFloat(e.target.value);
+                                                // Prevent negative or zero values
+                                                if (value < 0) return;
+                                                setFormData((prev) => ({
+                                                    ...prev,
+                                                    mark: e.target.value,
+                                                }));
+                                            }}
+                                            className="w-full border px-3 py-2 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                            required
+                                            min="1"
+                                            step="0.1"
+                                        />
                                     </div>
 
                                     <div className="w-full h-40 rounded-lg border border-gray-300 flex flex-col items-center justify-center overflow-hidden relative">

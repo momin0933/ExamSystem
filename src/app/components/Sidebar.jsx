@@ -77,14 +77,14 @@ const getLinkClasses = (href, baseClasses = "") => {
     <div className={`min-h-screen font-roboto bg-white-900 z-50 flex flex-col sticky top-0 ${isCollapsed ? "w-16" : "w-44 lg:w-56"} transition-all duration-300 ease-in-out`}>
       
       {/* Header */}
-      <div className="hidden lg:flex items-center justify-between h-16 bg-gray-700 p-4">
+      <div className="hidden lg:flex items-center justify-between h-14 bg-white p-3">
         {!isCollapsed && (
           <Link href="/homepage">
             <Image
               src="/images/FashionTex-Logo.png"
               alt="FashionTex Logo"
               width={190}
-              height={35}
+              height={34}
               priority
             />
           </Link>
@@ -95,7 +95,7 @@ const getLinkClasses = (href, baseClasses = "") => {
             : <GoSidebarCollapse className="text-gray-300 hidden hover:text-orange-500 transition ease-in-out" size={24} />}
         </button>
       </div>
-
+<hr className="border-t border-gray-200 w-full" />
       {/* Navigation */}
       <nav className={`flex-1 mt-4 space-y-2 ${isCollapsed ? "flex flex-col items-center" : ""}`}>
         
@@ -103,10 +103,11 @@ const getLinkClasses = (href, baseClasses = "") => {
         <Link
           href="/homepage"
           prefetch={true}
-          className={`flex items-center gap-3 px-4 py-2 rounded-md text-gray-700 hover:bg-gray-200 transition ${isCollapsed ? "justify-center" : ""}`}
+          // className={`flex items-center gap-3 px-4 py-2 rounded-md text-gray-700 hover:bg-gray-200 transition ${isCollapsed ? "justify-center" : ""}`}
+          className={`flex items-center gap-3 px-4 py-2 rounded-none  hover:bg-blue-50 transition-all duration-300 ${isCollapsed ? "justify-center" : ""}`}
         >
           <AiOutlineDashboard className="w-5 h-5" />
-          {!isCollapsed && <span className="text-[0.9rem] font-medium">Dashboard</span>}
+          {!isCollapsed && <span className="text-[1rem] font-medium text-gray-700">Dashboard</span>}
         </Link>
 
         {/* Management Dropdown */}
@@ -114,19 +115,19 @@ const getLinkClasses = (href, baseClasses = "") => {
           <div className="mb-3">
             <button
               onClick={() => toggleDropdown(2)}
-              className={`flex items-center justify-between w-full px-4 py-3 rounded-lg bg-gradient-to-r from-blue-50 to-white shadow hover:shadow-md transition-all duration-300 ${isCollapsed ? "justify-center" : ""}`}
+              className={`flex items-center justify-between w-full px-4 py-2 rounded-none  hover:bg-blue-50 transition-all duration-300 ${isCollapsed ? "justify-center" : ""}`}
             >
               <div className="flex items-center gap-3">
-                <MdManageAccounts className="w-5 h-5 text-blue-500" />
-                {!isCollapsed && <span className="text-sm font-semibold text-blue-700">Management</span>}
+                <MdManageAccounts className="w-5 h-5 text-gray-700" />
+                {!isCollapsed && <span className="text-[1rem] font-medium text-gray-700">Management</span>}
               </div>
               {!isCollapsed && (
-                <FaChevronDown className={`text-sm text-blue-500 transition-transform ${activeDropdown === 2 ? "rotate-180" : ""}`} />
+                <FaChevronDown className={`text-sm text-gray-500 duration-600 transition-transform ${activeDropdown === 2 ? "rotate-180" : ""}`} />
               )}
             </button>
 
             {!isCollapsed && activeDropdown === 2 && (
-              <div className="ml-8 mt-2 space-y-1 border-l-2 border-blue-100 pl-3">
+              <div className="ml-8 mt-2  space-y-1.5 border-l-2  border-gray-200 ">
                 {[
                   { href: "/addSubject", label: "Position List", icon: <MdWork  /> },
                   { href: "/addQuestion", label: "Question Bank", icon: <BsPatchQuestion /> },
@@ -138,7 +139,7 @@ const getLinkClasses = (href, baseClasses = "") => {
                     key={item.href}
                     href={item.href}
                     prefetch={true}
-                    className={getLinkClasses(item.href, "flex items-center gap-2 text-sm")}
+                    className={getLinkClasses(item.href, "flex items-center rounded-none gap-2 text-sm")}
                   >
                     <span className="text-blue-400 w-4 h-4">{item.icon}</span>
                     {item.label}
@@ -154,19 +155,20 @@ const getLinkClasses = (href, baseClasses = "") => {
           <div className="mb-3">
             <button
               onClick={() => toggleDropdown(3)}
-              className={`flex items-center justify-between w-full px-4 py-3 rounded-lg bg-gradient-to-r from-green-50 to-white shadow hover:shadow-md transition-all duration-300 ${isCollapsed ? "justify-center" : ""}`}
+              // className={`flex items-center justify-between w-full px-4 py-3 rounded-lg bg-gradient-to-r from-green-50 to-white shadow hover:shadow-md transition-all duration-300 ${isCollapsed ? "justify-center" : ""}`}
+              className={`flex items-center justify-between w-full px-4 py-2 rounded-none  hover:bg-blue-50 transition-all duration-300 ${isCollapsed ? "justify-center" : ""}`}
             >
               <div className="flex items-center gap-3">
-                <MdOutlineAssignmentTurnedIn className="w-5 h-5 text-green-500" />
-                {!isCollapsed && <span className="text-sm font-semibold text-green-700">Result</span>}
+                <MdOutlineAssignmentTurnedIn className="w-5 h-5 text-gray-700" />
+                {!isCollapsed && <span className="text-[1rem] font-medium text-gray-700">Result</span>}
               </div>
               {!isCollapsed && (
-                <FaChevronDown className={`text-sm text-green-500 transition-transform ${activeDropdown === 3 ? "rotate-180" : ""}`} />
+                <FaChevronDown className={`text-sm text-gray-500 duration-600 transition-transform ${activeDropdown === 3 ? "rotate-180" : ""}`} />
               )}
             </button>
 
             {!isCollapsed && activeDropdown === 3 && (
-              <div className="ml-8 mt-2 space-y-1 border-l-2 border-green-100 pl-3">
+              <div className="ml-8 mt-2 space-y-3 border-l-2 border-green-100 ">
                 {[{ href: "/participantsList", label: "Participate List", icon: <MdSubject /> }].map(item => (
                   <Link
                     key={item.href}
