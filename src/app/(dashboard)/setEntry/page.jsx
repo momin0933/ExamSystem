@@ -26,6 +26,10 @@ export default function SetEntryPage() {
     const [showPreview, setShowPreview] = useState(false);
     const [addMode, setAddMode] = useState("");
     const [questionCount, setQuestionCount] = useState("");
+    const [availableQuestions, setAvailableQuestions] = useState(0);
+
+
+
 
 
     useEffect(() => {
@@ -69,6 +73,49 @@ export default function SetEntryPage() {
 
 
     // Fetch questions by subject
+    // const fetchQuestionsBySubject = async (subId = null) => {
+    //     try {
+    //         const response = await fetch(`${config.API_BASE_URL}api/Procedure/GetData`, {
+    //             method: "POST",
+    //             headers: {
+    //                 TenantId: loginData.tenantId,
+    //                 "Content-Type": "application/json",
+    //             },
+    //             body: JSON.stringify({
+    //                 operation: "",
+    //                 procedureName: "SP_QuestionManage",
+    //                 parameters: {
+    //                     QueryChecker: 5,
+    //                     SubId: subId || 0,
+    //                 },
+    //             }),
+    //         });
+
+    //         const data = await response.json();
+    //         const questions = Array.isArray(data) ? data : [];
+    //         console.log("Question by Subject ", questions)
+    //         // setQuestionData(questions);
+    //         // return questions;
+    //         const merged = questions.map((q) => {
+    //             const selected = selectedQuestions.find(s => s.QuestionId === q.QuestionId);
+    //             return {
+    //                 ...q,
+    //                 Name: q.Name || q.QuestionName,
+    //                 Mark: q.Mark || q.QuestionMark || 0,
+    //                 QnType: q.QnType || "Descriptive",
+    //                 isChecked: selected ? true : false,
+    //             };
+    //         });
+
+    //         setQuestionData(merged);
+    //         return merged;
+    //     } catch (error) {
+    //         console.error(error);
+    //         toast.error("Failed to load questions");
+    //         return [];
+    //     }
+    // };
+
     const fetchQuestionsBySubject = async (subId = null) => {
         try {
             const response = await fetch(`${config.API_BASE_URL}api/Procedure/GetData`, {
@@ -89,9 +136,15 @@ export default function SetEntryPage() {
 
             const data = await response.json();
             const questions = Array.isArray(data) ? data : [];
-            console.log("Question by Subject ", questions)
-            // setQuestionData(questions);
-            // return questions;
+            console.log("Question by Subject ", questions);
+
+            // Update available questions for this subject
+            if (questions.length > 0) {
+                setAvailableQuestions(questions[0].TotalQuestions || 0);
+            } else {
+                setAvailableQuestions(0);
+            }
+
             const merged = questions.map((q) => {
                 const selected = selectedQuestions.find(s => s.QuestionId === q.QuestionId);
                 return {
@@ -108,6 +161,7 @@ export default function SetEntryPage() {
         } catch (error) {
             console.error(error);
             toast.error("Failed to load questions");
+            setAvailableQuestions(0);
             return [];
         }
     };
@@ -347,42 +401,41 @@ export default function SetEntryPage() {
             });
 
             const data = await response.json();
-            console.log("random Question", data);
-
             if (!Array.isArray(data) || data.length === 0) {
                 toast.error("No random questions found!");
                 return;
             }
 
-            // Normalize new questions and mark them checked
             const newQuestions = data.map(q => ({
                 ...q,
                 isChecked: true,
-                SubId: selectedSubject, // tag subject
+                SubId: selectedSubject,
                 QuestionId: q.QuestionId ?? q.Id ?? null,
                 Mark: Number(q.Mark) || 0,
             }));
 
-            //  Replace old questions for same subject, keep others
+            // setSelectedQuestions(prev => {
+            //     const existing = Array.isArray(prev) ? prev : [];
+            //     const others = existing.filter(q => q.SubId !== selectedSubject);
+            //     const merged = [...others, ...newQuestions];
+
+            //     // Update total mark based on merged
+            //     const total = merged.reduce((sum, q) => sum + (Number(q.Mark) || 0), 0);
+            //     setTotalMark(total);
+
+            //     return merged;
+            // });
             setSelectedQuestions(prev => {
                 const existing = Array.isArray(prev) ? prev : [];
-
-                // Keep only questions that are from OTHER subjects
                 const others = existing.filter(q => q.SubId !== selectedSubject);
-
-                // Add new random questions for this subject
                 const merged = [...others, ...newQuestions];
 
-                return merged;
+                // Update total mark
+                setTotalMark(merged.reduce((sum, q) => sum + (Number(q.Mark) || 0), 0));
+
+                return merged; // this updates selectedQuestions
             });
-        
-            setTotalMark(prev => {
-                
-                const currentQuestions = selectedQuestions.filter(q => q.SubId !== selectedSubject);
-                const allQuestions = [...currentQuestions, ...newQuestions];
-                const total = allQuestions.reduce((sum, q) => sum + (Number(q.Mark) || 0), 0);
-                return total;
-            });
+
 
             toast.success(`${data.length} random questions added for subject!`);
         } catch (error) {
@@ -390,6 +443,7 @@ export default function SetEntryPage() {
             toast.error("Failed to load random questions!");
         }
     };
+
 
 
     // Initialize component
@@ -534,12 +588,13 @@ export default function SetEntryPage() {
                     )}
                 </div>
                 <div className="border border-gray-300 rounded-b-md overflow-hidden max-h-[68vh] overflow-y-auto">
-                    <form onSubmit={handleSubmit} className="space-y-4 text-sm bg-white p-6 rounded-lg shadow">
-                        <div>
-                            <div className="flex flex-wrap items-center gap-2">
-                                {/* ---------------- SET NAME ---------------- */}
-                                <div className="flex items-center gap-2 w-full sm:w-[23%]">
-                                    <label className="w-1/3 text-sm font-semibold text-gray-700 text-nowrap">
+                    <form onSubmit={handleSubmit} className="space-y-4 text-sm bg-white p-3 rounded-sm shadow">
+                        <div >
+
+                            <div className="flex items-center gap-4 mb-2">
+                                {/* Set Name */}
+                                <div className="flex items-center gap-2 w-1/3">
+                                    <label className="text-sm font-semibold text-gray-700 w-1/3 whitespace-nowrap">
                                         Set Name:
                                     </label>
                                     <input
@@ -552,12 +607,12 @@ export default function SetEntryPage() {
                                     />
                                 </div>
 
-                                {/* ---------------- SELECT SUBJECT ---------------- */}
-                                <div className="flex items-center gap-2 w-full sm:w-[28%]">
-                                    <label className="w-.8/3 text-sm font-semibold text-gray-700 text-nowrap">
+                                {/* Subject */}
+                                <div className="flex items-center gap-2 w-1/3">
+                                    <label className="text-sm font-semibold text-gray-700 w-1/3 whitespace-nowrap">
                                         Subject:
                                     </label>
-                                    <div className="w-2.2/3">
+                                    <div className="w-2/3">
                                         {subjectData.length > 0 && (
                                             <Select
                                                 name="filterSubject"
@@ -565,6 +620,7 @@ export default function SetEntryPage() {
                                                 onChange={(selected) => {
                                                     const subId = selected?.value || "";
                                                     setSelectedSubject(subId);
+                                                     setQuestionCount("");
                                                     fetchQuestionsBySubject(subId);
                                                 }}
                                                 options={subjectData}
@@ -572,16 +628,32 @@ export default function SetEntryPage() {
                                                 className="text-sm"
                                                 isClearable
                                                 isSearchable
-
                                             />
                                         )}
                                     </div>
                                 </div>
 
-                                {/* ---------------- ADD MODE ---------------- */}
+                                {/* Available Questions */}
+                                <div className="flex items-center gap-2 w-1/3">
+                                    <label className="text-sm font-semibold text-gray-700 w-2/3 whitespace-nowrap">
+                                        Available Questions:
+                                    </label>
+                                    <input
+                                        name="availableQuestions"
+                                        value={availableQuestions}
+                                        readOnly
+                                        className="w-1/3 border border-gray-200 px-3 py-2 rounded-lg bg-gray-100 text-gray-600 focus:outline-none"
+                                    />
+                                </div>
+                            </div>
+
+
+                            {/* ---------------- SECOND ROW ---------------- */}
+                            <div className="flex items-center gap-4 mb-4">
+                                {/* Add Mode */}
                                 {!isEdit && (
-                                    <div className="flex items-center gap-2 w-full sm:w-[25%]">
-                                        <label className="w-1/3 text-sm font-semibold text-gray-700 text-nowrap">
+                                    <div className="flex items-center gap-2 w-1/3">
+                                        <label className="text-sm font-semibold text-gray-700 w-1/3 whitespace-nowrap">
                                             Add Mode:
                                         </label>
                                         <select
@@ -595,23 +667,24 @@ export default function SetEntryPage() {
                                         </select>
                                     </div>
                                 )}
-                                {/* ---------------- TOTAL MARK ---------------- */}
-                                <div className="flex items-center gap-2 w-full sm:w-[20%]">
-                                    <label className="w-1.5/3 text-sm font-semibold text-gray-700 text-nowrap">
+
+                                {/* Total Mark */}
+                                <div className="flex items-center gap-2 w-1/3">
+                                    <label className="text-sm font-semibold text-gray-700 w-1/3 whitespace-nowrap">
                                         Total Mark:
                                     </label>
                                     <input
                                         name="mark"
                                         value={totalMark}
                                         readOnly
-                                        className="w-1/3 border border-gray-200 px-3 py-2 rounded-lg bg-gray-100 text-gray-600 focus:outline-none"
+                                        className="w-2/3 border border-gray-200 px-3 py-2 rounded-lg bg-gray-100 text-gray-600 focus:outline-none"
                                     />
                                 </div>
 
-                                {/* ---------------- TOTAL QUESTIONS ---------------- */}
-                                <div className="flex items-center gap-2 w-full sm:w-[20%]">
-                                    <label className="w-1.5/3 text-sm font-semibold text-gray-700 text-nowrap">
-                                        Total Questions:
+                                {/* Total Selected Questions */}
+                                <div className="flex items-center gap-2 w-1/3">
+                                    <label className="text-sm font-semibold text-gray-700 w-2/3 whitespace-nowrap">
+                                        Total Selected Questions:
                                     </label>
                                     <input
                                         name="totalQuestions"
@@ -620,11 +693,9 @@ export default function SetEntryPage() {
                                         className="w-1/3 border border-gray-200 px-3 py-2 rounded-lg bg-gray-100 text-gray-600 focus:outline-none"
                                     />
                                 </div>
-
                             </div>
+
                         </div>
-
-
 
                         {/* ---------------- CONDITIONAL BLOCKS ---------------- */}
                         {(addMode === "manual" || isEdit) && (
