@@ -26,6 +26,11 @@ export default function SetEntryPage() {
     const [showPreview, setShowPreview] = useState(false);
     const [addMode, setAddMode] = useState("");
     const [questionCount, setQuestionCount] = useState("");
+    const [availableQuestions, setAvailableQuestions] = useState(0);
+
+
+
+
 
     useEffect(() => {
         AOS.init({ duration: 800, once: true });
@@ -68,6 +73,49 @@ export default function SetEntryPage() {
 
 
     // Fetch questions by subject
+    // const fetchQuestionsBySubject = async (subId = null) => {
+    //     try {
+    //         const response = await fetch(`${config.API_BASE_URL}api/Procedure/GetData`, {
+    //             method: "POST",
+    //             headers: {
+    //                 TenantId: loginData.tenantId,
+    //                 "Content-Type": "application/json",
+    //             },
+    //             body: JSON.stringify({
+    //                 operation: "",
+    //                 procedureName: "SP_QuestionManage",
+    //                 parameters: {
+    //                     QueryChecker: 5,
+    //                     SubId: subId || 0,
+    //                 },
+    //             }),
+    //         });
+
+    //         const data = await response.json();
+    //         const questions = Array.isArray(data) ? data : [];
+    //         console.log("Question by Subject ", questions)
+    //         // setQuestionData(questions);
+    //         // return questions;
+    //         const merged = questions.map((q) => {
+    //             const selected = selectedQuestions.find(s => s.QuestionId === q.QuestionId);
+    //             return {
+    //                 ...q,
+    //                 Name: q.Name || q.QuestionName,
+    //                 Mark: q.Mark || q.QuestionMark || 0,
+    //                 QnType: q.QnType || "Descriptive",
+    //                 isChecked: selected ? true : false,
+    //             };
+    //         });
+
+    //         setQuestionData(merged);
+    //         return merged;
+    //     } catch (error) {
+    //         console.error(error);
+    //         toast.error("Failed to load questions");
+    //         return [];
+    //     }
+    // };
+
     const fetchQuestionsBySubject = async (subId = null) => {
         try {
             const response = await fetch(`${config.API_BASE_URL}api/Procedure/GetData`, {
@@ -88,9 +136,15 @@ export default function SetEntryPage() {
 
             const data = await response.json();
             const questions = Array.isArray(data) ? data : [];
-            console.log("Question by Subject ", questions)
-            // setQuestionData(questions);
-            // return questions;
+            console.log("Question by Subject ", questions);
+
+            // Update available questions for this subject
+            if (questions.length > 0) {
+                setAvailableQuestions(questions[0].TotalQuestions || 0);
+            } else {
+                setAvailableQuestions(0);
+            }
+
             const merged = questions.map((q) => {
                 const selected = selectedQuestions.find(s => s.QuestionId === q.QuestionId);
                 return {
@@ -107,6 +161,7 @@ export default function SetEntryPage() {
         } catch (error) {
             console.error(error);
             toast.error("Failed to load questions");
+            setAvailableQuestions(0);
             return [];
         }
     };
@@ -186,6 +241,142 @@ export default function SetEntryPage() {
     };
 
 
+    // const fetchRandomQuestions = async () => {
+    //     if (!selectedSubject || !questionCount) {
+    //         toast.warning("Please select a subject and enter number of questions!");
+    //         return;
+    //     }
+
+    //     try {
+    //         const response = await fetch(`${config.API_BASE_URL}api/Procedure/GetData`, {
+    //             method: "POST",
+    //             headers: {
+    //                 TenantId: loginData.tenantId,
+    //                 "Content-Type": "application/json",
+    //             },
+    //             body: JSON.stringify({
+    //                 operation: "",
+    //                 procedureName: "SP_GetRandomQuestions",
+    //                 parameters: {
+    //                     SubId: selectedSubject,
+    //                     NumberOfQuestions: parseInt(questionCount),
+    //                 },
+    //             }),
+    //         });
+
+    //         const data = await response.json();
+    //         console.log("random Question", data)
+    //         if (!Array.isArray(data) || data.length === 0) {
+    //             toast.error("No random questions found!");
+    //             return;
+    //         }
+
+    //         // Replace previous random questions (keep manual ones if needed)
+    //         setSelectedQuestions(
+    //             data.map(q => ({ ...q, isChecked: true }))
+    //         );
+
+    //         // Update total mark
+    //         const total = data.reduce((sum, q) => sum + (Number(q.Mark) || 0), 0);
+    //         setTotalMark(total);
+
+    //         toast.success(`${data.length} random questions loaded!`);
+    //     } catch (error) {
+    //         console.error("Error fetching random questions:", error);
+    //         toast.error("Failed to load random questions!");
+    //     }
+    // };
+    // const fetchRandomQuestions = async () => {
+    //     if (!selectedSubject || !questionCount) {
+    //         toast.warning("Please select a subject and enter number of questions!");
+    //         return;
+    //     }
+
+    //     try {
+    //         const response = await fetch(`${config.API_BASE_URL}api/Procedure/GetData`, {
+    //             method: "POST",
+    //             headers: {
+    //                 TenantId: loginData.tenantId,
+    //                 "Content-Type": "application/json",
+    //             },
+    //             body: JSON.stringify({
+    //                 operation: "",
+    //                 procedureName: "SP_GetRandomQuestions",
+    //                 parameters: {
+    //                     SubId: selectedSubject,
+    //                     NumberOfQuestions: parseInt(questionCount),
+    //                 },
+    //             }),
+    //         });
+
+    //         const data = await response.json();
+    //         console.log("random Question", data);
+
+    //         if (!Array.isArray(data) || data.length === 0) {
+    //             toast.error("No random questions found!");
+    //             return;
+    //         }
+
+    //         // Normalize new questions and mark them checked
+    //         const newQuestions = data.map(q => ({
+    //             ...q,
+    //             isChecked: true,
+    //             // make sure QuestionId and Mark exist as numbers
+    //             QuestionId: q.QuestionId ?? q.Id ?? null,
+    //             Mark: Number(q.Mark) || 0,
+    //         }));
+
+    //         // Merge without duplicates (by QuestionId)
+    //         setSelectedQuestions(prev => {
+    //             const existing = Array.isArray(prev) ? prev : [];
+
+    //             // Build a set of existing QuestionIds
+    //             const existingIds = new Set(existing.map(item => item.QuestionId));
+
+    //             // Append only those not already present
+    //             const merged = [...existing];
+    //             newQuestions.forEach(nq => {
+    //                 if (nq.QuestionId == null) return; // guard
+    //                 if (!existingIds.has(nq.QuestionId)) {
+    //                     merged.push(nq);
+    //                     existingIds.add(nq.QuestionId);
+    //                 } else {
+    //                     // optional: if duplicate found, ensure it's checked
+    //                     merged.forEach(m => {
+    //                         if (m.QuestionId === nq.QuestionId) m.isChecked = true;
+    //                     });
+    //                 }
+    //             });
+
+    //             return merged;
+    //         });
+
+    //         // Incrementally update total mark by sum of newly added questions
+    //         const addedMark = newQuestions.reduce((sum, q) => {
+    //             // if q already exists in previous set, don't count it again
+    //             // We'll compare by looking at prev again:
+    //             // (Note: setSelectedQuestions above may not have completed yet, so we re-check against previous state via a temporary approach)
+    //             return sum + (Number(q.Mark) || 0);
+    //         }, 0);
+
+    //         // Better to compute addedMark excluding duplicates by checking against current selectedQuestions
+    //         // Use functional updater to ensure consistent state
+    //         setTotalMark(prevTotal => {
+    //             // Find which of newQuestions are truly new by comparing to current selectedQuestions
+    //             // (Read current selectedQuestions synchronously by using the state variable if available in closure.
+    //             // If you cannot access the latest selectedQuestions here safely, the simpler approach below still works
+    //             // because duplicates were skipped when merging selectedQuestions.)
+    //             const prev = totalMark ?? 0; // fallback if you keep totalMark in scope (or use prevTotal param)
+    //             return (prevTotal || 0) + addedMark;
+    //         });
+
+    //         toast.success(`${data.length} random questions loaded!`);
+    //     } catch (error) {
+    //         console.error("Error fetching random questions:", error);
+    //         toast.error("Failed to load random questions!");
+    //     }
+    // };
+
     const fetchRandomQuestions = async () => {
         if (!selectedSubject || !questionCount) {
             toast.warning("Please select a subject and enter number of questions!");
@@ -210,27 +401,50 @@ export default function SetEntryPage() {
             });
 
             const data = await response.json();
-            console.log("random Question", data)
             if (!Array.isArray(data) || data.length === 0) {
                 toast.error("No random questions found!");
                 return;
             }
 
-            // Replace previous random questions (keep manual ones if needed)
-            setSelectedQuestions(
-                data.map(q => ({ ...q, isChecked: true }))
-            );
+            const newQuestions = data.map(q => ({
+                ...q,
+                isChecked: true,
+                SubId: selectedSubject,
+                QuestionId: q.QuestionId ?? q.Id ?? null,
+                Mark: Number(q.Mark) || 0,
+            }));
 
-            // Update total mark
-            const total = data.reduce((sum, q) => sum + (Number(q.Mark) || 0), 0);
-            setTotalMark(total);
+            // setSelectedQuestions(prev => {
+            //     const existing = Array.isArray(prev) ? prev : [];
+            //     const others = existing.filter(q => q.SubId !== selectedSubject);
+            //     const merged = [...others, ...newQuestions];
 
-            toast.success(`${data.length} random questions loaded!`);
+            //     // Update total mark based on merged
+            //     const total = merged.reduce((sum, q) => sum + (Number(q.Mark) || 0), 0);
+            //     setTotalMark(total);
+
+            //     return merged;
+            // });
+            setSelectedQuestions(prev => {
+                const existing = Array.isArray(prev) ? prev : [];
+                const others = existing.filter(q => q.SubId !== selectedSubject);
+                const merged = [...others, ...newQuestions];
+
+                // Update total mark
+                setTotalMark(merged.reduce((sum, q) => sum + (Number(q.Mark) || 0), 0));
+
+                return merged; // this updates selectedQuestions
+            });
+
+
+            toast.success(`${data.length} random questions added for subject!`);
         } catch (error) {
             console.error("Error fetching random questions:", error);
             toast.error("Failed to load random questions!");
         }
     };
+
+
 
     // Initialize component
 
@@ -374,12 +588,13 @@ export default function SetEntryPage() {
                     )}
                 </div>
                 <div className="border border-gray-300 rounded-b-md overflow-hidden max-h-[68vh] overflow-y-auto">
-                    <form onSubmit={handleSubmit} className="space-y-4 text-sm bg-white p-6 rounded-lg shadow">
-                        <div>
-                            <div className="flex flex-wrap items-center gap-2">
-                                {/* ---------------- SET NAME ---------------- */}
-                                <div className="flex items-center gap-2 w-full sm:w-[23%]">
-                                    <label className="w-1/3 text-sm font-semibold text-gray-700 text-nowrap">
+                    <form onSubmit={handleSubmit} className="space-y-4 text-sm bg-white p-3 rounded-sm shadow">
+                        <div >
+
+                            <div className="flex items-center gap-4 mb-2">
+                                {/* Set Name */}
+                                <div className="flex items-center gap-2 w-1/3">
+                                    <label className="text-sm font-semibold text-gray-700 w-1/3 whitespace-nowrap">
                                         Set Name:
                                     </label>
                                     <input
@@ -392,12 +607,12 @@ export default function SetEntryPage() {
                                     />
                                 </div>
 
-                                {/* ---------------- SELECT SUBJECT ---------------- */}
-                                <div className="flex items-center gap-2 w-full sm:w-[28%]">
-                                    <label className="w-.8/3 text-sm font-semibold text-gray-700 text-nowrap">
+                                {/* Subject */}
+                                <div className="flex items-center gap-2 w-1/3">
+                                    <label className="text-sm font-semibold text-gray-700 w-1/3 whitespace-nowrap">
                                         Subject:
                                     </label>
-                                    <div className="w-2.2/3">
+                                    <div className="w-2/3">
                                         {subjectData.length > 0 && (
                                             <Select
                                                 name="filterSubject"
@@ -405,6 +620,7 @@ export default function SetEntryPage() {
                                                 onChange={(selected) => {
                                                     const subId = selected?.value || "";
                                                     setSelectedSubject(subId);
+                                                     setQuestionCount("");
                                                     fetchQuestionsBySubject(subId);
                                                 }}
                                                 options={subjectData}
@@ -412,16 +628,32 @@ export default function SetEntryPage() {
                                                 className="text-sm"
                                                 isClearable
                                                 isSearchable
-
                                             />
                                         )}
                                     </div>
                                 </div>
 
-                                {/* ---------------- ADD MODE ---------------- */}
+                                {/* Available Questions */}
+                                <div className="flex items-center gap-2 w-1/3">
+                                    <label className="text-sm font-semibold text-gray-700 w-2/3 whitespace-nowrap">
+                                        Available Questions:
+                                    </label>
+                                    <input
+                                        name="availableQuestions"
+                                        value={availableQuestions}
+                                        readOnly
+                                        className="w-1/3 border border-gray-200 px-3 py-2 rounded-lg bg-gray-100 text-gray-600 focus:outline-none"
+                                    />
+                                </div>
+                            </div>
+
+
+                            {/* ---------------- SECOND ROW ---------------- */}
+                            <div className="flex items-center gap-4 mb-4">
+                                {/* Add Mode */}
                                 {!isEdit && (
-                                    <div className="flex items-center gap-2 w-full sm:w-[25%]">
-                                        <label className="w-1/3 text-sm font-semibold text-gray-700 text-nowrap">
+                                    <div className="flex items-center gap-2 w-1/3">
+                                        <label className="text-sm font-semibold text-gray-700 w-1/3 whitespace-nowrap">
                                             Add Mode:
                                         </label>
                                         <select
@@ -435,23 +667,24 @@ export default function SetEntryPage() {
                                         </select>
                                     </div>
                                 )}
-                                {/* ---------------- TOTAL MARK ---------------- */}
-                                <div className="flex items-center gap-2 w-full sm:w-[20%]">
-                                    <label className="w-1.5/3 text-sm font-semibold text-gray-700 text-nowrap">
+
+                                {/* Total Mark */}
+                                <div className="flex items-center gap-2 w-1/3">
+                                    <label className="text-sm font-semibold text-gray-700 w-1/3 whitespace-nowrap">
                                         Total Mark:
                                     </label>
                                     <input
                                         name="mark"
                                         value={totalMark}
                                         readOnly
-                                        className="w-1/3 border border-gray-200 px-3 py-2 rounded-lg bg-gray-100 text-gray-600 focus:outline-none"
+                                        className="w-2/3 border border-gray-200 px-3 py-2 rounded-lg bg-gray-100 text-gray-600 focus:outline-none"
                                     />
                                 </div>
 
-                                {/* ---------------- TOTAL QUESTIONS ---------------- */}
-                                <div className="flex items-center gap-2 w-full sm:w-[20%]">
-                                    <label className="w-1.5/3 text-sm font-semibold text-gray-700 text-nowrap">
-                                        Total Questions:
+                                {/* Total Selected Questions */}
+                                <div className="flex items-center gap-2 w-1/3">
+                                    <label className="text-sm font-semibold text-gray-700 w-2/3 whitespace-nowrap">
+                                        Total Selected Questions:
                                     </label>
                                     <input
                                         name="totalQuestions"
@@ -460,11 +693,9 @@ export default function SetEntryPage() {
                                         className="w-1/3 border border-gray-200 px-3 py-2 rounded-lg bg-gray-100 text-gray-600 focus:outline-none"
                                     />
                                 </div>
-
                             </div>
+
                         </div>
-
-
 
                         {/* ---------------- CONDITIONAL BLOCKS ---------------- */}
                         {(addMode === "manual" || isEdit) && (
@@ -543,57 +774,6 @@ export default function SetEntryPage() {
                                             </button>
                                         </div>
                                     </div>
-
-                                    {/* ----------- TABLE DISPLAY ----------- */}
-                                    {selectedQuestions.length === 0 ? (
-                                        <p className="text-gray-400 text-sm italic text-center py-3">
-                                            No random questions added yet.
-                                        </p>
-                                    ) : (
-                                        <div className="max-h-64 overflow-y-auto rounded-lg border border-gray-200 bg-white">
-                                            <table className="w-full text-sm border-collapse">
-                                                <thead className="bg-gray-100 sticky top-0">
-                                                    <tr>
-                                                        <th className="w-10 p-2 text-left border-b">Select</th>
-                                                        <th className="p-2 text-left border-b">Question</th>
-                                                        <th className="w-24 p-2 text-left border-b">Type</th>
-                                                        <th className="w-20 p-2 text-left border-b">Mark</th>
-                                                    </tr>
-                                                </thead>
-                                                <tbody>
-                                                    {selectedQuestions.map((q, index) => (
-                                                        <tr
-                                                            key={q.QuestionId || index}
-                                                            className="hover:bg-gray-50 border-b last:border-0"
-                                                        >
-                                                            <td className="p-2 text-center">
-                                                                <input
-                                                                    type="checkbox"
-                                                                    checked={q.isChecked || false}
-                                                                    onChange={(e) => {
-                                                                        const isChecked = e.target.checked;
-                                                                        setSelectedQuestions((prev) =>
-                                                                            prev.map((x) =>
-                                                                                x.QuestionId === q.QuestionId
-                                                                                    ? { ...x, isChecked }
-                                                                                    : x
-                                                                            )
-                                                                        );
-                                                                    }}
-                                                                    className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-400"
-                                                                />
-                                                            </td>
-                                                            <td className="p-2 text-gray-700">
-                                                                {q.QuestionName || q.Name}
-                                                            </td>
-                                                            <td className="p-2 text-gray-600">{q.QnType}</td>
-                                                            <td className="p-2 text-gray-600">{q.Mark}</td>
-                                                        </tr>
-                                                    ))}
-                                                </tbody>
-                                            </table>
-                                        </div>
-                                    )}
                                 </div>
                             </>
                         )}

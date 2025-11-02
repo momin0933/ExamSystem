@@ -6,7 +6,7 @@ import { usePathname } from 'next/navigation';
 import { AiOutlineDashboard, AiOutlineLogout } from 'react-icons/ai';
 import { GoSidebarCollapse } from 'react-icons/go';
 import { FaChevronDown } from "react-icons/fa";
-import { MdOutlineQuiz, MdSubject, MdOutlineAssignmentTurnedIn, MdManageAccounts,MdWork  } from "react-icons/md";
+import { MdOutlineQuiz, MdSubject, MdOutlineAssignmentTurnedIn, MdManageAccounts, MdWork } from "react-icons/md";
 import { BsPatchQuestion } from "react-icons/bs";
 import { RiStackLine } from "react-icons/ri";
 import { FaUserPlus } from "react-icons/fa";
@@ -23,7 +23,7 @@ const Sidebar = () => {
 
   // Map dropdown IDs to their route paths
   const dropdownRouteMap = {
-    2: ["/addSubject", "/addQuestion", "/addSet", "/addExam", "/addCandidate"], // Management
+    2: ["/addSubject", "/addQuestion", "/insertQuestion", "/addSet", "/setEntry","/addExam", "/addCandidate"], // Management
     3: ["/participantsList"], // Result
   };
 
@@ -62,20 +62,19 @@ const Sidebar = () => {
   //   } px-2 py-1 rounded transition-colors duration-200`;
   // };
 
-const getLinkClasses = (href, baseClasses = "") => {
-  const isActive = pathname.startsWith(href);
-  return `${baseClasses} ${
-    isActive
+  const getLinkClasses = (href, baseClasses = "") => {
+    const isActive = pathname.startsWith(href)||
+    (href === "/addQuestion" && pathname.startsWith("/insertQuestion"))||
+     (href === "/addSet" && pathname.startsWith("/setEntry"));
+    return `${baseClasses} ${isActive
       ? "bg-blue-100 text-blue-700 font-medium"
       : "text-black hover:text-blue-800 hover:bg-blue-50"
-  } px-2 py-1 rounded transition-colors duration-200`;
-};
-
-
+      } px-2 py-1 rounded transition-colors duration-200`;
+  };
 
   return (
     <div className={`min-h-screen font-roboto bg-white-900 z-50 flex flex-col sticky top-0 ${isCollapsed ? "w-16" : "w-44 lg:w-56"} transition-all duration-300 ease-in-out`}>
-      
+
       {/* Header */}
       <div className="hidden lg:flex items-center justify-between h-14 bg-white p-3">
         {!isCollapsed && (
@@ -95,10 +94,10 @@ const getLinkClasses = (href, baseClasses = "") => {
             : <GoSidebarCollapse className="text-gray-300 hidden hover:text-orange-500 transition ease-in-out" size={24} />}
         </button>
       </div>
-<hr className="border-t border-gray-200 w-full" />
+      <hr className="border-t border-gray-200 w-full" />
       {/* Navigation */}
       <nav className={`flex-1 mt-4 space-y-2 ${isCollapsed ? "flex flex-col items-center" : ""}`}>
-        
+
         {/* Dashboard */}
         <Link
           href="/homepage"
@@ -129,8 +128,9 @@ const getLinkClasses = (href, baseClasses = "") => {
             {!isCollapsed && activeDropdown === 2 && (
               <div className="ml-8 mt-2  space-y-1.5 border-l-2  border-gray-200 ">
                 {[
-                  { href: "/addSubject", label: "Position List", icon: <MdWork  /> },
+                  { href: "/addSubject", label: "Position List", icon: <MdWork /> },
                   { href: "/addQuestion", label: "Question Bank", icon: <BsPatchQuestion /> },
+                  // { href: "/insertQuestion", label: "Add Question", icon: <BsPatchQuestion /> },
                   { href: "/addSet", label: "Set List", icon: <RiStackLine /> },
                   { href: "/addExam", label: "Exam List", icon: <MdOutlineQuiz /> },
                   { href: "/addCandidate", label: "Candidate List", icon: <FaUserPlus /> },

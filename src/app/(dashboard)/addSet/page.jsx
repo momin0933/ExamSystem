@@ -10,6 +10,8 @@ import { AuthContext } from '../../provider/AuthProvider';
 import { toast } from 'react-hot-toast';
 import { useRouter, useSearchParams } from 'next/navigation';
 import * as XLSX from 'xlsx';
+import jsPDF from "jspdf";
+import autoTable from "jspdf-autotable";
 
 export default function AddSet() {
     const { loginData } = useContext(AuthContext);
@@ -242,6 +244,102 @@ export default function AddSet() {
         }
     };
 
+    const handleDownload = async () => {
+        if (!viewData?.Questions || viewData.Questions.length === 0) return;
+
+        const doc = new jsPDF({
+            orientation: "portrait",
+            unit: "mm",
+            format: "a4",
+        });
+
+        const pageWidth = 210;
+        const pageHeight = 297;
+        const margin = 14;
+        const topMargin = 14;
+        const bottomMargin = 14;
+        const usableWidth = pageWidth - 2 * margin;
+        let y = topMargin;
+
+        // Title - Set Name
+        doc.setFontSize(14);
+        doc.setFont("times", "bold");
+        doc.text(`Set Name: ${viewData.SetName || "Question Set"}`, pageWidth / 2, y, { align: "center" });
+        y += 10;
+
+        // Basic Info
+        doc.setFontSize(10);
+        doc.setFont("times", "normal");
+        doc.text(
+            `Total Questions: ${viewData.TotalQuestions || 0} | Total Marks: ${viewData.TotalMark || 0}`,
+            pageWidth / 2,
+            y,
+            { align: "center" }
+        );
+        y += 10;
+
+        // Group questions by subject
+        const groupedQuestions = Object.entries(
+            viewData.Questions.reduce((acc, q) => {
+                if (!acc[q.subjectName]) acc[q.subjectName] = [];
+                acc[q.subjectName].push(q);
+                return acc;
+            }, {})
+        );
+
+        let questionCounter = 1; // continuous numbering across subjects
+
+        // Loop through subjects
+        for (const [subject, questions] of groupedQuestions) {
+            // Subject Header
+            if (y + 10 > pageHeight - bottomMargin) {
+                doc.addPage();
+                y = topMargin;
+            }
+            doc.setFont("times", "bold");
+            doc.setFontSize(12);
+            doc.text(`${subject} (${questions.length})`, margin, y);
+            y += 6;
+
+            // Loop through questions
+            questions.forEach((q) => {
+                if (y + 8 > pageHeight - bottomMargin) {
+                    doc.addPage();
+                    y = topMargin;
+                }
+
+                doc.setFont("times", "normal");
+                doc.setFontSize(10);
+
+                // Question text
+                const questionLines = doc.splitTextToSize(`${questionCounter}. ${q.question}`, usableWidth - 50);
+                questionLines.forEach((line, index) => {
+                    doc.text(line, margin, y);
+
+                    // Add marks only on the first line of the question
+                    if (index === 0) {
+                        const markText = `Mark: ${q.qnMark || 0}`;
+                        doc.setFont("times", "bold");
+                        doc.text(markText, pageWidth - margin, y, { align: "right" });
+                        doc.setFont("times", "normal");
+                    }
+
+                    y += 5;
+                });
+
+                y += 4; // spacing after each question
+                questionCounter++;
+            });
+
+            y += 6; // spacing after each subject
+        }
+
+        // Save PDF
+        doc.save(`${viewData.SetName || "QuestionSet"}_questions.pdf`);
+    };
+
+
+
     const handleDownloadExcel = () => {
         if (!selectedQuestions || selectedQuestions.length === 0) return toast.error('No data available to export!');
         const worksheet = XLSX.utils.json_to_sheet(selectedQuestions);
@@ -257,7 +355,7 @@ export default function AddSet() {
     }, []);
     return (
         <div className="overflow-x-auto p-3">
-            <div className="mb-4">
+            <div className="mb-1">
                 <h1 className="text-2xl font-bold text-gray-800">Question Set</h1>
             </div>
             <div className="rounded-md font-roboto overflow-hidden shadow-md">
@@ -282,27 +380,35 @@ export default function AddSet() {
 
                         {/* Add New Set Button & Excel */}
                         <div className='flex items-center gap-3'>
-                            <button onClick={() => router.push('/setEntry')} className="text-lg text-gray-50 cursor-pointer flex items-center gap-1">
+                            {/* <button onClick={() => router.push('/setEntry')} className="text-lg text-gray-50 cursor-pointer flex items-center gap-1">
                                 <IoMdAddCircle className="text-xl" />
-                            </button>
+                            </button> */}
+                            <Link
+                                href="/setEntry"
+                                className="text-lg text-gray-50 cursor-pointer flex items-center gap-1"
+
+                            >
+                                <IoMdAddCircle className="text-xl" />
+                            </Link>
                             <FaFileExcel onClick={handleDownloadExcel} className="text-lg cursor-pointer text-gray-50" />
                         </div>
                     </div>
 
                     {/* Set List Table */}
-                    <div className="border border-gray-300 rounded-b-md overflow-hidden max-h-[62vh] overflow-y-auto">
+                    <div className="border border-gray-300 rounded-b-md overflow-hidden max-h-[65vh] overflow-y-auto">
                         <table className="min-w-full text-sm text-left text-gray-600">
                             {/* <thead className="bg-gray-100 text-xs uppercase text-gray-700"> */}
                             <thead className="bg-gray-100 text-xs uppercase text-gray-700 sticky top-0 z-10">
                                 <tr className="border-b">
-                                    <th className="px-4 py-2 text-center w-[5%]">SL</th>
-                                    <th className="px-4 py-2 text-center w-[25%]">Set Name</th>
-                                    <th className="px-4 py-2 text-center w-[25%]">Total Questions</th>
-                                    <th className="px-4 py-2 text-center w-[15%]">Total Marks</th>
-                                    <th className="px-4 py-2 text-center w-[30%]">Actions</th>
+                                    <th className="px-4 py-2 text-center ">SL</th>
+                                    <th className="px-4 py-2 text-center ">Set Name</th>
+                                    <th className="px-4 py-2">Position Name</th>
+                                    <th className="px-4 py-2 text-center ">Total Questions</th>
+                                    <th className="px-4 py-2 text-center ">Total Marks</th>
+                                    <th className="px-4 py-2 text-center ">Actions</th>
                                 </tr>
                             </thead>
-                            <tbody className="bg-white text-xs text-gray-700">
+                            {/* <tbody className="bg-white text-xs text-gray-700">
                                 {filteredSet.length === 0 ? (
                                     <tr><td colSpan="5" className="text-center py-4">No data found</td></tr>
                                 ) : (
@@ -332,7 +438,40 @@ export default function AddSet() {
                                         </tr>
                                     ))
                                 )}
+                            </tbody> */}
+                            <tbody className="bg-white text-xs text-gray-700">
+                                {filteredSet.length === 0 ? (
+                                    <tr><td colSpan="5" className="text-center py-4">No data found</td></tr>
+                                ) : (
+                                    filteredSet.map((set, index) => (
+                                        <tr key={set.Id} className="border-b border-gray-300 hover:bg-gray-50">
+                                            <td className="px-4 py-2 text-center">{index + 1}</td>
+                                            <td className="px-4 py-2 text-center">{set.Name}</td>
+                                            <td className="px-4 py-2 ">{set.SubjectSummary}</td>
+                                            <td className="px-4 py-2 text-center">{set.TotalQn}</td>
+                                            <td className="px-4 py-2 text-center">{set.TotalMark}</td>
+                                            <td className="px-4 py-2 text-center flex justify-center gap-2">
+                                                <button onClick={() => openViewModal(set)} className="flex items-center gap-1 px-3 py-1.5 text-sm font-medium border border-blue-500 text-blue-500 rounded hover:bg-blue-500 hover:text-white transition-colors duration-200">
+                                                    <FiEye />
+                                                </button>
+                                                <button onClick={() => router.push(`/setEntry?id=${set.Id}`)} className="px-3 py-1.5 border border-[#00925a] text-[#00925a] rounded hover:bg-[#00925a] hover:text-white transition">
+                                                    <FiEdit />
+                                                </button>
+                                                <button onClick={() => openDeleteModal(set)} className="px-3 py-1.5 border border-red-500 text-red-500 rounded hover:bg-red-500 hover:text-white transition">
+                                                    <FiTrash2 />
+                                                </button>
+                                                <DeleteConfirmModal
+                                                    isOpen={isDeleteModalOpen}
+                                                    onClose={() => setIsDeleteModalOpen(false)}
+                                                    onConfirm={handleConfirmDelete}
+                                                    statusMessage={deleteSuccessMsg}
+                                                />
+                                            </td>
+                                        </tr>
+                                    ))
+                                )}
                             </tbody>
+
                         </table>
                     </div>
                 </div>
@@ -374,24 +513,13 @@ export default function AddSet() {
 
                             {/* Questions */}
                             <div className="space-y-6">
-                                {viewData.Questions && viewData.Questions.length > 0 ? (
+                                {/* {viewData.Questions && viewData.Questions.length > 0 ? (
                                     viewData.Questions.map((q, index) => (
                                         <div
                                             key={q.qnId || index}
                                             className=""
                                         >
-                                            {/* Question Header */}
-                                            {/* <div className="flex justify-between items-center mb-2">
-                                         
-                                            <h4 className="font-semibold text-gray-800 text-lg">
-                                                {index + 1}. {q.question}
-                                            </h4>
-
-                                          
-                                            <span className="text-sm text-gray-600 font-medium">
-                                                Mark: {q.qnMark}
-                                            </span>
-                                        </div> */}
+         
 
                                             <div className="mb-4 relative">
                                                 <h4 className="font-semibold text-gray-800 text-lg pr-16">
@@ -401,11 +529,6 @@ export default function AddSet() {
                                                     Mark: {q.qnMark}
                                                 </span>
                                             </div>
-
-
-
-
-                                            {/* Question Image */}
                                             {q.qnImage && (
                                                 <div className="mb-3 flex justify-start">
                                                     <img
@@ -417,7 +540,7 @@ export default function AddSet() {
                                                 </div>
                                             )}
 
-                                            {/* MCQ Options */}
+                                      
                                             {q.qnType === "MCQ" && q.options && q.options.length > 0 && (
                                                 <ul className="ml-4 space-y-1">
                                                     {q.options.map((opt, i) => (
@@ -438,18 +561,80 @@ export default function AddSet() {
                                     ))
                                 ) : (
                                     <p className="text-center text-gray-500 py-6 text-lg">No questions found.</p>
+                                )} */}
+
+                                {viewData.Questions && viewData.Questions.length > 0 ? (
+                                    Object.entries(
+                                        viewData.Questions.reduce((acc, q) => {
+                                            if (!acc[q.subjectName]) acc[q.subjectName] = [];
+                                            acc[q.subjectName].push(q);
+                                            return acc;
+                                        }, {})
+                                    ).map(([subject, questions]) => (
+                                        <div key={subject} className="mb-6">
+                                            {/* Subject Header */}
+                                            <h4 className="text-lg font-bold text-gray-800 mb-3">{subject} ({questions.length})</h4>
+
+                                            {/* Questions under this subject */}
+                                            {questions.map((q, index) => (
+                                                <div key={q.qnId || index} className="mb-4 relative">
+                                                    <h5 className="font-semibold text-gray-700 pr-16">
+                                                        {index + 1}. {q.question}
+                                                    </h5>
+                                                    <span className="absolute top-0 right-0 text-gray-600 font-semibold">
+                                                        Mark: {q.qnMark}
+                                                    </span>
+
+                                                    {q.qnImage && (
+                                                        <div className="mb-3 flex justify-start">
+                                                            <img
+                                                                src={q.qnImage}
+                                                                alt="Question"
+                                                                className="rounded-md object-contain border border-gray-200"
+                                                                style={{ maxHeight: "150px" }}
+                                                            />
+                                                        </div>
+                                                    )}
+
+                                                    {q.qnType === "MCQ" && q.options && q.options.length > 0 && (
+                                                        <ul className="ml-4 space-y-1">
+                                                            {q.options.map((opt, i) => (
+                                                                <li key={i} className="p-2 rounded text-sm text-gray-700 hover:bg-gray-100 flex items-center">
+                                                                    <span className="font-medium mr-1">{String.fromCharCode(65 + i)}.</span>
+                                                                    {opt.text}
+                                                                    {opt.isCorrect && <span className="ml-2 text-green-600 font-semibold">✓</span>}
+                                                                </li>
+                                                            ))}
+                                                        </ul>
+                                                    )}
+                                                </div>
+                                            ))}
+                                        </div>
+                                    ))
+                                ) : (
+                                    <p className="text-center text-gray-500 py-6 text-lg">No questions found.</p>
                                 )}
+
                             </div>
 
                             {/* Close Button */}
-                            <div className="flex justify-end mt-6">
+                            <div className="flex justify-end gap-3 mt-6">
+                                <button
+                                    type="button"
+                                    onClick={handleDownload}
+                                    className="px-4 py-2 bg-blue-600 text-white rounded-lg shadow hover:bg-blue-700 transition duration-200 ease-in-out flex items-center"
+                                >
+                                    Download
+                                </button>
+
                                 <button
                                     onClick={() => setIsViewModalOpen(false)}
-                                    className="px-5 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition"
+                                    className="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg shadow hover:bg-gray-300 transition duration-200 ease-in-out"
                                 >
                                     Close
                                 </button>
                             </div>
+
                         </div>
                     </div>
                 )}
