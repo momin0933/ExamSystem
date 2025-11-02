@@ -175,6 +175,7 @@ export default function AddQuestion() {
 
     // Modal handlers - SIMPLIFIED openEditModal
     const openEditModal = (question) => {
+        debugger;
         if (!question?.QuestionId) return console.error("Invalid question ID");
         
         // Redirect to insertQuestion page with edit mode
@@ -370,6 +371,7 @@ export default function AddQuestion() {
                             <Link
                                 href="/insertQuestion"
                                 className="text-lg text-gray-50 cursor-pointer flex items-center"
+                                
                             >
                                 <IoMdAddCircle className="text-xl" />
                             </Link>

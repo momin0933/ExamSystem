@@ -98,6 +98,7 @@ export default function InsertQuestion() {
     };
 
     const fetchQuestionData = async (questionId) => {
+        debugger;
         try {
             setLoading(true);
 
@@ -121,6 +122,7 @@ export default function InsertQuestion() {
             if (!response.ok) throw new Error(await response.text());
 
             const data = await response.json();
+            console.log("Edit Question data",data)
             const question = data.length ? {
                 QuestionId: data[0].QuestionId,
                 Name: data[0].Name,
@@ -177,9 +179,10 @@ export default function InsertQuestion() {
                 });
 
                 // FIX: Only set existingImage, not questionImage in edit mode
-                setExistingImage(question.Sketch || null);
-                setQuestionImage(null); // This prevents double image display
-                setDescriptiveMode(question.QnType === "Descriptive" ? "manual" : "");
+                setExistingImage(question.Sketch || null);       
+                setQuestionImage(null); 
+                // setDescriptiveMode(question.QnType === "Descriptive" ? "manual" : "");
+                setDescriptiveMode("manual");
             }
         } catch (err) {
             console.error(`Error fetching question:`, err);
@@ -909,9 +912,9 @@ export default function InsertQuestion() {
                                                 <div className="flex flex-col items-center">
                                                     {/* Image Box */}
                                                     <div className="w-40 h-40 rounded-lg border border-gray-300 flex items-center justify-center overflow-hidden relative">
-                                                        {questionImage ? (
+                                                        {(questionImage || existingImage) ? (
                                                             <img
-                                                                src={questionImage}
+                                                                src={questionImage || existingImage}
                                                                 alt="Question Preview"
                                                                 className="object-cover w-full h-full"
                                                             />
