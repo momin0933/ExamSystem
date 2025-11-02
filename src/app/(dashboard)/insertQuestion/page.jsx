@@ -703,61 +703,59 @@ export default function InsertQuestion() {
                                             disabled={isUploading}
                                         />
                                     </div> */}
-                                    <div className="flex items-center gap-4 w-full">
-                                        {/* Label */}
+                                    <div className="flex items-center gap-4">
                                         <label className="text-sm font-semibold text-gray-700 w-32">
-                                            Question Image:
+                                            Question Image
                                         </label>
 
-                                        {/* Upload Box */}
-                                        <div className="w-40 h-40 rounded-lg border border-gray-300 flex flex-col items-center justify-center overflow-hidden relative">
-                                            {questionImage ? (
-                                                <img
-                                                    src={questionImage}
-                                                    alt="Question Preview"
-                                                    className="object-cover w-full h-full"
-                                                />
-                                            ) : (
-                                                <span className="text-gray-400 text-sm text-center">
-                                                    Select Image
-                                                </span>
-                                            )}
+                                        <div className="flex flex-col items-center">
+                                            {/* Image Box */}
+                                            <div className="w-40 h-40 rounded-lg border border-gray-300 flex items-center justify-center overflow-hidden relative">
+                                                {questionImage ? (
+                                                    <img
+                                                        src={questionImage}
+                                                        alt="Question Preview"
+                                                        className="object-cover w-full h-full"
+                                                    />
+                                                ) : (
+                                                    <span className="text-gray-400 text-sm text-center">Select Image</span>
+                                                )}
 
-                                            {/* Bigger clickable area */}
-                                            <input
-                                                id="questionImageInput"
-                                                type="file"
-                                                accept="image/*"
-                                                className="absolute -inset-4 w-[500%] h-[200%] opacity-0 cursor-pointer"
-                                                onChange={handleQuestionImageChange}
-                                                disabled={isUploading}
-                                            />
+                                                {/* Clickable area */}
+                                                <input
+                                                    id="questionImageInput"
+                                                    type="file"
+                                                    accept="image/*"
+                                                    className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                                                    onChange={handleQuestionImageChange}
+                                                    disabled={isUploading}
+                                                />
+                                            </div>
+
+                                            {/* Buttons below the image box */}
+                                            <div className="flex gap-2 mt-2">
+                                                <button
+                                                    type="button"
+                                                    onClick={() => document.querySelector('#questionImageInput').click()}
+                                                    className="px-3 py-1 rounded bg-blue-600 text-white text-sm hover:bg-blue-700"
+                                                >
+                                                    {questionImage ? "Change" : "Upload"}
+                                                </button>
+
+                                                {questionImage && (
+                                                    <button
+                                                        type="button"
+                                                        onClick={handleRemoveQuestionImage}
+                                                        className="px-3 py-1 rounded bg-red-100 text-red-600 text-sm hover:bg-red-200"
+                                                    >
+                                                        Remove
+                                                    </button>
+                                                )}
+                                            </div>
                                         </div>
                                     </div>
-
-                                    <div className="flex items-center space-x-4">
-                                        <button
-                                            type="button"
-                                            onClick={() => document.querySelector('input[type="file"]').click()}
-                                            className="px-3 py-1 rounded bg-blue-600 text-white text-sm hover:bg-blue-700"
-                                        >
-                                            {questionImage ? "Change" : "Upload"}
-                                        </button>
-
-                                        {questionImage && (
-                                            <button
-                                                type="button"
-                                                onClick={handleRemoveQuestionImage}
-                                                className="text-gray-600 text-sm hover:text-red-500"
-                                            >
-                                                Remove
-                                            </button>
-                                        )}
-                                    </div>
                                 </div>
-                            )}
-
-                            {/* Manual MCQ Question - Show when manual mode AND MCQ type selected */}
+                            )}                         
                             {descriptiveMode === "manual" && formData.qnTypeId === "2" && (
                                 <>
                                     <div className="flex items-center gap-2 flex-1 min-w-[200px]">
@@ -807,13 +805,12 @@ export default function InsertQuestion() {
                                         />
                                     </div> */}
 
-                                    <div className="flex items-center gap-4 w-full">
-                                        {/* Label */}
+                                    {/* <div className="flex items-center gap-4 w-full">
+                                     
                                         <label className="text-sm font-semibold text-gray-700 w-32">
                                             Question Image:
                                         </label>
 
-                                        {/* Upload Box */}
                                         <div className="w-40 h-40 rounded-lg border border-gray-300 flex flex-col items-center justify-center overflow-hidden relative">
                                             {questionImage ? (
                                                 <img
@@ -827,7 +824,7 @@ export default function InsertQuestion() {
                                                 </span>
                                             )}
 
-                                            {/* Bigger clickable area */}
+                                       
                                             <input
                                                 id="questionImageInput"
                                                 type="file"
@@ -861,7 +858,7 @@ export default function InsertQuestion() {
 
                                     {isUploading && <p className="text-xs text-gray-500">Uploading...</p>}
 
-                                    {/* MCQ Options */}
+                            
                                     <div className="mt-3">
                                         <div className="flex gap-2 px-1 mb-1">
                                             <span className="flex-1 text-sm font-semibold text-gray-700">Options</span>
@@ -900,7 +897,110 @@ export default function InsertQuestion() {
                                         <button type="button" onClick={addOption} className="mt-2 px-3 py-1 bg-green-500 text-white rounded">
                                             Add Option
                                         </button>
+                                    </div> */}
+                                    <div className="flex gap-6 w-full mt-3">
+                                        <div className="flex flex-col gap-2">
+                                            {/* Label + Image Input horizontal */}
+                                            <div className="flex items-center gap-4">
+                                                <label className="text-sm font-semibold text-gray-700 w-32">
+                                                    Question Image
+                                                </label>
+
+                                                <div className="flex flex-col items-center">
+                                                    {/* Image Box */}
+                                                    <div className="w-40 h-40 rounded-lg border border-gray-300 flex items-center justify-center overflow-hidden relative">
+                                                        {questionImage ? (
+                                                            <img
+                                                                src={questionImage}
+                                                                alt="Question Preview"
+                                                                className="object-cover w-full h-full"
+                                                            />
+                                                        ) : (
+                                                            <span className="text-gray-400 text-sm text-center">Select Image</span>
+                                                        )}
+
+                                                        {/* Clickable area */}
+                                                        <input
+                                                            id="questionImageInput"
+                                                            type="file"
+                                                            accept="image/*"
+                                                            className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                                                            onChange={handleQuestionImageChange}
+                                                            disabled={isUploading}
+                                                        />
+                                                    </div>
+
+                                                    {/* Buttons below the image box */}
+                                                    <div className="flex gap-2 mt-2">
+                                                        <button
+                                                            type="button"
+                                                            onClick={() => document.querySelector('#questionImageInput').click()}
+                                                            className="px-3 py-1 rounded bg-blue-600 text-white text-sm hover:bg-blue-700"
+                                                        >
+                                                            {questionImage ? "Change" : "Upload"}
+                                                        </button>
+
+                                                        {questionImage && (
+                                                            <button
+                                                                type="button"
+                                                                onClick={handleRemoveQuestionImage}
+                                                                className="px-3 py-1 rounded bg-red-100 text-red-600 text-sm hover:bg-red-200"
+                                                            >
+                                                                Remove
+                                                            </button>
+                                                        )}
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        {/* Options Section - RIGHT */}
+                                        <div className="flex-1">
+                                            <div className="flex gap-2 px-1 mb-1">
+                                                <span className="flex-1 text-sm font-semibold text-gray-700">Options</span>
+                                                <span className="w-21 text-sm font-semibold text-gray-700 text-center">Choose Ans</span>
+                                                <span className="w-8"></span>
+                                            </div>
+
+                                            {formData.options.map((opt, index) => (
+                                                <div key={index} className="flex gap-2 mt-2 items-center">
+                                                    <input
+                                                        type="text"
+                                                        value={opt.optionText}
+                                                        onChange={(e) => handleOptionChange(index, "optionText", e.target.value)}
+                                                        placeholder={`Option ${index + 1}`}
+                                                        className="flex-1 min-w-0 border px-2 py-1 rounded"
+                                                    />
+                                                    <div className="flex justify-center items-center w-16">
+                                                        <input
+                                                            type="checkbox"
+                                                            checked={opt.isCorrect}
+                                                            onChange={(e) => handleOptionChange(index, "isCorrect", e.target.checked)}
+                                                        />
+                                                    </div>
+                                                    <div className="flex justify-center">
+                                                        <button
+                                                            type="button"
+                                                            className="px-2 bg-red-500 text-white rounded flex items-center justify-center"
+                                                            onClick={() => removeOption(index)}
+                                                            disabled={formData.options.length <= 1}
+                                                        >
+                                                            <FiTrash2 className="text-base" />
+                                                        </button>
+                                                    </div>
+                                                </div>
+                                            ))}
+
+                                            <button
+                                                type="button"
+                                                onClick={addOption}
+                                                className="mt-2 px-3 py-1 bg-green-500 text-white rounded"
+                                            >
+                                                Add Option
+                                            </button>
+                                        </div>
                                     </div>
+
                                 </>
                             )}
 
