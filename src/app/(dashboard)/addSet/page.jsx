@@ -26,11 +26,147 @@ export default function AddSet() {
     const [deleteSuccessMsg, setDeleteSuccessMsg] = useState('');
     const [subjectData, setSubjectData] = useState([]);
     const [isViewModalOpen, setIsViewModalOpen] = useState(false);
+    
 
     // Form/Edit/View States
 
     const [selectedQuestions, setSelectedQuestions] = useState([]);
     const [viewData, setViewData] = useState(null);
+    const doc = new jsPDF();
+
+    const loadBanglaFont = async (doc) => {
+    try {
+        const fontUrl = "/fonts/NotoSansBengali-Regular.ttf";
+        const res = await fetch(fontUrl);
+        if (!res.ok) throw new Error("Font not found");
+
+        const buffer = await res.arrayBuffer();
+        const bytes = new Uint8Array(buffer);
+        let binary = "";
+        const chunkSize = 0x8000;
+
+        for (let i = 0; i < bytes.length; i += chunkSize) {
+            const chunk = bytes.subarray(i, i + chunkSize);
+            binary += String.fromCharCode.apply(null, chunk);
+        }
+
+        const base64 = btoa(binary);
+
+        // Add font to jsPDF
+        doc.addFileToVFS("NotoSansBengali-Regular.ttf", base64);
+        doc.addFont("NotoSansBengali-Regular.ttf", "NotoSansBengali", "normal");
+
+        // Set font
+        doc.setFont("NotoSansBengali", "normal");
+        return true; // font loaded successfully
+    } catch (err) {
+        console.error("Error loading Bangla font:", err);
+        doc.setFont("times", "normal"); // fallback
+        return false;
+    }
+};
+
+const handleDownload = async () => {
+     if (!viewData?.Questions || viewData.Questions.length === 0) return;
+
+    const doc = new jsPDF({ orientation: "portrait", unit: "mm", format: "a4" });
+
+    const fontLoaded = await loadBanglaFont(doc); // wait for font to load
+
+    const pageWidth = 210, pageHeight = 297, margin = 14, topMargin = 14, bottomMargin = 14;
+    const usableWidth = pageWidth - 2 * margin;
+    let y = topMargin;
+
+    // Title
+    doc.setFontSize(14);
+    doc.setFont(fontLoaded ? "NotoSansBengali" : "times", "bold");
+    doc.text(` ${viewData.SetName || "Question Set"}`, pageWidth / 2, y, { align: "center" });
+    y += 10;
+
+    // Info
+    doc.setFontSize(10);
+    doc.setFont(fontLoaded ? "NotoSansBengali" : "times", "normal");
+    doc.text(
+        `Total Question: ${viewData.TotalQuestions || 0} | Mark: ${viewData.TotalMark || 0}`,
+        pageWidth / 2,
+        y,
+        { align: "center" }
+    );
+    y += 10;
+
+    // --- Group questions by subject ---
+    const groupedQuestions = Object.entries(
+        viewData.Questions.reduce((acc, q) => {
+            if (!acc[q.subjectName]) acc[q.subjectName] = [];
+            acc[q.subjectName].push(q);
+            return acc;
+        }, {})
+    );
+
+    let questionCounter = 1; // continuous numbering across subjects
+
+    for (const [subject, questions] of groupedQuestions) {
+        // Subject Header
+        if (y + 10 > pageHeight - bottomMargin) {
+            doc.addPage();
+            y = topMargin;
+        }
+        doc.setFont("NotoSansBengali", "bold");
+        doc.setFontSize(12);
+        doc.text(`${subject} (${questions.length})`, margin, y);
+        y += 6;
+
+        for (const q of questions) {
+            if (y + 8 > pageHeight - bottomMargin) {
+                doc.addPage();
+                y = topMargin;
+            }
+
+            doc.setFont("NotoSansBengali", "normal");
+            doc.setFontSize(10);
+
+            // Question text
+            const questionLines = doc.splitTextToSize(`${questionCounter}. ${q.question}`, usableWidth - 50);
+            questionLines.forEach((line, index) => {
+                doc.text(line, margin, y);
+
+                // Add marks only on first line
+                if (index === 0) {
+                    const markText = `Mark: ${q.qnMark || 0}`;
+                    doc.setFont("NotoSansBengali", "bold");
+                    doc.text(markText, pageWidth - margin, y, { align: "right" });
+                    doc.setFont("NotoSansBengali", "normal");
+                }
+
+                y += 5;
+            });
+
+            y += 2;
+
+            // MCQ Options
+            if (q.qnType === "MCQ" && q.options && q.options.length > 0) {
+                q.options.forEach((opt, i) => {
+                    const optText = `${String.fromCharCode(65 + i)}. ${opt.text}${opt.isCorrect ? " ✓" : ""}`;
+                    const optionLines = doc.splitTextToSize(optText, usableWidth - 30);
+                    optionLines.forEach(line => {
+                        doc.text(line, margin + 6, y);
+                        y += 5;
+                    });
+                    y += 1;
+                });
+            }
+
+            y += 4;
+            questionCounter++;
+        }
+
+        y += 6;
+    }
+
+    doc.save(`${viewData.SetName || "QuestionSet"}_questions.pdf`);
+};
+
+
 
     const fetchSetData = async () => {
         try {
@@ -54,53 +190,6 @@ export default function AddSet() {
             toast.error('Failed to load Set data');
         }
     };
-    // Set View
-    // const fetchSetById = async (Id) => {
-    //     try {
-    //         const response = await fetch(`${config.API_BASE_URL}api/Procedure/GetData`, {
-    //             method: 'POST',
-    //             headers: {
-    //                 TenantId: loginData.tenantId,
-    //                 'Content-Type': 'application/json',
-    //             },
-    //             body: JSON.stringify({
-    //                 operation: '',
-    //                 procedureName: 'SP_QuestionSetManage',
-    //                 parameters: {
-    //                     QueryChecker: 3,
-    //                     Id: Id
-    //                 },
-    //             }),
-    //         });
-
-    //         if (!response.ok) throw new Error(await response.text());
-
-    //         const data = await response.json();
-    //         if (data.length === 0) {
-    //             toast.error("No data found for this set");
-    //             setViewData(null);
-    //             return;
-    //         }
-
-    //         const set = {
-    //             Id: data[0].Id,
-    //             SetName: data[0].SetName,
-    //             TotalMark: data[0].TotalMark,
-    //             TotalQuestions: data[0].TotalQuestions,
-    //             Questions: data.map((q) => ({
-    //                 SubjectName: q.SubjectName,
-    //                 QuestionName: q.Question,
-    //                 QnType: q.QnType,
-    //                 Mark: q.Mark,
-    //             })),
-    //         };
-    //         setViewData(set);
-    //     } catch (err) {
-    //         console.error('Error fetching set:', err);
-    //         toast.error('Failed to load set data');
-    //         setViewData(null);
-    //     }
-    // };
 
     const fetchSetById = async (Id) => {
         try {
@@ -244,99 +333,99 @@ export default function AddSet() {
         }
     };
 
-    const handleDownload = async () => {
-        if (!viewData?.Questions || viewData.Questions.length === 0) return;
+    // const handleDownload = async () => {
+    //     if (!viewData?.Questions || viewData.Questions.length === 0) return;
 
-        const doc = new jsPDF({
-            orientation: "portrait",
-            unit: "mm",
-            format: "a4",
-        });
+    //     const doc = new jsPDF({
+    //         orientation: "portrait",
+    //         unit: "mm",
+    //         format: "a4",
+    //     });
 
-        const pageWidth = 210;
-        const pageHeight = 297;
-        const margin = 14;
-        const topMargin = 14;
-        const bottomMargin = 14;
-        const usableWidth = pageWidth - 2 * margin;
-        let y = topMargin;
+    //     const pageWidth = 210;
+    //     const pageHeight = 297;
+    //     const margin = 14;
+    //     const topMargin = 14;
+    //     const bottomMargin = 14;
+    //     const usableWidth = pageWidth - 2 * margin;
+    //     let y = topMargin;
 
-        // Title - Set Name
-        doc.setFontSize(14);
-        doc.setFont("times", "bold");
-        doc.text(`Set Name: ${viewData.SetName || "Question Set"}`, pageWidth / 2, y, { align: "center" });
-        y += 10;
+    //     // Title - Set Name
+    //     doc.setFontSize(14);
+    //     doc.setFont("times", "bold");
+    //     doc.text(`Set Name: ${viewData.SetName || "Question Set"}`, pageWidth / 2, y, { align: "center" });
+    //     y += 10;
 
-        // Basic Info
-        doc.setFontSize(10);
-        doc.setFont("times", "normal");
-        doc.text(
-            `Total Questions: ${viewData.TotalQuestions || 0} | Total Marks: ${viewData.TotalMark || 0}`,
-            pageWidth / 2,
-            y,
-            { align: "center" }
-        );
-        y += 10;
+    //     // Basic Info
+    //     doc.setFontSize(10);
+    //     doc.setFont("times", "normal");
+    //     doc.text(
+    //         `Total Questions: ${viewData.TotalQuestions || 0} | Total Marks: ${viewData.TotalMark || 0}`,
+    //         pageWidth / 2,
+    //         y,
+    //         { align: "center" }
+    //     );
+    //     y += 10;
 
-        // Group questions by subject
-        const groupedQuestions = Object.entries(
-            viewData.Questions.reduce((acc, q) => {
-                if (!acc[q.subjectName]) acc[q.subjectName] = [];
-                acc[q.subjectName].push(q);
-                return acc;
-            }, {})
-        );
+    //     // Group questions by subject
+    //     const groupedQuestions = Object.entries(
+    //         viewData.Questions.reduce((acc, q) => {
+    //             if (!acc[q.subjectName]) acc[q.subjectName] = [];
+    //             acc[q.subjectName].push(q);
+    //             return acc;
+    //         }, {})
+    //     );
 
-        let questionCounter = 1; // continuous numbering across subjects
+    //     let questionCounter = 1; // continuous numbering across subjects
 
-        // Loop through subjects
-        for (const [subject, questions] of groupedQuestions) {
-            // Subject Header
-            if (y + 10 > pageHeight - bottomMargin) {
-                doc.addPage();
-                y = topMargin;
-            }
-            doc.setFont("times", "bold");
-            doc.setFontSize(12);
-            doc.text(`${subject} (${questions.length})`, margin, y);
-            y += 6;
+    //     // Loop through subjects
+    //     for (const [subject, questions] of groupedQuestions) {
+    //         // Subject Header
+    //         if (y + 10 > pageHeight - bottomMargin) {
+    //             doc.addPage();
+    //             y = topMargin;
+    //         }
+    //         doc.setFont("times", "bold");
+    //         doc.setFontSize(12);
+    //         doc.text(`${subject} (${questions.length})`, margin, y);
+    //         y += 6;
 
-            // Loop through questions
-            questions.forEach((q) => {
-                if (y + 8 > pageHeight - bottomMargin) {
-                    doc.addPage();
-                    y = topMargin;
-                }
+    //         // Loop through questions
+    //         questions.forEach((q) => {
+    //             if (y + 8 > pageHeight - bottomMargin) {
+    //                 doc.addPage();
+    //                 y = topMargin;
+    //             }
 
-                doc.setFont("times", "normal");
-                doc.setFontSize(10);
+    //             doc.setFont("times", "normal");
+    //             doc.setFontSize(10);
 
-                // Question text
-                const questionLines = doc.splitTextToSize(`${questionCounter}. ${q.question}`, usableWidth - 50);
-                questionLines.forEach((line, index) => {
-                    doc.text(line, margin, y);
+    //             // Question text
+    //             const questionLines = doc.splitTextToSize(`${questionCounter}. ${q.question}`, usableWidth - 50);
+    //             questionLines.forEach((line, index) => {
+    //                 doc.text(line, margin, y);
 
-                    // Add marks only on the first line of the question
-                    if (index === 0) {
-                        const markText = `Mark: ${q.qnMark || 0}`;
-                        doc.setFont("times", "bold");
-                        doc.text(markText, pageWidth - margin, y, { align: "right" });
-                        doc.setFont("times", "normal");
-                    }
+    //                 // Add marks only on the first line of the question
+    //                 if (index === 0) {
+    //                     const markText = `Mark: ${q.qnMark || 0}`;
+    //                     doc.setFont("times", "bold");
+    //                     doc.text(markText, pageWidth - margin, y, { align: "right" });
+    //                     doc.setFont("times", "normal");
+    //                 }
 
-                    y += 5;
-                });
+    //                 y += 5;
+    //             });
 
-                y += 4; // spacing after each question
-                questionCounter++;
-            });
+    //             y += 4; // spacing after each question
+    //             questionCounter++;
+    //         });
 
-            y += 6; // spacing after each subject
-        }
+    //         y += 6; // spacing after each subject
+    //     }
 
-        // Save PDF
-        doc.save(`${viewData.SetName || "QuestionSet"}_questions.pdf`);
-    };
+    //     // Save PDF
+    //     doc.save(`${viewData.SetName || "QuestionSet"}_questions.pdf`);
+    // };
 
 
 
