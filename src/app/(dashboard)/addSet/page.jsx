@@ -33,6 +33,7 @@ export default function AddSet() {
     const [selectedQuestions, setSelectedQuestions] = useState([]);
     const [viewData, setViewData] = useState(null);
     // const doc = new jsPDF();
+    //For Image
     const toBase64 = async (url) => {
         const res = await fetch(url);
         const blob = await res.blob();
@@ -44,6 +45,7 @@ export default function AddSet() {
         });
     };
 
+// For Bangla Font
     const loadBanglaFont = async () => {
         const loadFont = async (url) => {
             const res = await fetch(url);
@@ -69,9 +71,8 @@ export default function AddSet() {
             "NotoSansBengali-Bold.ttf": bold
         };
     };
-
-    
-
+ 
+//For Download Pdf
     const handleDownload = async () => {
         if (!viewData?.Questions || viewData.Questions.length === 0) return;
 
@@ -160,7 +161,6 @@ export default function AddSet() {
 
         pdfMake.createPdf(docDefinition).download(`QuestionSet_${viewData.SetName || "QuestionSet"}.pdf`);
     };
-
 
 
     const fetchSetData = async () => {
@@ -347,7 +347,7 @@ export default function AddSet() {
             <div className="mb-1">
                 <h1 className="text-2xl font-bold text-gray-800">Question Set</h1>
             </div>
-            <div className="rounded-md font-roboto overflow-hidden shadow-md">
+            <div className="rounded-sm font-roboto overflow-hidden shadow-md">
                 <div className="bg-gradient-to-r from-[#2c3e50] to-[#3498db] sticky top-0 z-20">
                     {/* Search & Actions */}
                     <div className="px-3 py-2 flex flex-wrap justify-between items-center gap-3">
@@ -469,7 +469,7 @@ export default function AddSet() {
                     <div className="fixed inset-0 bg-black/40 z-50 flex items-center justify-center">
                         <div
                             data-aos="zoom-in"
-                            className="bg-white rounded-2xl shadow-2xl w-full max-w-4xl relative overflow-y-auto max-h-[90vh] p-6"
+                            className="bg-white rounded-sm shadow-2xl w-full max-w-4xl relative overflow-y-auto max-h-[90vh] p-6"
                         >
                             {/* Close Button */}
                             <button
