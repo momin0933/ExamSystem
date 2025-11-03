@@ -12,7 +12,6 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import * as XLSX from 'xlsx';
 // import jsPDF from "jspdf";
 // import autoTable from "jspdf-autotable";
-
 import pdfMake from "pdfmake/build/pdfmake";
 
 
@@ -30,331 +29,201 @@ export default function AddSet() {
     const [deleteSuccessMsg, setDeleteSuccessMsg] = useState('');
     const [subjectData, setSubjectData] = useState([]);
     const [isViewModalOpen, setIsViewModalOpen] = useState(false);
-    
-
     // Form/Edit/View States
-
     const [selectedQuestions, setSelectedQuestions] = useState([]);
     const [viewData, setViewData] = useState(null);
     // const doc = new jsPDF();
-
     const toBase64 = async (url) => {
-  const res = await fetch(url);
-  const blob = await res.blob();
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onloadend = () => resolve(reader.result);
-    reader.onerror = reject;
-    reader.readAsDataURL(blob);
-  });
-};
+        const res = await fetch(url);
+        const blob = await res.blob();
+        return new Promise((resolve, reject) => {
+            const reader = new FileReader();
+            reader.onloadend = () => resolve(reader.result);
+            reader.onerror = reject;
+            reader.readAsDataURL(blob);
+        });
+    };
 
-//     const loadBanglaFont = async (doc) => {
-//         debugger;
-//     try {
-//         const fontUrl = "/fonts/NotoSansBengali-Regular.ttf";
-//         const res = await fetch(fontUrl);
-//         if (!res.ok) throw new Error("Font not found");
+    const loadBanglaFont = async () => {
+        const loadFont = async (url) => {
+            const res = await fetch(url);
+            const buffer = await res.arrayBuffer();
+            const bytes = new Uint8Array(buffer);
+            let binary = "";
+            const chunkSize = 0x8000;
+            for (let i = 0; i < bytes.length; i += chunkSize) {
+                const chunk = bytes.subarray(i, i + chunkSize);
+                binary += String.fromCharCode.apply(null, chunk);
+            }
+            return btoa(binary);
+        };
 
-//         const buffer = await res.arrayBuffer();
-//         const bytes = new Uint8Array(buffer);
-//         let binary = "";
-//         const chunkSize = 0x8000;
+        const normal = await loadFont("/fonts/NotoSansBengali-Regular.ttf");
+        const bold = await loadFont("/fonts/NotoSansBengali-Bold.ttf");
 
-//         for (let i = 0; i < bytes.length; i += chunkSize) {
-//             const chunk = bytes.subarray(i, i + chunkSize);
-//             binary += String.fromCharCode.apply(null, chunk);
-//         }
+        pdfMake.fonts = {
+            NotoBengali: { normal: "NotoSansBengali-Regular.ttf", bold: "NotoSansBengali-Bold.ttf" }
+        };
+        pdfMake.vfs = {
+            "NotoSansBengali-Regular.ttf": normal,
+            "NotoSansBengali-Bold.ttf": bold
+        };
+    };
 
-//         const base64 = btoa(binary);
+    // const handleDownload = async () => {
+    //     if (!viewData?.Questions || viewData.Questions.length === 0) return;
 
-//         // Add font to jsPDF
-//         doc.addFileToVFS("NotoSansBengali-Regular.ttf", base64);
-//         doc.addFont("NotoSansBengali-Regular.ttf", "NotoSansBengali", "normal");
+    //     await loadBanglaFont();
 
-//         // Set font
-//         doc.setFont("NotoSansBengali", "normal");
-//         return true; // font loaded successfully
-//     } catch (err) {
-//         console.error("Error loading Bangla font:", err);
-//         doc.setFont("times", "normal"); // fallback
-//         return false;
-//     }
-// };
+    //     const content = [
+    //         { text: viewData.SetName || "Question Set", style: "header" },
+    //         {
+    //             text: `Total Questions: ${viewData.TotalQuestions || 0} | Total Marks: ${viewData.TotalMark || 0}`,
+    //             style: "subheader"
+    //         }
+    //     ];
 
-const loadBanglaFont = async () => {
-  const loadFont = async (url) => {
-    const res = await fetch(url);
-    const buffer = await res.arrayBuffer();
-    const bytes = new Uint8Array(buffer);
-    let binary = "";
-    const chunkSize = 0x8000;
-    for (let i = 0; i < bytes.length; i += chunkSize) {
-      const chunk = bytes.subarray(i, i + chunkSize);
-      binary += String.fromCharCode.apply(null, chunk);
-    }
-    return btoa(binary);
-  };
+    //     const groupedQuestions = Object.entries(
+    //         viewData.Questions.reduce((acc, q) => {
+    //             if (!acc[q.subjectName]) acc[q.subjectName] = [];
+    //             acc[q.subjectName].push(q);
+    //             return acc;
+    //         }, {})
+    //     );
 
-  const normal = await loadFont("/fonts/NotoSansBengali-Regular.ttf");
-  const bold = await loadFont("/fonts/NotoSansBengali-Bold.ttf");
+    //     for (const [subject, questions] of groupedQuestions) {
+    //         content.push({ text: `${subject} (${questions.length})`, style: "subject" });
 
-  pdfMake.fonts = {
-    NotoBengali: { normal: "NotoSansBengali-Regular.ttf", bold: "NotoSansBengali-Bold.ttf" }
-  };
-  pdfMake.vfs = {
-    "NotoSansBengali-Regular.ttf": normal,
-    "NotoSansBengali-Bold.ttf": bold
-  };
-};
+    //         for (const [idx, q] of questions.entries()) {
+    //             // Question text
+    //             content.push({ text: `${idx + 1}. ${q.question}`, style: "question" });
 
-// const handleDownload = async () => {
-//   if (!viewData?.Questions || viewData.Questions.length === 0) return;
+    //             // Question image if exists
+    //             if (q.qnImage) {
+    //                 try {
+    //                     const imgData = await toBase64(q.qnImage);
+    //                     content.push({
+    //                         image: imgData,
+    //                         width: 250, // adjust as needed
+    //                         margin: [0, 5, 0, 5]
+    //                     });
+    //                 } catch (err) {
+    //                     console.error("Image load error:", err);
+    //                 }
+    //             }
 
-//   await loadBanglaFont();
+    //             // MCQ options
+    //             if (q.qnType === "MCQ" && q.options && q.options.length > 0) {
+    //                 for (const [i, opt] of q.options.entries()) {
+    //                     content.push({ text: `${String.fromCharCode(65 + i)}. ${opt.text}`, style: "option" });
+    //                 }
+    //             }
+    //         }
+    //     }
 
-//   const content = [
-//     { text: viewData.SetName || "Question Set", style: "header" },
-//     {
-//       text: `Total Questions: ${viewData.TotalQuestions || 0} | Total Marks: ${viewData.TotalMark || 0}`,
-//       style: "subheader"
-//     }
-//   ];
+    //     const docDefinition = {
+    //         content,
+    //         defaultStyle: { font: "NotoBengali" },
+    //         styles: {
+    //             header: { fontSize: 18, bold: true, margin: [0, 0, 0, 10] },
+    //             subheader: { fontSize: 12, margin: [0, 0, 0, 10] },
+    //             subject: { fontSize: 14, bold: true, margin: [0, 5, 0, 5] },
+    //             question: { fontSize: 12, margin: [0, 2, 0, 2] },
+    //             option: { fontSize: 11, margin: [10, 1, 0, 1] },
+    //         },
+    //     };
 
-//   Object.entries(
-//     viewData.Questions.reduce((acc, q) => {
-//       if (!acc[q.subjectName]) acc[q.subjectName] = [];
-//       acc[q.subjectName].push(q);
-//       return acc;
-//     }, {})
-//   ).forEach(([subject, questions]) => {
-//     content.push({ text: `${subject} (${questions.length})`, style: "subject" });
+    //     pdfMake.createPdf(docDefinition).download(`${viewData.SetName || "QuestionSet"}.pdf`);
+    // };
 
-//     questions.forEach((q, idx) => {
-//       content.push({ text: `${idx + 1}. ${q.question}`, style: "question" });
-//       if (q.qnType === "MCQ" && q.options && q.options.length > 0) {
-//         q.options.forEach((opt, i) => {
-//           content.push({ text: `${String.fromCharCode(65 + i)}. ${opt.text}`, style: "option" });
-//         });
-//       }
-//     });
-//   });
+    const handleDownload = async () => {
+        if (!viewData?.Questions || viewData.Questions.length === 0) return;
 
-//   const docDefinition = {
-//     content,
-//     defaultStyle: { font: "NotoBengali" },
-//     styles: {
-//       header: { fontSize: 18, bold: true, margin: [0, 0, 0, 10] },
-//       subheader: { fontSize: 12, margin: [0, 0, 0, 10] },
-//       subject: { fontSize: 14, bold: true, margin: [0, 5, 0, 5] },
-//       question: { fontSize: 12, margin: [0, 2, 0, 2] },
-//       option: { fontSize: 11, margin: [10, 1, 0, 1] },
-//     },
-//   };
+        await loadBanglaFont();
+        const content = [
+            {
+                // text: viewData.SetName || "Question Set",
+                text: `Question Set: ${viewData.SetName || "Question Set"}`,
+                style: "header",
+                alignment: "center"  
+            },
+            {
+                text: `Total Questions: ${viewData.TotalQuestions || 0} | Total Marks: ${viewData.TotalMark || 0}`,
+                style: "subheader",
+                alignment: "center"  
+            }
+        ];
 
-//   pdfMake.createPdf(docDefinition).download(`${viewData.SetName || "QuestionSet"}.pdf`);
-// };
+        const groupedQuestions = Object.entries(
+            viewData.Questions.reduce((acc, q) => {
+                if (!acc[q.subjectName]) acc[q.subjectName] = [];
+                acc[q.subjectName].push(q);
+                return acc;
+            }, {})
+        );
 
-const handleDownload = async () => {
-  if (!viewData?.Questions || viewData.Questions.length === 0) return;
+        for (const [subject, questions] of groupedQuestions) {
+            // Subject header
+            content.push({ text: `${subject} (${questions.length})`, style: "subject" });
 
-  await loadBanglaFont();
+            for (const [idx, q] of questions.entries()) {
+              
+                content.push({
+                    table: {
+                        widths: ['*', 50], 
+                        body: [
+                            [
+                                { text: `${idx + 1}. ${q.question}`, style: "question" },
+                                { text: `Mark: ${q.qnMark || 0}`, style: "mark", alignment: "right" }
+                            ]
+                        ]
+                    },
+                    layout: 'noBorders',
+                    margin: [0, 2, 0, 2]
+                });
 
-  const content = [
-    { text: viewData.SetName || "Question Set", style: "header" },
-    {
-      text: `Total Questions: ${viewData.TotalQuestions || 0} | Total Marks: ${viewData.TotalMark || 0}`,
-      style: "subheader"
-    }
-  ];
+                // Question image
+                if (q.qnImage) {
+                    try {
+                        const imgData = await toBase64(q.qnImage);
+                        content.push({
+                            image: imgData,
+                            width: 200,
+                            margin: [0, 5, 0, 5]
+                        });
+                    } catch (err) {
+                        console.error("Image load error:", err);
+                    }
+                }
 
-  const groupedQuestions = Object.entries(
-    viewData.Questions.reduce((acc, q) => {
-      if (!acc[q.subjectName]) acc[q.subjectName] = [];
-      acc[q.subjectName].push(q);
-      return acc;
-    }, {})
-  );
-
-  for (const [subject, questions] of groupedQuestions) {
-    content.push({ text: `${subject} (${questions.length})`, style: "subject" });
-
-    for (const [idx, q] of questions.entries()) {
-      // Question text
-      content.push({ text: `${idx + 1}. ${q.question}`, style: "question" });
-
-      // Question image if exists
-      if (q.qnImage) {
-        try {
-          const imgData = await toBase64(q.qnImage);
-          content.push({
-            image: imgData,
-            width: 250, // adjust as needed
-            margin: [0, 5, 0, 5]
-          });
-        } catch (err) {
-          console.error("Image load error:", err);
+                // MCQ options
+                if (q.qnType === "MCQ" && q.options && q.options.length > 0) {
+                    for (const [i, opt] of q.options.entries()) {
+                        content.push({
+                            text: `${String.fromCharCode(65 + i)}. ${opt.text}${opt.isCorrect ? ' ✓' : ''}`,
+                            style: "option",
+                            margin: [10, 1, 0, 1]
+                        });
+                    }
+                }
+            }
         }
-      }
 
-      // MCQ options
-      if (q.qnType === "MCQ" && q.options && q.options.length > 0) {
-        for (const [i, opt] of q.options.entries()) {
-          content.push({ text: `${String.fromCharCode(65 + i)}. ${opt.text}`, style: "option" });
-        }
-      }
-    }
-  }
+        const docDefinition = {
+            content,
+            defaultStyle: { font: "NotoBengali" },
+            styles: {
+                header: { fontSize: 15, bold: true, margin: [0, 0, 0, 10] },
+                subheader: { fontSize: 13, margin: [0, 0, 0, 10] },
+                subject: { fontSize: 13, bold: true, margin: [0, 5, 0, 5] },
+                question: { fontSize: 12 },
+                mark: { fontSize: 12},
+                option: { fontSize: 11 }
+            }
+        };
 
-  const docDefinition = {
-    content,
-    defaultStyle: { font: "NotoBengali" },
-    styles: {
-      header: { fontSize: 18, bold: true, margin: [0, 0, 0, 10] },
-      subheader: { fontSize: 12, margin: [0, 0, 0, 10] },
-      subject: { fontSize: 14, bold: true, margin: [0, 5, 0, 5] },
-      question: { fontSize: 12, margin: [0, 2, 0, 2] },
-      option: { fontSize: 11, margin: [10, 1, 0, 1] },
-    },
-  };
-
-  pdfMake.createPdf(docDefinition).download(`${viewData.SetName || "QuestionSet"}.pdf`);
-};
-
-
-
-
-// const handleDownload = async () => {
-//     debugger;
-//   if (!viewData?.Questions || viewData.Questions.length === 0) return;
-
-//   const doc = new jsPDF({ orientation: "portrait", unit: "mm", format: "a4" });
-//   console.log("Download Question",doc)
-
-//   const fontLoaded = await loadBanglaFont(doc);
-//    console.log("Download Question font",fontLoaded)
-//    debugger;
-
-//   const pageWidth = 210, pageHeight = 297, margin = 14, topMargin = 14, bottomMargin = 14;
-//   const usableWidth = pageWidth - 2 * margin;
-//   let y = topMargin;
-
-//   // Title
-//   doc.setFontSize(14);
-//   doc.setFont(fontLoaded ? "NotoSansBengali" : "times", "bold");
-//   doc.text(` ${viewData.SetName || "Question Set"}`, pageWidth / 2, y, { align: "center" });
-//   y += 10;
-
-//   // Info
-//   doc.setFontSize(10);
-//   doc.setFont(fontLoaded ? "NotoSansBengali" : "times", "normal");
-//   doc.text(
-//     `Total Question: ${viewData.TotalQuestions || 0} | Mark: ${viewData.TotalMark || 0}`,
-//     pageWidth / 2,
-//     y,
-//     { align: "center" }
-//   );
-//   y += 10;
-
-//   // Group questions
-//   const groupedQuestions = Object.entries(
-//     viewData.Questions.reduce((acc, q) => {
-//       if (!acc[q.subjectName]) acc[q.subjectName] = [];
-//       acc[q.subjectName].push(q);
-//       return acc;
-//     }, {})
-//   );
-
-//   let questionCounter = 1;
-
-//   for (const [subject, questions] of groupedQuestions) {
-//     // Subject Header
-//     if (y + 10 > pageHeight - bottomMargin) {
-//       doc.addPage();
-//       y = topMargin;
-//     }
-//     doc.setFont("NotoSansBengali", "bold");
-//     doc.setFontSize(12);
-//     doc.text(`${subject} (${questions.length})`, margin, y);
-//     y += 6;
-
-//     for (const q of questions) {
-//       if (y + 8 > pageHeight - bottomMargin) {
-//         doc.addPage();
-//         y = topMargin;
-//       }
-
-//       doc.setFont("NotoSansBengali", "normal");
-//       doc.setFontSize(10);
-
-//       // Question text
-//       const questionLines = doc.splitTextToSize(`${questionCounter}. ${q.question}`, usableWidth - 50);
-//       questionLines.forEach((line, index) => {
-//         doc.text(line, margin, y);
-//         if (index === 0) {
-//           const markText = `Mark: ${q.qnMark || 0}`;
-//           doc.setFont("NotoSansBengali", "bold");
-//           doc.text(markText, pageWidth - margin, y, { align: "right" });
-//           doc.setFont("NotoSansBengali", "normal");
-//         }
-//         y += 5;
-//       });
-//       y += 2;
-
-//       //  Add question image if available
-//       if (q.qnImage) {
-//         try {
-//           const imgData = await toBase64(q.qnImage);
-//           const imgHeight = 40; // adjust height
-//           const imgWidth = usableWidth - 100;
-
-//           if (y + imgHeight > pageHeight - bottomMargin) {
-//             doc.addPage();
-//             y = topMargin;
-//           }
-
-//           doc.addImage(imgData, "JPEG", margin + 10, y, imgWidth, imgHeight);
-//           y += imgHeight + 4;
-//         } catch (err) {
-//           console.error("Image load error:", err);
-//         }
-//       }
-
-//       // MCQ Options
-//       if (q.qnType === "MCQ" && q.options && q.options.length > 0) {
-//         q.options.forEach((opt, i) => {
-//           const optText = `${String.fromCharCode(65 + i)}. ${opt.text}${opt.isCorrect ? " ✓" : ""}`;
-//           const optionLines = doc.splitTextToSize(optText, usableWidth - 30);
-//           optionLines.forEach((line) => {
-//             doc.text(line, margin + 6, y);
-//             y += 5;
-//           });
-//           y += 1;
-//         });
-//       }
-
-//       y += 4;
-//       questionCounter++;
-//     }
-
-//     y += 6;
-//   }
-
-//   doc.save(`${viewData.SetName || "QuestionSet"}_questions.pdf`);
-// };
-
-// //  Helper: Convert image URL to Base64
-// const toBase64 = async (url) => {
-//   const res = await fetch(url);
-//   const blob = await res.blob();
-//   return new Promise((resolve, reject) => {
-//     const reader = new FileReader();
-//     reader.onloadend = () => resolve(reader.result);
-//     reader.onerror = reject;
-//     reader.readAsDataURL(blob);
-//   });
-// };
-
+        pdfMake.createPdf(docDefinition).download(`${viewData.SetName || "QuestionSet"}.pdf`);
+    };
 
 
 
@@ -522,101 +391,6 @@ const handleDownload = async () => {
             setIsDeleteModalOpen(false);
         }
     };
-
-    // const handleDownload = async () => {
-    //     if (!viewData?.Questions || viewData.Questions.length === 0) return;
-
-    //     const doc = new jsPDF({
-    //         orientation: "portrait",
-    //         unit: "mm",
-    //         format: "a4",
-    //     });
-
-    //     const pageWidth = 210;
-    //     const pageHeight = 297;
-    //     const margin = 14;
-    //     const topMargin = 14;
-    //     const bottomMargin = 14;
-    //     const usableWidth = pageWidth - 2 * margin;
-    //     let y = topMargin;
-
-    //     // Title - Set Name
-    //     doc.setFontSize(14);
-    //     doc.setFont("times", "bold");
-    //     doc.text(`Set Name: ${viewData.SetName || "Question Set"}`, pageWidth / 2, y, { align: "center" });
-    //     y += 10;
-
-    //     // Basic Info
-    //     doc.setFontSize(10);
-    //     doc.setFont("times", "normal");
-    //     doc.text(
-    //         `Total Questions: ${viewData.TotalQuestions || 0} | Total Marks: ${viewData.TotalMark || 0}`,
-    //         pageWidth / 2,
-    //         y,
-    //         { align: "center" }
-    //     );
-    //     y += 10;
-
-    //     // Group questions by subject
-    //     const groupedQuestions = Object.entries(
-    //         viewData.Questions.reduce((acc, q) => {
-    //             if (!acc[q.subjectName]) acc[q.subjectName] = [];
-    //             acc[q.subjectName].push(q);
-    //             return acc;
-    //         }, {})
-    //     );
-
-    //     let questionCounter = 1; // continuous numbering across subjects
-
-    //     // Loop through subjects
-    //     for (const [subject, questions] of groupedQuestions) {
-    //         // Subject Header
-    //         if (y + 10 > pageHeight - bottomMargin) {
-    //             doc.addPage();
-    //             y = topMargin;
-    //         }
-    //         doc.setFont("times", "bold");
-    //         doc.setFontSize(12);
-    //         doc.text(`${subject} (${questions.length})`, margin, y);
-    //         y += 6;
-
-    //         // Loop through questions
-    //         questions.forEach((q) => {
-    //             if (y + 8 > pageHeight - bottomMargin) {
-    //                 doc.addPage();
-    //                 y = topMargin;
-    //             }
-
-    //             doc.setFont("times", "normal");
-    //             doc.setFontSize(10);
-
-    //             // Question text
-    //             const questionLines = doc.splitTextToSize(`${questionCounter}. ${q.question}`, usableWidth - 50);
-    //             questionLines.forEach((line, index) => {
-    //                 doc.text(line, margin, y);
-
-    //                 // Add marks only on the first line of the question
-    //                 if (index === 0) {
-    //                     const markText = `Mark: ${q.qnMark || 0}`;
-    //                     doc.setFont("times", "bold");
-    //                     doc.text(markText, pageWidth - margin, y, { align: "right" });
-    //                     doc.setFont("times", "normal");
-    //                 }
-
-    //                 y += 5;
-    //             });
-
-    //             y += 4; // spacing after each question
-    //             questionCounter++;
-    //         });
-
-    //         y += 6; // spacing after each subject
-    //     }
-
-    //     // Save PDF
-    //     doc.save(`${viewData.SetName || "QuestionSet"}_questions.pdf`);
-    // };
-
 
 
     const handleDownloadExcel = () => {
