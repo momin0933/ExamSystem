@@ -10,8 +10,6 @@ import { AuthContext } from '../../provider/AuthProvider';
 import { toast } from 'react-hot-toast';
 import { useRouter, useSearchParams } from 'next/navigation';
 import * as XLSX from 'xlsx';
-// import jsPDF from "jspdf";
-// import autoTable from "jspdf-autotable";
 import pdfMake from "pdfmake/build/pdfmake";
 
 
@@ -32,7 +30,7 @@ export default function AddSet() {
     // Form/Edit/View States
     const [selectedQuestions, setSelectedQuestions] = useState([]);
     const [viewData, setViewData] = useState(null);
-    // const doc = new jsPDF();
+
     //For Image
     const toBase64 = async (url) => {
         const res = await fetch(url);
