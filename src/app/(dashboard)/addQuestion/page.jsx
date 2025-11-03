@@ -444,7 +444,7 @@ export default function AddQuestion() {
 
             {isViewModalOpen && viewData && (
                 <div className="fixed inset-0 bg-black/30 z-50 flex items-center justify-center p-4">
-                    <div data-aos="zoom-in" className="bg-white rounded-xl shadow-xl p-6 w-full max-w-lg relative overflow-y-auto max-h-[90vh]">
+                    <div data-aos="zoom-in" className="bg-white rounded-sm shadow-xl p-6 w-full max-w-lg relative overflow-y-auto max-h-[90vh]">
                         {/* Close Button */}
                         <button
                             onClick={() => setIsViewModalOpen(false)}

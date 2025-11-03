@@ -423,11 +423,10 @@ export default function AddExam() {
       `}</style>
 
             <div className="rounded-md font-roboto overflow-hidden">
-                <div className="mb-6">
+                <div className="mb-2">
                     <h1 className="text-2xl font-bold text-gray-800">Participant Management</h1>
                 </div>
                 <div className="bg-gradient-to-r from-[#2c3e50] to-[#3498db] sticky top-0 z-20 shadow-md">
-
                     {/* Header with search and actions */}
                     <div className="px-3 py-2 flex flex-wrap justify-between items-center gap-2">
                         <div className='flex items-center gap-3'>
@@ -464,7 +463,7 @@ export default function AddExam() {
                     </div>
 
                     {/* Participate  table */}
-                    <div className="border border-gray-300 rounded-b-md overflow-hidden max-h-[58vh] overflow-y-auto">
+                    <div className="border border-gray-300 rounded-b-md overflow-hidden max-h-[63vh] overflow-y-auto">
                         <table className="min-w-full text-sm text-left text-gray-600">
                             <thead className="bg-gray-100 text-xs uppercase text-gray-700 sticky top-0 z-10">
                                 <tr className="border-b">
@@ -542,7 +541,7 @@ export default function AddExam() {
 
             {showQuestionModal && (
                 <div className="fixed inset-0 bg-black/40 flex items-start justify-center z-50 p-4 overflow-y-auto">
-                    <div className="bg-white rounded-xl p-6 w-full max-w-4xl mt-10 relative">
+                    <div className="bg-white rounded-sm p-6 w-full max-w-4xl mt-10 relative">
                         {/* Close button */}
                         <button
                             onClick={() => {
