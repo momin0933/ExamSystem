@@ -70,71 +70,7 @@ export default function AddSet() {
         };
     };
 
-    // const handleDownload = async () => {
-    //     if (!viewData?.Questions || viewData.Questions.length === 0) return;
-
-    //     await loadBanglaFont();
-
-    //     const content = [
-    //         { text: viewData.SetName || "Question Set", style: "header" },
-    //         {
-    //             text: `Total Questions: ${viewData.TotalQuestions || 0} | Total Marks: ${viewData.TotalMark || 0}`,
-    //             style: "subheader"
-    //         }
-    //     ];
-
-    //     const groupedQuestions = Object.entries(
-    //         viewData.Questions.reduce((acc, q) => {
-    //             if (!acc[q.subjectName]) acc[q.subjectName] = [];
-    //             acc[q.subjectName].push(q);
-    //             return acc;
-    //         }, {})
-    //     );
-
-    //     for (const [subject, questions] of groupedQuestions) {
-    //         content.push({ text: `${subject} (${questions.length})`, style: "subject" });
-
-    //         for (const [idx, q] of questions.entries()) {
-    //             // Question text
-    //             content.push({ text: `${idx + 1}. ${q.question}`, style: "question" });
-
-    //             // Question image if exists
-    //             if (q.qnImage) {
-    //                 try {
-    //                     const imgData = await toBase64(q.qnImage);
-    //                     content.push({
-    //                         image: imgData,
-    //                         width: 250, // adjust as needed
-    //                         margin: [0, 5, 0, 5]
-    //                     });
-    //                 } catch (err) {
-    //                     console.error("Image load error:", err);
-    //                 }
-    //             }
-
-    //             // MCQ options
-    //             if (q.qnType === "MCQ" && q.options && q.options.length > 0) {
-    //                 for (const [i, opt] of q.options.entries()) {
-    //                     content.push({ text: `${String.fromCharCode(65 + i)}. ${opt.text}`, style: "option" });
-    //                 }
-    //             }
-    //         }
-    //     }
-
-    //     const docDefinition = {
-    //         content,
-    //         defaultStyle: { font: "NotoBengali" },
-    //         styles: {
-    //             header: { fontSize: 18, bold: true, margin: [0, 0, 0, 10] },
-    //             subheader: { fontSize: 12, margin: [0, 0, 0, 10] },
-    //             subject: { fontSize: 14, bold: true, margin: [0, 5, 0, 5] },
-    //             question: { fontSize: 12, margin: [0, 2, 0, 2] },
-    //             option: { fontSize: 11, margin: [10, 1, 0, 1] },
-    //         },
-    //     };
-
-    //     pdfMake.createPdf(docDefinition).download(`${viewData.SetName || "QuestionSet"}.pdf`);
-    // };
+    
 
     const handleDownload = async () => {
         if (!viewData?.Questions || viewData.Questions.length === 0) return;
@@ -222,7 +158,7 @@ export default function AddSet() {
             }
         };
 
-        pdfMake.createPdf(docDefinition).download(`${viewData.SetName || "QuestionSet"}.pdf`);
+        pdfMake.createPdf(docDefinition).download(`QuestionSet_${viewData.SetName || "QuestionSet"}.pdf`);
     };
 
 
