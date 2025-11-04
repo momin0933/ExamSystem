@@ -667,19 +667,19 @@ content.push({
                                     </tr>
                                 ) : (
                                     filteredSet.map((item, index) => (
-                                        <tr key={`${item.value}-${index}`} className="border-b border-gray-300 hover:bg-gray-50">
-                                            <td data-label="SL" className="px-4 py-2">{index + 1}</td>
-                                            <td data-label="Name" className="px-4 py-2">{item.examName}</td>
-                                            <td data-label="Name" className="px-4 py-2">{item.label}</td>
-                                            {/* <td data-label="User ID" className="px-4 py-2">{item.value}</td>
-                                        <td data-label="Password" className="px-4 py-2">{item.password}</td> */}
-                                            <td data-label="Organization" className="px-4 py-2">{item.org}</td>
-                                            <td data-label="Salary" className="px-4 py-2">৳ {item.salary}</td>
-                                            <td data-label="Mobile No" className="px-4 py-2">{item.mobileNo}</td>
-                                            <td data-label="Experience" className="px-4 py-2">{item.experience}</td>
-                                            <td data-label="Notice Period" className="px-4 py-2 text-center">{item.noticePeriod}</td>
-                                            <td data-label="Qn Mark" className="px-4 py-2 text-center">{item.totalQnMark}</td>
-                                            <td data-label="Actions" className="px-4 py-2 text-center">
+                                        <tr key={`${item.value}-${index}`} className="border-b border-gray-300 hover:bg-[#4775a0] group">
+                                            <td data-label="SL" className="px-4 py-1.5 group-hover:text-white">{index + 1}</td>
+                                            <td data-label="Name" className="px-4 py-1.5 group-hover:text-white">{item.examName}</td>
+                                            <td data-label="Name" className="px-4 py-1.5 group-hover:text-white">{item.label}</td>
+                                            {/* <td data-label="User ID" className="px-4 py-1.5">{item.value}</td>
+                                        <td data-label="Password" className="px-4 py-1.5">{item.password}</td> */}
+                                            <td data-label="Organization" className="px-4 py-1.5 group-hover:text-white">{item.org}</td>
+                                            <td data-label="Salary" className="px-4 py-1.5 group-hover:text-white">৳ {item.salary}</td>
+                                            <td data-label="Mobile No" className="px-4 py-1.5 group-hover:text-white">{item.mobileNo}</td>
+                                            <td data-label="Experience" className="px-4 py-1.5 group-hover:text-white">{item.experience}</td>
+                                            <td data-label="Notice Period" className="px-4 py-1.5 group-hover:text-white text-center">{item.noticePeriod}</td>
+                                            <td data-label="Qn Mark" className="px-4 py-1.5 group-hover:text-white text-center">{item.totalQnMark}</td>
+                                            <td data-label="Actions" className="px-4 py-1.5 group-hover:text-white text-center">
                                                 <div className="flex justify-center gap-3">
 
                                                     <button
@@ -688,9 +688,9 @@ content.push({
                                                             setIsEditMode(false);
                                                             setShowQuestionModal(true);
                                                         }}
-                                                        className="flex items-center gap-1 px-3 py-1.5 text-sm font-medium border border-blue-500 text-blue-500 rounded hover:bg-blue-500 hover:text-white transition-colors duration-200"
+                                                        className="flex items-center gap-1 px-3 py-1 text-sm font-medium border border-blue-500 text-blue-500 rounded-sm group-hover:!text-white group-hover:border-white  transition-colors duration-200"
                                                     >
-                                                        <FiEye className="text-base" />
+                                                        <FiEye  />
                                                     </button>
 
                                                     <button
@@ -699,9 +699,9 @@ content.push({
                                                             setIsEditMode(true);
                                                             setShowQuestionModal(true);
                                                         }}
-                                                        className="flex items-center gap-1 px-3 py-1.5 text-sm font-medium border border-green-500 text-green-500 rounded hover:bg-green-500 hover:text-white transition-colors duration-200"
+                                                        className="flex items-center gap-1 px-3 py-1 text-sm font-medium border border-green-500 text-green-500 rounded-sm group-hover:!text-white group-hover:border-white  transition-colors duration-200"
                                                     >
-                                                        <FiCheckCircle className="text-base" />
+                                                        <FiCheckCircle />
                                                     </button>
 
                                                 </div>
