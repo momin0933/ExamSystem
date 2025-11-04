@@ -765,7 +765,7 @@ export default function AddCandidate() {
                             <FaFileExcel onClick={handleDownloadExcel} className="text-lg cursor-pointer text-gray-50" />
                         </div>
                     </div>
-                    <div className="border border-gray-300 rounded-b-md overflow-hidden max-h-[68vh] overflow-y-auto">
+                    <div className="border border-gray-300 rounded-b-md overflow-hidden max-h-[70vh] overflow-y-auto">
                         <table className="min-w-full text-sm text-left text-gray-600">
                             <thead className="bg-gray-100 text-xs uppercase text-gray-700 sticky top-0 z-10">
                                 <tr className="border-b">
@@ -901,7 +901,7 @@ export default function AddCandidate() {
                 <div className="fixed inset-0 bg-black/20 bg-opacity-40 z-50 flex items-center justify-center">
                     <div
                         data-aos="zoom-in"
-                        className="bg-white rounded-lg shadow-md w-full max-w-xl relative overflow-y-auto max-h-[90vh] p-6"
+                        className="bg-white rounded-sm shadow-md w-full max-w-xl relative overflow-y-auto max-h-[90vh] p-6"
                     >
                         <button
                             onClick={() => setShowModal(false)}
@@ -974,7 +974,7 @@ export default function AddCandidate() {
                             </div>
 
                             {/* User Role */}
-                            <div className="flex items-center gap-2 mt-2">
+                            {/* <div className="flex items-center gap-2 mt-2">
                                 <label className="w-1/3 text-sm font-semibold text-gray-700">User Role</label>
                                 <input
                                     type="text"
@@ -982,7 +982,7 @@ export default function AddCandidate() {
                                     readOnly
                                     className="w-full border rounded p-2 bg-gray-100 cursor-not-allowed"
                                 />
-                            </div>
+                            </div> */}
 
                             {/* Exam Dropdown */}
                             <div className="flex items-center gap-2 mt-2">

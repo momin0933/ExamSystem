@@ -588,7 +588,7 @@ export default function AddExam() {
       {/* Add/Edit Exam Modal */}
       {showModal && (
         <div className="fixed inset-0 bg-black/20 bg-opacity-40 z-50 flex items-center justify-center">
-          <div data-aos="zoom-in" className="bg-white rounded-lg shadow-md p-6 w-full max-w-xl relative">
+          <div data-aos="zoom-in" className="bg-white rounded-sm shadow-md p-6 w-full max-w-xl relative">
             <form method="dialog">
               <button
                 onClick={() => setShowModal(false)}
@@ -735,7 +735,7 @@ export default function AddExam() {
         <div className="fixed inset-0 bg-black/40 z-50 flex items-center justify-center">
           <div
             data-aos="zoom-in"
-            className="bg-white rounded-2xl shadow-2xl w-full max-w-4xl relative overflow-y-auto max-h-[90vh] p-6"
+            className="bg-white rounded-sm shadow-2xl w-full max-w-4xl relative overflow-y-auto max-h-[90vh] p-6"
           >
             {/* Close Button */}
             <button
