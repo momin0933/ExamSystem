@@ -7,7 +7,7 @@ import * as XLSX from 'xlsx';
 import Link from 'next/link';
 import { IoMdAddCircle } from 'react-icons/io';
 import toast from 'react-hot-toast';
-import { FiEdit, FiTrash2, FiEye } from "react-icons/fi";
+import { FiEdit, FiTrash2, FiEye, FiX } from "react-icons/fi";
 import DeleteConfirmModal from '../../components/DeleteConfirmModal';
 import AOS from 'aos';
 import 'aos/dist/aos.css';
@@ -699,7 +699,7 @@ export default function AddCandidate() {
         };
     }, []);
     return (
-        <div className="overflow-x-auto p-3">
+        <div className="overflow-x-auto p-2">
             <style jsx>{`
                 .custom-scrollbar::-webkit-scrollbar { display: none; }
                 .custom-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
@@ -729,7 +729,9 @@ export default function AddCandidate() {
                     .fixed-table td:last-child { border-bottom: none; }
                 }
             `}</style>
-
+            <div className="mb-1">
+                <h1 className="text-2xl font-bold text-gray-800">Candidate List</h1>
+            </div>
             <div className="rounded-md font-roboto overflow-hidden">
                 <div className="bg-gradient-to-r from-[#2c3e50] to-[#3498db] sticky top-0 z-20 shadow-md">
                     <div className="px-3 py-2 flex flex-wrap justify-between items-center gap-2">
@@ -765,8 +767,8 @@ export default function AddCandidate() {
                             <FaFileExcel onClick={handleDownloadExcel} className="text-lg cursor-pointer text-gray-50" />
                         </div>
                     </div>
-                    <div className="border border-gray-300 rounded-b-md overflow-hidden max-h-[70vh] overflow-y-auto">
-                        <table className="min-w-full text-sm text-left text-gray-600">
+                    <div className="border border-gray-300 rounded-b-md overflow-hidden max-h-[65vh] overflow-y-auto">
+                        <table className="min-w-full text-sm text-left text-gray-700">
                             <thead className="bg-gray-100 text-xs uppercase text-gray-700 sticky top-0 z-10">
                                 <tr className="border-b">
                                     <th className="px-4 py-2 text-center">SL</th>
@@ -907,23 +909,23 @@ export default function AddCandidate() {
                             onClick={() => setShowModal(false)}
                             className="btn btn-sm btn-circle btn-ghost absolute right-2 top-2"
                         >
-                            ✕
+                            <FiX className="w-4 h-4" />
                         </button>
 
                         <div className="border-b border-gray-300 pb-2 mb-4">
-                            <h3 className="font-bold text-lg">{isEdit ? "Update Candidate" : "Add Candidate"}</h3>
+                            <h3 className="font-bold text-lg text-gray-700">{isEdit ? "Update Candidate" : "Add Candidate"}</h3>
                         </div>
 
                         <form onSubmit={handleSubmit} className="space-y-4 text-sm">
                             {/* Full Name */}
                             <div className="flex items-center gap-2">
-                                <label className="w-1/3 font-semibold text-gray-700">Full Name: <span className="text-red-500">*</span></label>
+                                <label className="w-1/3 font-semibold text-gray-700">Full Name <span className="text-red-500">*</span></label>:
                                 <input
                                     type="text"
                                     name="name"
                                     value={formData.name}
                                     onChange={handleNameChange}
-                                    className="w-full border rounded p-2"
+                                    className="w-full border rounded-sm p-2 focus:outline-none focus:ring-0 focus:ring-blue-400 focus:border-blue-400 transition-colors duration-200"
                                     placeholder="Enter full name"
                                     required
                                 />
@@ -931,19 +933,19 @@ export default function AddCandidate() {
 
                             {/* UserId */}
                             <div className="flex items-center gap-2">
-                                <label className="w-1/3 font-semibold text-gray-700">User ID</label>
+                                <label className="w-1/3 font-semibold text-gray-700">User ID</label>:
                                 <input
                                     type="text"
                                     name="userId"
                                     value={formData.userId || ""}
                                     readOnly
-                                    className="w-full border rounded p-2 bg-gray-100"
+                                    className="w-full border rounded-sm p-2 bg-gray-100 focus:outline-none focus:ring-0 focus:ring-blue-400 focus:border-blue-400 transition-colors duration-200"
                                 />
                             </div>
 
                             {/* Email */}
                             <div className="flex items-center gap-2">
-                                <label className="w-1/3 font-semibold text-gray-700">Email: <span className="text-red-500">*</span></label>
+                                <label className="w-1/3 font-semibold text-gray-700">Email <span className="text-red-500">*</span></label>:
                                 <input
                                     type="email"
                                     name="email"
@@ -951,7 +953,7 @@ export default function AddCandidate() {
                                     onChange={(e) =>
                                         setFormData((prev) => ({ ...prev, email: e.target.value }))
                                     }
-                                    className="w-full border rounded p-2"
+                                    className="w-full border rounded-sm p-2 focus:outline-none focus:ring-0 focus:ring-blue-400 focus:border-blue-400 transition-colors duration-200"
                                     placeholder="Enter email"
                                     required
                                 />
@@ -959,7 +961,7 @@ export default function AddCandidate() {
 
                             {/* Mobile No */}
                             <div className="flex items-center gap-2">
-                                <label className="w-1/3 font-semibold text-gray-700">Mobile No</label>
+                                <label className="w-1/3 font-semibold text-gray-700">Mobile No</label>:
                                 <input
                                     type="text"
                                     name="mobileNo"
@@ -967,7 +969,7 @@ export default function AddCandidate() {
                                     onChange={(e) =>
                                         setFormData((prev) => ({ ...prev, mobileNo: e.target.value }))
                                     }
-                                    className="w-full border rounded p-2"
+                                    className="w-full border rounded-sm p-2 focus:outline-none focus:ring-0 focus:ring-blue-400 focus:border-blue-400 transition-colors duration-200"
                                     placeholder="Enter mobile number"
 
                                 />
@@ -985,8 +987,8 @@ export default function AddCandidate() {
                             </div> */}
 
                             {/* Exam Dropdown */}
-                            <div className="flex items-center gap-2 mt-2">
-                                <label className="w-1/3 text-sm font-semibold text-gray-700">Select Exam: <span className="text-red-500">*</span></label>
+                            <div className="flex items-center gap-2 mt-2 relative z-50">
+                                <label className="w-1/3 text-sm font-semibold text-gray-700">Select Exam <span className="text-red-500">*</span></label>:
                                 <Select
                                     options={exam.map((ex) => ({
                                         value: ex.id,
@@ -1005,10 +1007,22 @@ export default function AddCandidate() {
                                         })
                                     }
                                     placeholder="Select or search exam..."
-                                    className="w-full"
+                                    className="w-full focus:outline-none focus:ring-0 focus:ring-blue-400 focus:border-blue-400 transition-colors duration-200"
                                     isClearable
                                     isSearchable
                                     required
+                                    menuPortalTarget={typeof window !== "undefined" ? document.body : null}
+                                    menuPosition="fixed"
+                                    styles={{
+                                        menuPortal: (base) => ({ ...base, zIndex: 9999 }),
+                                        menu: (base) => ({ ...base, zIndex: 9999 }),
+                                        control: (base) => ({
+                                            ...base,
+                                            minHeight: "36px",
+                                            borderColor: "#D1D5DB",
+                                            "&:hover": { borderColor: "#3B82F6" },
+                                        }),
+                                    }}
                                 />
                             </div>
 
@@ -1046,7 +1060,7 @@ export default function AddCandidate() {
                             }}
                             className="absolute top-4 right-4 text-gray-500 hover:text-gray-800 text-lg font-bold"
                         >
-                            ✕
+                            <FiX className="w-4 h-4" />
                         </button>
 
                         {participateQuestionPaper.length > 0 ? (

@@ -7,12 +7,13 @@ import * as XLSX from 'xlsx';
 import Link from 'next/link';
 import { IoMdAddCircle } from 'react-icons/io';
 import toast from 'react-hot-toast';
-import { FiEdit, FiTrash2, FiEye } from "react-icons/fi";
+import { FiEdit, FiTrash2, FiEye, FiX } from "react-icons/fi";
 import DeleteConfirmModal from '../../components/DeleteConfirmModal';
 import AOS from 'aos';
 import 'aos/dist/aos.css';
-import Select from 'react-select';
-import { useRouter } from 'next/navigation'; // Add this import
+// import Select from 'react-select';
+import { useRouter } from 'next/navigation'; 
+import Select, { components } from "react-select";
 
 export default function AddQuestion() {
     const { loginData } = useContext(AuthContext);
@@ -177,7 +178,7 @@ export default function AddQuestion() {
     const openEditModal = (question) => {
         debugger;
         if (!question?.QuestionId) return console.error("Invalid question ID");
-        
+
         // Redirect to insertQuestion page with edit mode
         router.push(`/insertQuestion?editId=${question.QuestionId}`);
     };
@@ -266,7 +267,7 @@ export default function AddQuestion() {
     }, []);
 
     return (
-        <div className="overflow-x-auto p-3">
+        <div className="overflow-x-auto p-2">
             <style jsx>{`
                 .custom-scrollbar::-webkit-scrollbar { display: none; }
                 .custom-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
@@ -327,42 +328,50 @@ export default function AddQuestion() {
 
                             <div className="w-full sm:w-auto min-w-[180px] max-w-[280px]">
                                 {subjectData.length > 0 && (
-                                    <Select
-                                        name="filterSubject"
-                                        value={
-                                            selectedSubject === ""
-                                                ? { value: "", label: "All Position" }
-                                                : subjectData.find((s) => s.value === selectedSubject) || null
-                                        }
-                                        onChange={(selected) => {
-                                            const subId = selected?.value || "";
-                                            setSelectedSubject(subId);
-                                            fetchQuestionsBySubject(subId);
-                                        }}
-                                        options={[{ value: "", label: "All Position" }, ...subjectData]}
-                                        placeholder="Select or search position..."
-                                        className="w-full"
-                                        classNamePrefix="custom-select"
-                                        isClearable
-                                        isSearchable
-                                        menuPortalTarget={document.body}
-                                        styles={{
-                                            control: (base) => ({
-                                                ...base,
-                                                minHeight: "34px",
-                                                height: "28px",
-                                                borderColor: "#D1D5DB",
-                                                boxShadow: "0 1px 2px rgba(0,0,0,0.05)",
-                                                "&:hover": {
-                                                    borderColor: "#3B82F6",
-                                                },
-                                            }),
-                                            menuPortal: (base) => ({
-                                                ...base,
-                                                zIndex: 9999,
-                                            }),
-                                        }}
-                                    />
+                                <Select
+                                    name="filterSubject"
+                                    value={
+                                        selectedSubject === ""
+                                            ? { value: "", label: "All Position" }
+                                            : subjectData.find((s) => s.value === selectedSubject) || null
+                                    }
+                                    onChange={(selected) => {
+                                        const subId = selected?.value || "";
+                                        setSelectedSubject(subId);
+                                        fetchQuestionsBySubject(subId);
+                                    }}
+                                    options={[{ value: "", label: "All Position" }, ...subjectData]}
+                                    placeholder="Select or search position..."
+                                    className="w-full  text-gray-800"
+                                    classNamePrefix="custom-select"
+                                    isClearable
+                                    isSearchable
+                                    menuPortalTarget={document.body}
+                                    components={{
+                                        ClearIndicator: (props) => {
+                                            // Hide clear indicator if the selected value is "All Position"
+                                            if (props.getValue()[0]?.value === "") return null;
+                                            return <components.ClearIndicator {...props} />;
+                                        },
+                                    }}
+                                    styles={{
+                                        control: (base) => ({
+                                            ...base,
+                                            minHeight: "34px",
+                                            height: "28px",
+                                            borderColor: "#D1D5DB",
+                                            boxShadow: "0 1px 2px rgba(0,0,0,0.05)",
+                                            "&:hover": {
+                                                borderColor: "#3B82F6",
+                                            },
+                                        }),
+                                        menuPortal: (base) => ({
+                                            ...base,
+                                            zIndex: 9999,
+                                        }),
+                                    }}
+                                />
+
                                 )}
                             </div>
                         </div>
@@ -371,7 +380,7 @@ export default function AddQuestion() {
                             <Link
                                 href="/insertQuestion"
                                 className="text-lg text-gray-50 cursor-pointer flex items-center"
-                                
+
                             >
                                 <IoMdAddCircle className="text-xl" />
                             </Link>
@@ -380,7 +389,7 @@ export default function AddQuestion() {
                     </div>
                     <div className="border border-gray-300 rounded-b-md overflow-hidden max-h-[64vh] overflow-y-auto">
                         <table className="min-w-full text-sm text-left text-gray-600">
-                            <thead className="bg-gray-100 text-xs uppercase text-gray-700 sticky top-0">
+                            <thead className="bg-gray-100 text-xs uppercase text-gray-800 sticky top-0">
                                 <tr className="border-b">
                                     <th className="px-4 py-2 text-center">SL</th>
                                     <th className="px-4 py-2">Position</th>
@@ -390,7 +399,7 @@ export default function AddQuestion() {
                                     <th className="px-4 py-2 text-center">Actions</th>
                                 </tr>
                             </thead>
-                            <tbody className="bg-white text-xs text-gray-700">
+                            <tbody className="bg-white text-xs text-gray-800">
                                 {filteredQuestion.length === 0 ? (
                                     <tr>
                                         <td colSpan="6" className="text-center py-4">No data found</td>
@@ -443,44 +452,44 @@ export default function AddQuestion() {
             />
 
             {isViewModalOpen && viewData && (
-                <div className="fixed inset-0 bg-black/30 z-50 flex items-center justify-center p-4">
+               <div className="fixed inset-0 bg-black/20 z-50 flex items-center justify-center">
                     <div data-aos="zoom-in" className="bg-white rounded-sm shadow-xl p-6 w-full max-w-lg relative overflow-y-auto max-h-[90vh]">
                         {/* Close Button */}
                         <button
                             onClick={() => setIsViewModalOpen(false)}
-                            className="absolute right-3 top-3 text-gray-500 hover:text-gray-700 text-lg font-bold"
+                            className="absolute right-3 top-3 text-gray-500 hover:text-gray-800 text-lg font-bold"
                         >
-                            ✕
+                            <FiX className="w-4 h-4" />
                         </button>
 
                         {/* Header */}
                         <div className="border-b border-gray-200 pb-3 mb-4">
-                            <h3 className="text-xl font-semibold text-gray-800">View Question Details</h3>
+                            <h3 className="text-xl font-semibold text-gray-800">Question Details</h3>
                         </div>
 
-                        <div className="space-y-4 text-sm text-gray-700">
+                        <div className="space-y-4 text-sm">
                             {/* Position */}
                             <div className="flex items-center gap-2">
-                                <span className="w-32 font-semibold text-gray-800">Position</span>
-                                <span className="flex-1">{subjectData.find(s => s.value === viewData.SubjectId)?.label || "-"}</span>
+                                <span className="w-32 font-semibold text-gray-800">Position</span>:
+                                <span className="flex-1 text-gray-900">{subjectData.find(s => s.value === viewData.SubjectId)?.label || "-"}</span>
                             </div>
 
                             {/* Question Type */}
                             <div className="flex items-center gap-2">
-                                <span className="w-32 font-semibold text-gray-800">Question Type</span>
-                                <span className="flex-1">{viewData.QnType}</span>
+                                <span className="w-32 font-semibold text-gray-800">Question Type</span>:
+                                <span className="flex-1 text-gray-800">{viewData.QnType}</span>
                             </div>
 
                             {/* Question */}
                             <div className="flex items-start gap-2">
-                                <span className="w-32 font-semibold text-gray-800">Question</span>
-                                <p className="flex-1 whitespace-pre-wrap bg-gray-50 p-2 rounded border border-gray-200">{viewData.Name}</p>
+                                <span className="w-32 font-semibold text-gray-800">Question</span>:
+                                <p className="flex-1 text-gray-800">{viewData.Name}</p>
                             </div>
 
                             {/* Mark */}
                             <div className="flex items-center gap-2">
-                                <span className="w-32 font-semibold text-gray-800">Mark</span>
-                                <span className="flex-1">{viewData.Mark}</span>
+                                <span className="w-32 font-semibold text-gray-800">Mark</span>:
+                                <span className="flex-1 text-gray-800">{viewData.Mark}</span>
                             </div>
 
                             {/* MCQ Options */}
@@ -511,7 +520,7 @@ export default function AddQuestion() {
                             <div className="flex justify-end pt-4">
                                 <button
                                     onClick={() => setIsViewModalOpen(false)}
-                                    className="px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition"
+                                    className="px-5 py-2.5 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition"
                                 >
                                     Close
                                 </button>

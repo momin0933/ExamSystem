@@ -3,7 +3,7 @@ import config from '@/config';
 import Link from 'next/link';
 import { IoMdAddCircle } from 'react-icons/io';
 import { FaFileExcel } from 'react-icons/fa';
-import { FiEdit, FiTrash2, FiEye } from "react-icons/fi";
+import { FiEdit, FiTrash2, FiEye,FiX } from "react-icons/fi";
 import { useState, useEffect, useContext } from 'react';
 import DeleteConfirmModal from '../../components/DeleteConfirmModal';
 import { AuthContext } from '../../provider/AuthProvider';
@@ -341,7 +341,7 @@ export default function AddSet() {
         };
     }, []);
     return (
-        <div className="overflow-x-auto p-3">
+        <div className="overflow-x-auto p-2">
             <div className="mb-1">
                 <h1 className="text-2xl font-bold text-gray-800">Question Set</h1>
             </div>
@@ -383,9 +383,9 @@ export default function AddSet() {
 
                     {/* Set List Table */}
                     <div className="border border-gray-300 rounded-b-md overflow-hidden max-h-[65vh] overflow-y-auto">
-                        <table className="min-w-full text-sm text-left text-gray-600">
+                        <table className="min-w-full text-sm text-left">
                             {/* <thead className="bg-gray-100 text-xs uppercase text-gray-700"> */}
-                            <thead className="bg-gray-100 text-xs uppercase text-gray-700 sticky top-0 z-10">
+                            <thead className="bg-gray-100 text-xs uppercase text-gray-800 sticky top-0 z-10">
                                 <tr className="border-b">
                                     <th className="px-4 py-2 text-center ">SL</th>
                                     <th className="px-4 py-2 text-center ">Set Name</th>
@@ -426,7 +426,7 @@ export default function AddSet() {
                                     ))
                                 )}
                             </tbody> */}
-                            <tbody className="bg-white text-xs text-gray-700">
+                            <tbody className="bg-white text-xs text-gray-800">
                                 {filteredSet.length === 0 ? (
                                     <tr><td colSpan="5" className="text-center py-4">No data found</td></tr>
                                 ) : (
@@ -474,20 +474,20 @@ export default function AddSet() {
                                 onClick={() => setIsViewModalOpen(false)}
                                 className="absolute top-4 right-4 text-gray-400 hover:text-gray-700 font-bold transition"
                             >
-                                ✕
+                                <FiX className="w-4 h-4" />
                             </button>
 
                             {/* Header */}
                             <div className="mb-6 text-center">
-                                <h3 className="text-2xl font-bold text-gray-800">View Question Set</h3>
+                                <h3 className="text-2xl font-bold text-gray-800">Question Set: <span className="font-normal">{viewData.SetName}</span></h3>
                             </div>
 
                             {/* Basic Info */}
                             <div className="flex flex-wrap justify-between items-center gap-4 text-gray-700 text-sm font-medium mb-6">
-                                <span>
+                                {/* <span>
                                     <b>Set Name: </b>
                                     <span className="font-normal">{viewData.SetName}</span>
-                                </span>
+                                </span> */}
                                 <span>
                                     <b>Total Question: </b>
                                     <span className="font-normal">{viewData.TotalQuestions}</span>
@@ -560,24 +560,24 @@ export default function AddSet() {
                                     ).map(([subject, questions]) => (
                                         <div key={subject} className="mb-6">
                                             {/* Subject Header */}
-                                            <h4 className="text-lg font-bold text-gray-800 mb-3">{subject} ({questions.length})</h4>
+                                            <h4 className="text-lg font-normal text-gray-800 mb-3">{subject} ({questions.length})</h4>
 
                                             {/* Questions under this subject */}
                                             {questions.map((q, index) => (
                                                 <div key={q.qnId || index} className="mb-4 relative">
-                                                    <h5 className="font-semibold text-gray-700 pr-16">
+                                                    <h5 className="font-normal text-gray-700 pr-16">
                                                         {index + 1}. {q.question}
                                                     </h5>
-                                                    <span className="absolute top-0 right-0 text-gray-600 font-semibold">
+                                                    <span className="absolute top-0 right-0 text-gray-700 font-normal">
                                                         Mark: {q.qnMark}
                                                     </span>
 
                                                     {q.qnImage && (
-                                                        <div className="mb-3 flex justify-start">
+                                                        <div className="mb-2 flex justify-start">
                                                             <img
                                                                 src={q.qnImage}
                                                                 alt="Question"
-                                                                className="rounded-md object-contain border border-gray-200"
+                                                                className="rounded-sm object-contain border border-gray-200"
                                                                 style={{ maxHeight: "150px" }}
                                                             />
                                                         </div>

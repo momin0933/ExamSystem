@@ -571,7 +571,7 @@ content.push({
     }, []);
 
     return (
-        <div className="overflow-x-auto p-3">
+        <div className="overflow-x-auto p-2">
             <style jsx>{`
         .custom-scrollbar::-webkit-scrollbar { display: none; }
         .custom-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
