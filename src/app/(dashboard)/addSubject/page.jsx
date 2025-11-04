@@ -304,17 +304,17 @@ export default function SubjectManage() {
                                 </tr>
                             ) : (
                                 filteredSubject.map((subject, index) => (
-                                    <tr key={subject.Id} className="border-b border-gray-300  text-gray-800 hover:bg-gray-50">
-                                        <td className="px-4 py-2">{index + 1}</td>
-                                        <td className="px-4 py-2">{subject.Department}</td>
-                                        <td className="px-4 py-2">{subject.Name}</td>
-                                        <td className="px-4 py-2 text-center">{subject.EntryDate ? new Date(subject.EntryDate).toLocaleDateString("en-GB") : "-"}</td>
-                                        <td className="px-4 py-2 text-center">
+                                    <tr key={subject.Id} className="border-b border-gray-300  text-gray-800 hover:bg-[#4775a0] hover:text-white">
+                                        <td className="px-4 py-1.5">{index + 1}</td>
+                                        <td className="px-4 py-1.5">{subject.Department}</td>
+                                        <td className="px-4 py-1.5">{subject.Name}</td>
+                                        <td className="px-4 py-1.5 text-center">{subject.EntryDate ? new Date(subject.EntryDate).toLocaleDateString("en-GB") : "-"}</td>
+                                        <td className="px-4 py-1.5 text-center">
                                             <div className="flex justify-center gap-3">
-                                                <button onClick={() => openEditModal(subject)} className="flex items-center gap-1 px-3 py-1.5 text-sm font-medium border border-[#00925a] text-[#00925a] rounded-sm hover:bg-[#00925a] hover:text-white">
+                                                <button onClick={() => openEditModal(subject)} className="flex items-center gap-1 px-3 py-1 text-sm font-medium border border-[#00925a] text-[#00925a] rounded-sm hover:bg-[#00925a] hover:text-white">
                                                     <FiEdit />
                                                 </button>
-                                                <button onClick={() => openDeleteModal(subject.Id)} className="flex items-center gap-1 px-3 py-1.5 text-sm font-medium border border-red-500 text-red-500 rounded-sm hover:bg-red-500 hover:text-white">
+                                                <button onClick={() => openDeleteModal(subject.Id)} className="flex items-center gap-1 px-3 py-1 text-sm font-medium border border-red-500 text-red-500 rounded-sm hover:bg-red-500 hover:text-white">
                                                     <FiTrash2 />
                                                 </button>
                                             </div>

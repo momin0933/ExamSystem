@@ -800,15 +800,15 @@ export default function AddCandidate() {
                                             key={candidate.id ?? index}
                                             className="border-b border-gray-300 hover:bg-[#4775a0] hover:text-white"
                                         >
-                                            <td className="px-4 py-1 text-center">{index + 1}</td>
-                                            <td className="px-4 py-1">{candidate.name}</td>
-                                            <td className="px-4 py-1">{candidate.userId}</td>
-                                            <td className="px-4 py-1">{candidate.password}</td>
-                                            <td className="px-4 py-1">{candidate.examName}</td>
-                                            <td className="px-4 py-1">{candidate.setName}</td>
-                                            <td className="px-4 py-1">{candidate.email}</td>
-                                            <td className="px-4 py-1 text-center">{candidate.mobileNo}</td>
-                                            <td className="px-4 py-1 text-center">
+                                            <td className="px-4 py-1.5 text-center">{index + 1}</td>
+                                            <td className="px-4 py-1.5">{candidate.name}</td>
+                                            <td className="px-4 py-1.5">{candidate.userId}</td>
+                                            <td className="px-4 py-1.5">{candidate.password}</td>
+                                            <td className="px-4 py-1.5">{candidate.examName}</td>
+                                            <td className="px-4 py-1.5">{candidate.setName}</td>
+                                            <td className="px-4 py-1.5">{candidate.email}</td>
+                                            <td className="px-4 py-1.5 text-center">{candidate.mobileNo}</td>
+                                            <td className="px-4 py-1.5 text-center">
                                                 <label className="inline-flex items-center cursor-pointer">
                                                     <div className="relative">
                                                         <input
@@ -825,11 +825,12 @@ export default function AddCandidate() {
                                                     </div>
                                                 </label>
                                             </td>
-                                            <td className="px-4 py-1 text-center">
+                                            <td className="px-4 py-1.5 text-center">
                                                 <div className="flex items-center justify-center gap-3">
                                                     <button
                                                         onClick={() => openEditCandidateModal(candidate)}
                                                         className="flex items-center gap-1 px-2 py-1 text-sm font-medium border border-[#00925a] text-[#00925a] rounded hover:bg-[#00925a] hover:text-white transition-colors duration-200"
+                                                    
                                                     >
                                                         <FiEdit className="text-base" />
                                                     </button>

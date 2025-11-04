@@ -538,7 +538,7 @@ export default function AddExam() {
               <thead className="bg-gray-100 text-xs uppercase text-gray-800 sticky top-0 z-10">
                 <tr className="border-b">
                   <th className="px-4 py-2 text-center whitespace-nowrap">SL</th>
-                  <th className="px-4 py-2 whitespace-nowrap">Set Name</th>
+                  <th className="px-4 py-2 whitespace-nowrap">Set</th>
                   <th className="px-4 py-2 whitespace-nowrap">Exam Name</th>
                   <th className="px-4 py-2 whitespace-nowrap">Total Ques</th>
                   <th className="px-4 py-2 whitespace-nowrap">Total Mark</th>
@@ -555,29 +555,30 @@ export default function AddExam() {
                   </tr>
                 ) : (
                   filteredExams.map((item, index) => (
-                    <tr key={item.id} className="border-b border-gray-300 hover:bg-gray-50">
-                      <td data-label="SL" className="px-4 py-2 text-center">{index + 1}</td>
-                      <td data-label="Set Name" className="px-4 py-2 ">{item.setName}</td>
-                      <td data-label="Exam Name" className="px-4 py-2 ">{item.examName}</td>
-                      <td data-label="Total Ques" className="px-4 py-2 ">{item.totalQn}</td>
-                      <td data-label="Total Mark" className="px-4 py-2 ">{item.totalMark}</td>
-                      {/* <td data-label="From Date" className="px-4 py-2 text-center">{item.fromDate}</td>
-                    <td data-label="To Date" className="px-4 py-2 text-center">{item.toDate}</td> */}
-                      <td data-label="From Date" className="px-4 py-2 ">
+                    <tr key={item.id} className="border-b border-gray-300 hover:bg-[#4775a0] hover:text-white">
+                      <td data-label="SL" className="px-4 py-1.5 text-center">{index + 1}</td>
+                      <td data-label="Set Name" className="px-4 py-1.5 ">{item.setName}</td>
+                      <td data-label="Exam Name" className="px-4 py-1.5 ">{item.examName}</td>
+                      <td data-label="Total Ques" className="px-4 py-1.5 ">{item.totalQn}</td>
+                      <td data-label="Total Mark" className="px-4 py-1.5 ">{item.totalMark}</td>
+                      {/* <td data-label="From Date" className="px-4 py-1.5 text-center">{item.fromDate}</td>
+                    <td data-label="To Date" className="px-4 py-1.5 text-center">{item.toDate}</td> */}
+                      <td data-label="From Date" className="px-4 py-1.5 ">
                         {item.fromDate ? new Date(item.fromDate).toLocaleDateString("en-GB") : "-"}
                       </td>
-                      <td data-label="To Date" className="px-4 py-2 ">
+                      <td data-label="To Date" className="px-4 py-1.5 ">
                         {item.toDate ? new Date(item.toDate).toLocaleDateString("en-GB") : "-"}
                       </td>
 
 
-                      <td data-label="Exam Time" className="px-4 py-2">{item.examTime}</td>
-                      <td data-label="Actions" className="px-4 py-2 text-center">
+                      <td data-label="Exam Time" className="px-4 py-1.5">{item.examTime}</td>
+                      <td data-label="Actions" className="px-4 py-1.5 text-center">
                         <div className="flex justify-center gap-3">
                           {/* View Button */}
                           <button
                             onClick={() => openViewModal(item)}
-                            className="flex items-center gap-1 px-3 py-1.5 text-sm font-medium border border-blue-500 text-blue-500 rounded hover:bg-blue-500 hover:text-white transition-colors duration-200">
+                            className="flex items-center gap-1 px-3 py-1 text-sm font-medium border border-blue-500 text-blue-500  rounded-sm hover:bg-blue-500 hover:text-white transition-colors duration-200"
+                          >
                             <FiEye />
                           </button>
 
@@ -585,7 +586,7 @@ export default function AddExam() {
                           <button
                             onClick={() => openEditModal(item)}
                             title="Edit Exam"
-                            className="flex items-center gap-1 px-3 py-1.5 text-sm font-medium border border-[#00925a] text-[#00925a] rounded hover:bg-[#00925a] hover:text-white transition-colors duration-200"
+                            className="flex items-center gap-1 px-3 py-1 text-sm font-medium border border-[#00925a] text-[#00925a] rounded-sm hover:bg-[#00925a] hover:text-white transition-colors duration-200"
                           >
                             <FiEdit className="text-base" />
                           </button>
@@ -594,7 +595,7 @@ export default function AddExam() {
                           <button
                             onClick={() => openDeleteModal(item)}
                             title="Delete Exam"
-                            className="flex items-center gap-1 px-3 py-1.5 text-sm font-medium border border-red-500 text-red-500 rounded hover:bg-red-500 hover:text-white transition-colors duration-200"
+                            className="flex items-center gap-1 px-3 py-1 text-sm font-medium border border-red-500 text-red-500 rounded-sm hover:bg-red-500 hover:text-white transition-colors duration-200"
                           >
                             <FiTrash2 className="text-base" />
                           </button>

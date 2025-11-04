@@ -431,20 +431,20 @@ export default function AddSet() {
                                     <tr><td colSpan="5" className="text-center py-4">No data found</td></tr>
                                 ) : (
                                     filteredSet.map((set, index) => (
-                                        <tr key={set.Id} className="border-b border-gray-300 hover:bg-gray-50">
-                                            <td className="px-4 py-2 text-center">{index + 1}</td>
-                                            <td className="px-4 py-2 text-center">{set.Name}</td>
-                                            <td className="px-4 py-2 ">{set.SubjectSummary}</td>
-                                            <td className="px-4 py-2 text-center">{set.TotalQn}</td>
-                                            <td className="px-4 py-2 text-center">{set.TotalMark}</td>
-                                            <td className="px-4 py-2 text-center flex justify-center gap-2">
-                                                <button onClick={() => openViewModal(set)} className="flex items-center gap-1 px-3 py-1.5 text-sm font-medium border border-blue-500 text-blue-500 rounded hover:bg-blue-500 hover:text-white transition-colors duration-200">
+                                        <tr key={set.Id} className="border-b border-gray-300 hover:bg-[#4775a0] hover:text-white">
+                                            <td className="px-4 py-1.5 text-center">{index + 1}</td>
+                                            <td className="px-4 py-1.5 text-center">{set.Name}</td>
+                                            <td className="px-4 py-1.5 ">{set.SubjectSummary}</td>
+                                            <td className="px-4 py-1.5 text-center">{set.TotalQn}</td>
+                                            <td className="px-4 py-1.5 text-center">{set.TotalMark}</td>
+                                            <td className="px-4 py-1.5 text-center flex justify-center gap-2">
+                                                <button onClick={() => openViewModal(set)} className="flex items-center gap-1 px-3 py-1 text-sm font-medium border border-blue-500 text-blue-500 rounded hover:bg-blue-500 hover:text-white transition-colors duration-200">
                                                     <FiEye />
                                                 </button>
-                                                <button onClick={() => router.push(`/setEntry?id=${set.Id}`)} className="px-3 py-1.5 border border-[#00925a] text-[#00925a] rounded hover:bg-[#00925a] hover:text-white transition">
+                                                <button onClick={() => router.push(`/setEntry?id=${set.Id}`)} className="px-3 py-1 border border-[#00925a] text-[#00925a] rounded hover:bg-[#00925a] hover:text-white transition">
                                                     <FiEdit />
                                                 </button>
-                                                <button onClick={() => openDeleteModal(set)} className="px-3 py-1.5 border border-red-500 text-red-500 rounded hover:bg-red-500 hover:text-white transition">
+                                                <button onClick={() => openDeleteModal(set)} className="px-3 py-1 border border-red-500 text-red-500 rounded hover:bg-red-500 hover:text-white transition">
                                                     <FiTrash2 />
                                                 </button>
                                                 <DeleteConfirmModal
@@ -609,14 +609,14 @@ export default function AddSet() {
                                 <button
                                     type="button"
                                     onClick={handleDownload}
-                                    className="px-4 py-2 bg-blue-600 text-white rounded-lg shadow hover:bg-blue-700 transition duration-200 ease-in-out flex items-center"
+                                    className="px-4 py-1.5 bg-blue-600 text-white rounded-lg shadow hover:bg-blue-700 transition duration-200 ease-in-out flex items-center"
                                 >
                                     Download
                                 </button>
 
                                 <button
                                     onClick={() => setIsViewModalOpen(false)}
-                                    className="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg shadow hover:bg-gray-300 transition duration-200 ease-in-out"
+                                    className="px-4 py-1.5 bg-gray-200 text-gray-700 rounded-lg shadow hover:bg-gray-300 transition duration-200 ease-in-out"
                                 >
                                     Close
                                 </button>
