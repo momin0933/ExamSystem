@@ -552,6 +552,7 @@ export default function AddCandidate() {
 
     //Insert and Update
     const handleSubmit = async (e) => {
+
         e.preventDefault();
 
         // Basic validation
@@ -594,6 +595,8 @@ export default function AddCandidate() {
                 },
                 body: JSON.stringify(payload),
             });
+
+
 
             if (!response.ok) {
                 const text = await response.text();
@@ -795,49 +798,17 @@ export default function AddCandidate() {
                                     filteredSet.map((candidate, index) => (
                                         <tr
                                             key={candidate.id ?? index}
-                                            className="border-b border-gray-300 hover:bg-gray-50"
+                                            className="border-b border-gray-300 hover:bg-[#4775a0] hover:text-white"
                                         >
-                                            <td className="px-4 py-2 text-center">{index + 1}</td>
-                                            <td className="px-4 py-2">{candidate.name}</td>
-                                            <td className="px-4 py-2 ">{candidate.userId}</td>
-                                            <td className="px-4 py-2 ">{candidate.password}</td>
-                                            <td className="px-4 py-2 ">{candidate.examName}</td>
-                                            <td className="px-4 py-2 ">{candidate.setName}</td>
-                                            <td className="px-4 py-2 ">{candidate.email}</td>
-                                            <td className="px-4 py-2 text-center">{candidate.mobileNo}</td>
-
-                                            {/* <td className="px-4 py-2 text-center">
-                                            {candidate.isActive ? "Active" : "Inactive"}
-                                        </td> */}
-                                            {/* <td className="px-4 py-2 text-center">
-                                            <button
-                                                onClick={() => handleToggleActive(candidate)}
-                                                className={`px-3 py-1 rounded-full text-xs font-semibold ${candidate.isActive
-                                                    ? "bg-green-100 text-green-700 border border-green-500"
-                                                    : "bg-red-100 text-red-700 border border-red-500"
-                                                    }`}
-                                            >
-                                                {candidate.isActive ? "Active" : "Inactive"}
-                                            </button>
-                                        </td> */}
-                                            {/* <td className="px-4 py-2 text-center">
-                                            <label className="relative inline-flex items-center cursor-pointer">
-                                                <input
-                                                    type="checkbox"
-                                                    className="sr-only peer"
-                                                    checked={candidate.isActive}
-                                                    onChange={() => handleToggleActive(candidate)}
-                                                />
-                                                <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:bg-green-500 transition-colors duration-300"></div>
-                                                <span
-                                                    className={`absolute left-[4px] top-[4px] bg-white w-4 h-4 rounded-full transition-transform duration-300 ${candidate.isActive ? "translate-x-5" : ""
-                                                        }`}
-                                                ></span>
-                                            </label>
-                        
-                                        </td> */}
-
-                                            <td className="px-4 py-2 text-center">
+                                            <td className="px-4 py-1 text-center">{index + 1}</td>
+                                            <td className="px-4 py-1">{candidate.name}</td>
+                                            <td className="px-4 py-1">{candidate.userId}</td>
+                                            <td className="px-4 py-1">{candidate.password}</td>
+                                            <td className="px-4 py-1">{candidate.examName}</td>
+                                            <td className="px-4 py-1">{candidate.setName}</td>
+                                            <td className="px-4 py-1">{candidate.email}</td>
+                                            <td className="px-4 py-1 text-center">{candidate.mobileNo}</td>
+                                            <td className="px-4 py-1 text-center">
                                                 <label className="inline-flex items-center cursor-pointer">
                                                     <div className="relative">
                                                         <input
@@ -854,35 +825,18 @@ export default function AddCandidate() {
                                                     </div>
                                                 </label>
                                             </td>
-
-
-                                            <td className="px-4 py-2 text-center">
+                                            <td className="px-4 py-1 text-center">
                                                 <div className="flex items-center justify-center gap-3">
-                                                    {/* <button
-                                                    onClick={async () => {
-                                                        await fetchParticipateQuestionPaper(candidate.id);
-                                                        setIsEditMode(false);
-                                                        setShowQuestionModal(true);
-                                                    }}
-                                                    className="flex items-center gap-1 px-3 py-1.5 text-sm font-medium border border-blue-500 text-blue-500 rounded hover:bg-blue-500 hover:text-white transition-colors duration-200"
-                                                >
-                                                    <FiEye className="text-base" />
-                                                </button> */}
                                                     <button
                                                         onClick={() => openEditCandidateModal(candidate)}
-                                                        className="flex items-center gap-1 px-3 py-1.5 text-sm font-medium border border-[#00925a] text-[#00925a] rounded hover:bg-[#00925a] hover:text-white transition-colors duration-200"
+                                                        className="flex items-center gap-1 px-2 py-1 text-sm font-medium border border-[#00925a] text-[#00925a] rounded hover:bg-[#00925a] hover:text-white transition-colors duration-200"
                                                     >
                                                         <FiEdit className="text-base" />
                                                     </button>
-                                                    {/* <button
-                                onClick={() => openDeleteModal(candidate)}
-                                className="flex items-center gap-1 px-3 py-1.5 text-sm font-medium border border-red-500 text-red-500 rounded hover:bg-red-500 hover:text-white transition-colors duration-200"
-                            >
-                                <FiTrash2 className="text-base" />
-                            </button> */}
                                                 </div>
                                             </td>
                                         </tr>
+
                                     ))
                                 )}
                             </tbody>
