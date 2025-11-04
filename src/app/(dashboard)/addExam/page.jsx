@@ -555,29 +555,29 @@ export default function AddExam() {
                   </tr>
                 ) : (
                   filteredExams.map((item, index) => (
-                    <tr key={item.id} className="border-b border-gray-300 hover:bg-[#4775a0] hover:text-white">
-                      <td data-label="SL" className="px-4 py-1.5 text-center">{index + 1}</td>
-                      <td data-label="Set Name" className="px-4 py-1.5 ">{item.setName}</td>
-                      <td data-label="Exam Name" className="px-4 py-1.5 ">{item.examName}</td>
-                      <td data-label="Total Ques" className="px-4 py-1.5 ">{item.totalQn}</td>
-                      <td data-label="Total Mark" className="px-4 py-1.5 ">{item.totalMark}</td>
+                    <tr key={item.id} className="border-b border-gray-300 hover:bg-[#4775a0] group">
+                      <td data-label="SL" className="px-4 py-1.5 group-hover:text-white text-center">{index + 1}</td>
+                      <td data-label="Set Name" className="px-4 py-1.5 group-hover:text-white ">{item.setName}</td>
+                      <td data-label="Exam Name" className="px-4 py-1.5 group-hover:text-white ">{item.examName}</td>
+                      <td data-label="Total Ques" className="px-4 py-1.5  group-hover:text-white">{item.totalQn}</td>
+                      <td data-label="Total Mark" className="px-4 py-1.5 group-hover:text-white ">{item.totalMark}</td>
                       {/* <td data-label="From Date" className="px-4 py-1.5 text-center">{item.fromDate}</td>
                     <td data-label="To Date" className="px-4 py-1.5 text-center">{item.toDate}</td> */}
-                      <td data-label="From Date" className="px-4 py-1.5 ">
+                      <td data-label="From Date" className="px-4 py-1.5 group-hover:text-white ">
                         {item.fromDate ? new Date(item.fromDate).toLocaleDateString("en-GB") : "-"}
                       </td>
-                      <td data-label="To Date" className="px-4 py-1.5 ">
+                      <td data-label="To Date" className="px-4 py-1.5 group-hover:text-white ">
                         {item.toDate ? new Date(item.toDate).toLocaleDateString("en-GB") : "-"}
                       </td>
 
 
-                      <td data-label="Exam Time" className="px-4 py-1.5">{item.examTime}</td>
-                      <td data-label="Actions" className="px-4 py-1.5 text-center">
+                      <td data-label="Exam Time" className="px-4 py-1.5 group-hover:text-white">{item.examTime}</td>
+                      <td data-label="Actions" className="px-4 py-1.5 group-hover:text-white text-center">
                         <div className="flex justify-center gap-3">
                           {/* View Button */}
                           <button
                             onClick={() => openViewModal(item)}
-                            className="flex items-center gap-1 px-3 py-1 text-sm font-medium border border-blue-500 text-blue-500  rounded-sm hover:bg-blue-500 hover:text-white transition-colors duration-200"
+                            className="flex items-center gap-1 px-3 py-1 text-sm font-medium border border-blue-500 text-blue-500  rounded-sm group-hover:!text-white group-hover:border-white transition-colors duration-200"
                           >
                             <FiEye />
                           </button>
@@ -586,7 +586,7 @@ export default function AddExam() {
                           <button
                             onClick={() => openEditModal(item)}
                             title="Edit Exam"
-                            className="flex items-center gap-1 px-3 py-1 text-sm font-medium border border-[#00925a] text-[#00925a] rounded-sm hover:bg-[#00925a] hover:text-white transition-colors duration-200"
+                            className="flex items-center gap-1 px-3 py-1 text-sm font-medium border border-[#00925a] text-[#00925a] rounded-sm group-hover:!text-white group-hover:border-white transition-colors duration-200"
                           >
                             <FiEdit className="text-base" />
                           </button>
@@ -595,7 +595,7 @@ export default function AddExam() {
                           <button
                             onClick={() => openDeleteModal(item)}
                             title="Delete Exam"
-                            className="flex items-center gap-1 px-3 py-1 text-sm font-medium border border-red-500 text-red-500 rounded-sm hover:bg-red-500 hover:text-white transition-colors duration-200"
+                            className="flex items-center gap-1 px-3 py-1 text-sm font-medium border border-red-500 text-red-500 rounded-sm group-hover:bg-red-500 group-hover:!text-white transition-colors duration-200"
                           >
                             <FiTrash2 className="text-base" />
                           </button>

@@ -790,7 +790,7 @@ export default function AddCandidate() {
                             <tbody className="bg-white text-xs text-gray-700">
                                 {filteredSet.length === 0 ? (
                                     <tr key="no-data">
-                                        <td colSpan="6" className="text-center py-4">
+                                        <td colSpan="10" className="text-center py-4">
                                             No data found
                                         </td>
                                     </tr>
@@ -798,17 +798,17 @@ export default function AddCandidate() {
                                     filteredSet.map((candidate, index) => (
                                         <tr
                                             key={candidate.id ?? index}
-                                            className="border-b border-gray-300 hover:bg-[#4775a0] hover:text-white"
+                                            className="border-b border-gray-300 hover:bg-[#4775a0] group"
                                         >
-                                            <td className="px-4 py-1.5 text-center">{index + 1}</td>
-                                            <td className="px-4 py-1.5">{candidate.name}</td>
-                                            <td className="px-4 py-1.5">{candidate.userId}</td>
-                                            <td className="px-4 py-1.5">{candidate.password}</td>
-                                            <td className="px-4 py-1.5">{candidate.examName}</td>
-                                            <td className="px-4 py-1.5">{candidate.setName}</td>
-                                            <td className="px-4 py-1.5">{candidate.email}</td>
-                                            <td className="px-4 py-1.5 text-center">{candidate.mobileNo}</td>
-                                            <td className="px-4 py-1.5 text-center">
+                                            <td className="px-4 py-1.5 group-hover:text-white text-center">{index + 1}</td>
+                                            <td className="px-4 py-1.5 group-hover:text-white">{candidate.name}</td>
+                                            <td className="px-4 py-1.5 group-hover:text-white">{candidate.userId}</td>
+                                            <td className="px-4 py-1.5  group-hover:text-white">{candidate.password}</td>
+                                            <td className="px-4 py-1.5 group-hover:text-white">{candidate.examName}</td>
+                                            <td className="px-4 py-1.5 group-hover:text-white">{candidate.setName}</td>
+                                            <td className="px-4 py-1.5 group-hover:text-white">{candidate.email}</td>
+                                            <td className="px-4 py-1.5 group-hover:text-white text-center">{candidate.mobileNo}</td>
+                                            <td className="px-4 py-1.5 group-hover:text-white text-center">
                                                 <label className="inline-flex items-center cursor-pointer">
                                                     <div className="relative">
                                                         <input
@@ -829,10 +829,10 @@ export default function AddCandidate() {
                                                 <div className="flex items-center justify-center gap-3">
                                                     <button
                                                         onClick={() => openEditCandidateModal(candidate)}
-                                                        className="flex items-center gap-1 px-2 py-1 text-sm font-medium border border-[#00925a] text-[#00925a] rounded hover:bg-[#00925a] hover:text-white transition-colors duration-200"
+                                                        className="flex items-center gap-1 px-2 py-1 text-sm font-medium border border-[#00925a] text-[#00925a] rounded group-hover:!text-white group-hover:border-white transition-colors duration-200"
                                                     
                                                     >
-                                                        <FiEdit className="text-base" />
+                                                        <FiEdit />
                                                     </button>
                                                 </div>
                                             </td>

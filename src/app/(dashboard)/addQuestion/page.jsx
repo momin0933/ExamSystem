@@ -406,32 +406,32 @@ export default function AddQuestion() {
                                     </tr>
                                 ) : (
                                     filteredQuestion.map((question, index) => (
-                                        <tr key={index} className="border-b border-gray-300 hover:bg-[#4775a0] hover:text-white">
-                                            <td data-label="SL" className="px-4 py-1.5 text-center">{index + 1}</td>
-                                            <td data-label="Subject" className="px-4 py-1.5">{question.SubjectName}</td>
-                                            <td data-label="Question" className="px-4 py-1.5">{question.Name}</td>
-                                            <td data-label="Type" className="px-4 py-1.5">{question.QnType}</td>
-                                            <td data-label="Mark" className="px-4 py-1.5 text-center">{question.Mark}</td>
-                                            <td data-label="Actions" className="px-4 py-1.5 text-center">
+                                        <tr key={index} className="border-b border-gray-300 hover:bg-[#4775a0] group">
+                                            <td data-label="SL" className="px-4 py-1.5 group-hover:text-white text-center">{index + 1}</td>
+                                            <td data-label="Subject" className="px-4 py-1.5 group-hover:text-white">{question.SubjectName}</td>
+                                            <td data-label="Question" className="px-4 py-1.5 group-hover:text-white">{question.Name}</td>
+                                            <td data-label="Type" className="px-4 py-1.5 group-hover:text-white">{question.QnType}</td>
+                                            <td data-label="Mark" className="px-4 py-1.5 group-hover:text-white text-center">{question.Mark}</td>
+                                            <td data-label="Actions" className="px-4 py-1.5  text-center">
                                                 <div className="flex justify-center gap-3">
                                                     <button
                                                         onClick={() => openViewModal(question)}
-                                                        className="flex items-center gap-1 px-3 py-1 text-sm font-medium border border-blue-500 text-blue-500 rounded hover:bg-blue-500 hover:text-white transition-colors duration-200"
+                                                        className="flex items-center gap-1 px-3 py-1 text-sm font-medium border border-blue-500 text-blue-500 rounded-sm group-hover:!text-white group-hover:border-white transition-colors duration-200"
                                                     >
-                                                        <FiEye className="text-base" />
+                                                        <FiEye  />
                                                     </button>
                                                     <button
                                                         onClick={() => openEditModal(question)}
                                                         title="Edit"
-                                                        className="flex items-center gap-1 px-3 py-1 text-sm font-medium border border-[#00925a] text-[#00925a] rounded hover:bg-[#00925a] hover:text-white transition-colors duration-200"
+                                                        className="flex items-center gap-1 px-3 py-1 text-sm font-medium border border-[#00925a] text-[#00925a] rounded-sm  group-hover:!text-white group-hover:border-white transition-colors duration-200"
                                                     >
-                                                        <FiEdit className="text-base" />
+                                                        <FiEdit  />
                                                     </button>
                                                     <button
                                                         onClick={() => openDeleteModal(question)}
-                                                        className="flex items-center gap-1 px-3 py-1 text-sm font-medium border border-red-500 text-red-500 rounded hover:bg-red-500 hover:text-white transition-colors duration-200"
+                                                        className="flex items-center gap-1 px-3 py-1 text-sm font-medium border border-red-500 text-red-500 rounded-sm  group-hover:bg-red-500 group-hover:!text-white transition-colors duration-200"
                                                     >
-                                                        <FiTrash2 className="text-base" />
+                                                        <FiTrash2  />
                                                     </button>
                                                 </div>
                                             </td>
