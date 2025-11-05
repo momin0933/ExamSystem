@@ -663,7 +663,7 @@ content.push({
                             <tbody className="bg-white text-xs text-gray-700">
                                 {filteredSet.length === 0 ? (
                                     <tr key="no-participants">
-                                        <td colSpan="7" className="text-center py-4">No participants found</td>
+                                        <td colSpan="10" className="text-center py-4">No participants found</td>
                                     </tr>
                                 ) : (
                                     filteredSet.map((item, index) => (

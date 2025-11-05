@@ -13,6 +13,7 @@ const Sidebar = dynamic(() => import("./Sidebar"));
 
 export default function Navbar() {
   const { loginData, logout } = useContext(AuthContext);
+  console.log("Navber Login Data", loginData)
   const { isCollapsed, setIsCollapsed } = useContext(DataContext);
   const toggleSidebar = () => setIsCollapsed(!isCollapsed);
   const [isDropdownOpen, setDropdownOpen] = useState(false);
@@ -21,44 +22,46 @@ export default function Navbar() {
   return (
     <nav className="sticky top-0 z-50 bg-gray-600 shadow-md border-b border-gray-200">
       <div className="flex justify-between items-center px-4 py-2 lg:px-2 transition-all duration-300">
-
-        {/* ===== Left: Sidebar Toggle ===== */}
         <div className="flex items-center gap-2">
-          {/* Desktop Sidebar Toggle */}
-          <button
-            onClick={toggleSidebar}
-            className="hidden sm:flex items-center justify-center w-10 h-10 cursor-pointer transition"
-          >
-            <RxHamburgerMenu className="text-2xl text-gray-50" />
-          </button>
+          {loginData?.UserRole !== "Participate" && (
+            <>
+              {/* Desktop Sidebar Toggle */}
+              <button
+                onClick={toggleSidebar}
+                className="hidden sm:flex items-center justify-center w-10 h-10 cursor-pointer transition"
+              >
+                <RxHamburgerMenu className="text-2xl text-gray-50" />
+              </button>
 
-          {/* Mobile Toggle */}
-          <button
-            onClick={() => setIsNavOpen(!isNavOpen)}
-            className="sm:hidden flex items-center justify-center w-10 h-10 rounded-lg hover:bg-gray-100 transition"
-          >
-            <RxHamburgerMenu className="text-2xl text-gray-700" />
-          </button>
+              {/* Mobile Toggle */}
+              <button
+                onClick={() => setIsNavOpen(!isNavOpen)}
+                className="sm:hidden flex items-center justify-center w-10 h-10 rounded-lg hover:bg-gray-100 transition"
+              >
+                <RxHamburgerMenu className="text-2xl text-gray-700" />
+              </button>
 
-          {/* Mobile Sidebar */}
-          {isNavOpen && (
-            <div
-              data-aos="fade-right"
-              className="absolute left-0 top-12 z-50 bg-gray-900 text-white w-60 rounded-md p-3 shadow-lg"
-              onMouseLeave={() => setIsNavOpen(false)}
-            >
-              <Sidebar />
-            </div>
+              {/* Mobile Sidebar */}
+              {isNavOpen && (
+                <div
+                  data-aos="fade-right"
+                  className="absolute left-0 top-12 z-50 bg-gray-900 text-white w-60 rounded-md p-3 shadow-lg"
+                  onMouseLeave={() => setIsNavOpen(false)}
+                >
+                  <Sidebar />
+                </div>
+              )}
+            </>
           )}
         </div>
 
         {/* ===== Right: Profile and Actions ===== */}
-        <div className="hidden sm:flex items-center gap-3 pr-4 relative">
+        {/* <div className="hidden sm:flex items-center gap-3 pr-4 relative"> */}
+        <div className="flex items-center gap-3 pr-4 relative">
           {/* Notification Icon */}
           <button
             title="Notifications"
             className="relative w-10 h-10 flex items-center justify-center rounded-full text-blue-600 hover:bg-blue-100 transition"
-
           >
             <svg
               xmlns="http://www.w3.org/2000/svg"
@@ -118,8 +121,8 @@ export default function Navbar() {
                   href="/homepage"
                   className="flex items-center gap-3 px-3 py-2 rounded-lg text-gray-700 hover:bg-gradient-to-r hover:from-blue-500 hover:to-indigo-500 hover:text-white transition-all duration-300 shadow-sm hover:shadow-md"
                 > */}
-                  <FaRegCircleUser className="text-lg" />
-                  <span className="text-sm font-medium">View Profile</span>
+                <FaRegCircleUser className="text-lg" />
+                <span className="text-sm font-medium">View Profile</span>
                 {/* </Link> */}
               </li>
 

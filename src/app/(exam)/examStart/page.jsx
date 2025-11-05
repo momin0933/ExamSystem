@@ -4,167 +4,242 @@ import { AuthContext } from '../../provider/AuthProvider';
 import config from "@/config";
 import toast from 'react-hot-toast';
 import { useRouter } from 'next/navigation';
+import { LuAlarmClock } from "react-icons/lu";
 
 export default function ExamStartPage() {
+    // Context and hooks
     const { loginData } = useContext(AuthContext);
     const router = useRouter();
 
-    /** States */
+    // State declarations grouped by purpose
+    // Exam data states
     const [questions, setQuestions] = useState([]);
-    const [currentIndex, setCurrentIndex] = useState(0);
     const [answers, setAnswers] = useState({});
     const [participateId, setParticipateId] = useState(null);
+    const [departmentContactData, setDepartmentContactData] = useState([]);
+
+    // UI and navigation states
     const [loading, setLoading] = useState(false);
     const [timeLeft, setTimeLeft] = useState(null);
-    const [hasLooped, setHasLooped] = useState(false);
-    const [passCount, setPassCount] = useState(1);
+    const [currentPage, setCurrentPage] = useState(0);
+    const [loopCount, setLoopCount] = useState(0);
+    const [highlightedQuestions, setHighlightedQuestions] = useState([]);
 
-    /** Modal states */
+    // Modal states
     const [showConfirmSubmit, setShowConfirmSubmit] = useState(false);
     const [showSuccessModal, setShowSuccessModal] = useState(false);
 
-    /** Format seconds → HH:mm:ss */
+    // Constants
+    const questionsPerPage = 3;
+
+    // Computed values
+    const startIndex = currentPage * questionsPerPage;
+    const endIndex = startIndex + questionsPerPage;
+    const currentQuestions = questions.slice(startIndex, endIndex);
+    const totalPages = Math.ceil(questions.length / questionsPerPage);
+
+    /**
+     * Format seconds to HH:mm:ss
+     */
     const formatTime = (seconds) => {
+        if (seconds === null || seconds < 0) return "00:00:00";
+
         const hrs = Math.floor(seconds / 3600);
         const mins = Math.floor((seconds % 3600) / 60);
         const secs = seconds % 60;
         return `${hrs.toString().padStart(2, "0")}:${mins.toString().padStart(2, "0")}:${secs.toString().padStart(2, "0")}`;
     };
 
-    /** Fetch question paper from API */
+    /**
+     * Handle answer selection for a question
+     */
+    const handleAnswerChange = (value, questionId) => {
+        setAnswers(prev => ({
+            ...prev,
+            [questionId]: value
+        }));
+    };
+
+    /**
+     * Navigate to next page after validating all questions are answered
+     */
+    const handleNextPage = () => {
+        // Find unanswered questions on current page
+        const unanswered = currentQuestions.filter(q => !answers[q.questionId]);
+
+        if (unanswered.length > 0) {
+            // Highlight unanswered questions temporarily
+            setHighlightedQuestions(unanswered.map(q => q.questionId));
+            setTimeout(() => setHighlightedQuestions([]), 1000);
+            return;
+        }
+        const nextPage = (currentPage + 1) % totalPages;
+        // Track loop completion for submit button visibility
+        if (nextPage === 0) {
+            setLoopCount(prev => prev + 1);
+        }
+        setCurrentPage(nextPage);
+    };
+
+    /**
+     * Skip to next page without answering all questions
+     */
+    const handleSkipPage = () => {
+        const nextPage = (currentPage + 1) % totalPages;
+
+        if (nextPage === 0) {
+            setLoopCount(prev => prev + 1);
+        }
+
+        setCurrentPage(nextPage);
+    };
+
+    /**
+     * Fetch question paper from API
+     */
     const fetchQuestionPaper = async () => {
         if (!loginData?.tenantId || !loginData?.UserAutoId) {
             toast.error("User info missing, please login again.");
             return;
         }
+
         try {
             setLoading(true);
             const response = await fetch(`${config.API_BASE_URL}api/Procedure/GetData`, {
                 method: "POST",
-                headers: { TenantId: loginData.tenantId, "Content-Type": "application/json" },
+                headers: {
+                    TenantId: loginData.tenantId,
+                    "Content-Type": "application/json"
+                },
                 body: JSON.stringify({
                     operation: "",
                     procedureName: "SP_GetQuestionPaperByParticipate",
-                    parameters: { QueryChecker: 1, ParticipateId: loginData.UserAutoId },
+                    parameters: {
+                        QueryChecker: 1,
+                        ParticipateId: loginData.UserAutoId
+                    },
                 }),
             });
 
-            if (!response.ok) throw new Error("Failed to fetch question paper");
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+
             const data = await response.json();
 
             // Format questions with options
-            const formatted = Array.isArray(data)
-                ? data.reduce((acc, item) => {
-                    let question = acc.find(q => q.questionId === item.QuestionId);
-                    if (!question) {
-                        question = {
-                            questionId: item.QuestionId,
-                            question: item.Question,
-                            qnType: item.QnType,
-                            mark: item.Mark,
-                            sketch: item.Sketch,
-                            examName: item.ExamName,
-                            examTime: item.ExamTime,
-                            options: [],
-                            correctOption: null,
-                        };
-                        acc.push(question);
-                    }
-                    if (item.QnType === "MCQ" && item.Option) question.options.push(item.Option);
-                    if (item.QnType === "MCQ" && item.Answer === true) question.correctOption = item.Option;
-                    return acc;
-                }, [])
-                : [];
-            setQuestions(formatted);
-            setCurrentIndex(0);
+            const formatted = Array.isArray(data) ? data.reduce((acc, item) => {
+                let question = acc.find(q => q.questionId === item.QuestionId);
+                if (!question) {
+                    question = {
+                        questionId: item.QuestionId,
+                        question: item.Question,
+                        qnType: item.QnType,
+                        mark: item.Mark,
+                        sketch: item.Sketch,
+                        examName: item.ExamName,
+                        examTime: item.ExamTime,
+                        options: [],
+                        correctOption: null,
+                    };
+                    acc.push(question);
+                }
 
-            // Initialize timer if available
-            if (formatted.length > 0 && formatted[0].examTime) {
-                const [hours, minutes, seconds] = formatted[0].examTime.split(":").map(Number);
-                setTimeLeft(hours * 3600 + minutes * 60 + seconds);
+                // Safe option handling
+                if (item.QnType === "MCQ" && item.Option) {
+                    question.options.push(item.Option);
+                }
+                if (item.QnType === "MCQ" && item.Answer === true) {
+                    question.correctOption = item.Option;
+                }
+                return acc;
+            }, []) : [];
+
+            setQuestions(formatted);
+
+            // Initialize timer if exam time available
+            if (formatted.length > 0 && formatted[0]?.examTime) {
+                try {
+                    const [hours, minutes, seconds] = formatted[0].examTime.split(":").map(Number);
+                    const totalSeconds = hours * 3600 + minutes * 60 + seconds;
+                    setTimeLeft(totalSeconds);
+                } catch (timeError) {
+                    console.error("Error parsing exam time:", timeError);
+                    toast.error("Invalid exam time format");
+                }
             }
 
         } catch (err) {
-            console.error(err);
+            console.error("Failed to fetch question paper:", err);
             toast.error("Failed to load question paper");
         } finally {
             setLoading(false);
         }
     };
 
-    /** Load participateId from localStorage */
-    useEffect(() => {
-        const id = localStorage.getItem("participateId");
-        if (id) setParticipateId(Number(id));
-        else {
-            toast.error("Participate ID not found, please restart exam.");
-            router.push("/participate");
-        }
-    }, []);
+    /**
+     * Fetch department contact information
+     */
+    const fetchDepartmentContractInfo = async () => {
+        if (!loginData?.tenantId) return;
 
-    /** Fetch questions after loginData available */
-    useEffect(() => { fetchQuestionPaper(); }, [loginData]);
+        try {
+            const res = await fetch(`${config.API_BASE_URL}api/Procedure/GetData`, {
+                method: 'POST',
+                headers: {
+                    TenantId: loginData.tenantId,
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    operation: '',
+                    procedureName: 'SP_GetQuestionPaperByParticipate',
+                    parameters: { QueryChecker: 2 },
+                }),
+            });
 
-    /** Timer countdown effect */
-    useEffect(() => {
-        if (timeLeft === null) return;
-        if (timeLeft <= 0) {
-            toast.error("⏰ Time’s up! Auto-submitting your exam...");
-            handleSubmitExam();
-            return;
-        }
-        const timer = setInterval(() => setTimeLeft(prev => prev - 1), 1000);
-        return () => clearInterval(timer);
-    }, [timeLeft]);
+            if (!res.ok) {
+                throw new Error(`HTTP error! status: ${res.status}`);
+            }
 
-    /** Handle answer selection */
-    const handleAnswerChange = (value) => {
-        const currentQuestion = questions[currentIndex];
-        setAnswers(prev => ({ ...prev, [currentQuestion.questionId]: value }));
-    };
-
-    /** Navigate to previous question */
-    const goPrevious = () => { if (currentIndex > 0) setCurrentIndex(prev => prev - 1); };
-
-    /** Navigate to next question */
-    const goNext = () => {
-        const question = questions[currentIndex];
-        if (!answers[question.questionId] || answers[question.questionId] === "NA") {
-            alert("Please answer the question before moving to next.");
-            return;
-        }
-        if (currentIndex < questions.length - 1) setCurrentIndex(prev => prev + 1);
-        else { // Last question → start next pass
-            setHasLooped(true);
-            setPassCount(prev => prev + 1);
-            setCurrentIndex(0);
+            const data = await res.json();
+            setDepartmentContactData(Array.isArray(data) ? data : []);
+        } catch (err) {
+            console.error('Failed to load department data:', err);
+            toast.error('Failed to load Department data');
         }
     };
 
-    /** Skip current question */
-    const skipQuestion = () => {
-        const question = questions[currentIndex];
-        if (!answers[question.questionId]) setAnswers(prev => ({ ...prev, [question.questionId]: "NA" }));
-        if (currentIndex < questions.length - 1) setCurrentIndex(prev => prev + 1);
-        else { // Last question → start next pass
-            setHasLooped(true);
-            setPassCount(prev => prev + 1);
-            setCurrentIndex(0);
-        }
-    };
-
-    /** Submit exam answers */
+    /**
+     * Submit exam answers to API
+     */
     const handleSubmitExam = async (e) => {
-        if (e) e.preventDefault();
+        e?.preventDefault();
         setLoading(true);
 
         try {
-            if (!participateId) throw new Error("Participate ID is missing!");
-            if (!questions || questions.length === 0) throw new Error("No questions found!");
+            // Validation checks
+            if (!participateId) {
+                throw new Error("Participate ID is missing!");
+            }
 
+            if (!questions || questions.length === 0) {
+                throw new Error("No questions found!");
+            }
+
+            if (!loginData?.tenantId || !loginData?.UserId) {
+                throw new Error("User authentication data missing!");
+            }
+
+            // Prepare payload with safe defaults
             const payload = questions.map((q) => {
                 const ansValue = answers[q.questionId] ?? "NA";
-                let ansMark = (q.qnType === "MCQ" && ansValue !== "NA" && ansValue === q.correctOption) ? q.mark || 0 : 0;
+                let ansMark = 0;
+
+                // Calculate marks only for answered MCQ questions
+                if (q.qnType === "MCQ" && ansValue !== "NA" && ansValue === q.correctOption) {
+                    ansMark = q.mark || 0;
+                }
+
                 return {
                     ParticipateId: participateId,
                     QnId: q.questionId,
@@ -172,7 +247,7 @@ export default function ExamStartPage() {
                     QnMark: q.mark || 0,
                     AnsMark: ansMark,
                     Remarks: null,
-                    EntryBy: loginData?.UserId,
+                    EntryBy: loginData.UserId,
                     EntryDate: new Date().toISOString(),
                     IsActive: true,
                 };
@@ -180,113 +255,367 @@ export default function ExamStartPage() {
 
             const response = await fetch(`${config.API_BASE_URL}api/Participate/AddParticipateAns`, {
                 method: "POST",
-                headers: { "Content-Type": "application/json", TenantId: loginData?.tenantId },
+                headers: {
+                    "Content-Type": "application/json",
+                    TenantId: loginData.tenantId
+                },
                 body: JSON.stringify(payload),
             });
 
             if (!response.ok) {
-                const text = await response.text();
-                throw new Error(text || "Failed to submit exam answers");
+                const errorText = await response.text();
+                throw new Error(errorText || "Failed to submit exam answers");
             }
 
-            // Show success modal and auto-logout
+            // Show success and redirect
             setShowSuccessModal(true);
             setTimeout(() => {
+                // Clear storage and redirect
                 localStorage.removeItem("loginData");
                 localStorage.removeItem("participateId");
                 router.push("/");
             }, 3000);
 
         } catch (err) {
-            console.error(err);
+            console.error("Exam submission error:", err);
             toast.error(err.message || "Error submitting exam answers.");
         } finally {
             setLoading(false);
         }
     };
 
-    const currentQuestion = questions[currentIndex];
+    // Effects
+    useEffect(() => {
+        // Load participateId from localStorage
+        const id = localStorage.getItem("participateId");
+        if (id) {
+            setParticipateId(Number(id));
+        } else {
+            toast.error("Participate ID not found, please restart exam.");
+            router.push("/participate");
+        }
+    }, []);
+
+    useEffect(() => {
+        // Fetch data when tenantId is available
+        if (!loginData?.tenantId) return;
+
+        fetchQuestionPaper();
+        fetchDepartmentContractInfo();
+    }, [loginData?.tenantId]);
+
+    useEffect(() => {
+        // Timer countdown effect
+        if (timeLeft === null) return;
+
+        if (timeLeft <= 0) {
+            toast.error("⏰ Time's up! Auto-submitting your exam...");
+            handleSubmitExam();
+            return;
+        }
+
+        const timer = setInterval(() => {
+            setTimeLeft(prev => prev !== null ? prev - 1 : null);
+        }, 1000);
+
+        return () => clearInterval(timer);
+    }, [timeLeft]);
 
     return (
-        <div className="max-w-3xl mx-auto px-6 py-4 bg-white shadow-md rounded-lg">
-            {/* Header with timer */}
-            <div className="relative flex justify-center items-center mb-6 px-6 py-4 bg-white">
-                <div className="flex flex-col items-center text-center">
-                    <img src="/images/FashionTex-Logo.png" alt="Logo" className="w-24 h-20 object-contain drop-shadow-md" />
-                    <h1 className="text-2xl font-extrabold text-gray-800 tracking-wide mt-2">Fashion Tex Group Of Company</h1>
-                    <h2 className="text-lg font-medium text-gray-600 mt-1">
-                        <span className="text-indigo-700 font-semibold">{questions[0]?.examName || ""}</span>
-                    </h2>
-                </div>
+        <div className="max-w-3xl mx-auto px-6 py-4 bg-white shadow-md rounded-sm">
+            <div className="relative flex flex-col items-center mb-3 px-4 sm:px-6 md:px-8 py-4 bg-white">
+                <img
+                    src="/images/FashionTex-Logo.png"
+                    alt="Logo"
+                    className="w-28 h-12 sm:w-32 sm:h-12 md:w-40 md:h-12 xl:w-44 xl:h-12 object-contain drop-shadow-md mb-2"
+                />
                 {timeLeft !== null && (
-                    <div className="absolute top-0 right-0 mt-4 mr-6 bg-white border border-red-200 px-4 py-2 rounded-xl shadow-sm">
-                        <p className="font-bold text-red-600 tracking-wider">⏰ <span className="text-red-700">{formatTime(timeLeft)}</span></p>
+
+                    <div className="absolute 
+                top-1 right-2 
+                sm:top-2 sm:right-3 
+                md:top-3 md:right-4
+                lg:top-3 lg:right-4
+                bg-white border border-red-200 
+                px-2 sm:px-2 md:px-3
+                py-1 sm:py-1 md:py-1.5
+                rounded-sm ">
+
+                        <p className="flex items-center gap-2  
+               text-sm sm:text-base md:text-md lg:text-lg">
+                            <LuAlarmClock className="text-red-400" />
+                            <span className="text-red-500">{formatTime(timeLeft)}</span>
+                        </p>
                     </div>
+
                 )}
+                <h1 className="text-lg sm:text-lg md:text-xl lg:text-2xl xl:text-3xl font-semibold text-gray-800 tracking-wide text-center mb-1">
+                    Fashion Tex Group Of Company
+                </h1>
+                <p className="text-lg text-gray-800 font-medium text-center">
+                    Exam Name: <span className="text-indigo-700 font-semibold">
+                        {questions[0]?.examName || "N/A"}
+                    </span>
+                </p>
             </div>
 
+            {/* Questions and navigation */}
             {loading ? (
                 <p className="text-center text-gray-500 text-lg">Loading questions...</p>
-            ) : currentQuestion ? (
+            ) : currentQuestions.length > 0 ? (
                 <>
-                    {/* Question */}
-                    <div className="mb-4">
-                        <div className="flex justify-between items-center mb-2">
-                            <h3
-                                className="text-xl font-semibold text-gray-800 select-none"
-                                onContextMenu={(e) => e.preventDefault()}  // disable right-click
-                                onDragStart={(e) => e.preventDefault()}    // disable drag
-                                onMouseDown={(e) => e.preventDefault()}    // disable text selection
+                    {/* Current page questions */}
+                    {currentQuestions.map((q, idx) => {
+                        const questionNumber = currentPage * questionsPerPage + idx + 1;
+                        const isHighlighted = highlightedQuestions.includes(q.questionId);
+
+                        return (
+                            <div
+                                key={q.questionId}
+                                className={`mb-6 p-3 rounded-sm  transition-all duration-500 ${isHighlighted
+                                    ? 'bg-red-100 border border-red-400'
+                                    : 'bg-white border border-gray-300'
+                                    }`}
                             >
-                                {currentQuestion.question}
-                            </h3>
-                            <p className="text-sm text-gray-500">Mark: <span className="font-medium">{currentQuestion.mark}</span></p>
-                        </div>
-                        {currentQuestion.sketch && <img src={currentQuestion.sketch} alt={`Sketch ${currentIndex + 1}`} className="w-64 h-48 object-contain border rounded shadow-sm mb-3" />}
-                    </div>
+                                {/* Question header */}
+                                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-2">
+                                    <h3
+                                        // className="text-xl sm:text-xl font-normal text-gray-800 select-none break-words sm:pr-4"
+                                        className="text-md sm:text-md font-normal text-gray-800 select-none break-words sm:pr-4"
+                                        onContextMenu={(e) => e.preventDefault()}
+                                        onDragStart={(e) => e.preventDefault()}
+                                        onMouseDown={(e) => e.preventDefault()}
+                                    >
+                                        {questionNumber}. {q.question}
+                                    </h3>
+                                    <p className="text-sm text-gray-500 mt-1 sm:mt-0 flex-shrink-0">
+                                        Mark: <span className="font-medium">{q.mark}</span>
+                                    </p>
+                                </div>
 
-                    {/* Answer input */}
-                    {currentQuestion.qnType === "MCQ" ? (
-                        <div className="mb-4 space-y-2">
-                            {currentQuestion.options.map((opt, idx) => (
-                                <label key={idx} className="flex items-center gap-3 p-3 border rounded hover:bg-gray-50 cursor-pointer">
-                                    <input type="radio" name={`q${currentQuestion.questionId}`} value={opt} checked={answers[currentQuestion.questionId] === opt} onChange={() => handleAnswerChange(opt)} className="w-5 h-5 accent-blue-500" />
-                                    <span className="text-gray-700">{opt}</span>
-                                </label>
-                            ))}
-                        </div>
-                    ) : (
-                        <textarea rows={5} className="w-full p-3 border rounded focus:ring-2 focus:ring-blue-400 focus:outline-none text-gray-700" value={answers[currentQuestion.questionId] || ""} onChange={(e) => handleAnswerChange(e.target.value)} placeholder="Type your answer here..." />
-                    )}
+                                {/* Question sketch if available */}
+                                {q.sketch && (
+                                    <img
+                                        src={q.sketch}
+                                        alt={`Sketch for question ${questionNumber}`}
+                                        className="w-64 h-48 object-contain border rounded-sm shadow-sm mb-3"
+                                        onError={(e) => {
+                                            e.target.style.display = 'none';
+                                        }}
+                                    />
+                                )}
 
-                    {/* Navigation */}
-                    <div className="flex justify-between mt-6">
-                        <button onClick={goPrevious} disabled={currentIndex === 0 && passCount === 1} className={`px-5 py-2 rounded-lg border ${currentIndex === 0 && passCount === 1 ? "bg-gray-200 text-gray-400 cursor-not-allowed" : "bg-gray-100 hover:bg-gray-200 text-gray-700"}`}>Previous</button>
+                                {/* Answer input - MCQ or textarea */}
+                                {q.qnType === "MCQ" ? (
+                                    <div className="mb-1 space-y-1">
+                                        {q.options.map((opt, i) => (
+                                            <label
+                                                key={i}
+                                                className="flex items-center gap-1 p-1  hover:bg-gray-50 cursor-pointer"
+                                            >
+                                                <input
+                                                    type="radio"
+                                                    name={`q${q.questionId}`}
+                                                    value={opt}
+                                                    checked={answers[q.questionId] === opt}
+                                                    onChange={() => handleAnswerChange(opt, q.questionId)}
+                                                    className="w-4 h-4 accent-blue-500"
+                                                />
+                                                <span className="text-gray-700">{opt}</span>
+                                            </label>
+                                        ))}
+                                    </div>
+                                ) : (
+                                    <textarea
+                                        rows={5}
+                                        className="w-full p-3 border border-gray-200 rounded-sm focus:ring-2 focus:ring-blue-400 focus:outline-none text-gray-700"
+                                        value={answers[q.questionId] || ""}
+                                        onChange={(e) => handleAnswerChange(e.target.value, q.questionId)}
+                                        placeholder="Type your answer here..."
+                                    />
+                                )}
+                            </div>
+                        );
+                    })}
 
-                        <h2 className="text-gray-600 text-sm mb-1">Question {currentIndex + 1} of {questions.length}</h2>
+                    {/* Navigation controls */}
+                    {/* <div className="flex flex-col sm:flex-row justify-between items-center w-full mt-6 gap-3">
+                        <button
+                            onClick={() => setCurrentPage(prev => Math.max(prev - 1, 0))}
+                            disabled={currentPage === 0}
+                            className={`px-4 py-2 rounded-sm border w-full sm:w-auto ${currentPage === 0
+                                ? "bg-gray-200 text-gray-400 cursor-not-allowed"
+                                : "bg-gray-100 hover:bg-gray-200 text-gray-700"
+                                }`}
+                        >
+                            Previous
+                        </button>
 
-                        <div className="flex gap-2">
-                            <button onClick={skipQuestion} className="px-5 py-2 rounded-lg bg-gray-500 hover:bg-gray-600 text-white font-medium">Skip</button>
-                            <button onClick={goNext} className="px-5 py-2 rounded-lg bg-blue-500 hover:bg-blue-600 text-white font-medium">Next</button>
-                            {(passCount > 1 || (passCount === 1 && currentIndex === questions.length - 1)) && (
-                                <button onClick={() => setShowConfirmSubmit(true)} className="px-5 py-2 rounded-lg bg-green-500 hover:bg-green-600 text-white font-medium">Submit</button>
+                        <h2 className="text-gray-600 text-sm mb-1 w-full text-center sm:w-auto sm:text-base">
+                            Page {currentPage + 1} of {totalPages}
+                        </h2>
+
+                        <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
+                            <button
+                                onClick={handleSkipPage}
+                                className="px-4 py-2 rounded-sm bg-gray-500 hover:bg-gray-600 text-white font-medium w-full sm:w-auto"
+                            >
+                                Skip
+                            </button>
+
+                            <button
+                                onClick={handleNextPage}
+                                className="px-4 py-2 rounded-sm bg-blue-500 hover:bg-blue-600 text-white font-medium w-full sm:w-auto"
+                            >
+                                Next
+                            </button>
+
+                           
+                            {(loopCount > 0 || currentPage === totalPages - 1) && (
+                                <button
+                                    onClick={() => setShowConfirmSubmit(true)}
+                                    className="px-4 py-2 rounded-sm bg-green-500 hover:bg-green-600 text-white font-medium w-full sm:w-auto"
+                                >
+                                    Submit
+                                </button>
                             )}
                         </div>
+                    </div> */}
+
+                    <div className="flex flex-col w-full mt-6 gap-2">
+
+                        {/* Large screens: Horizontal layout */}
+                        <div className="hidden sm:flex justify-between items-center w-full gap-2">
+                            {/* Previous button */}
+                            <button
+                                onClick={() => setCurrentPage(prev => Math.max(prev - 1, 0))}
+                                disabled={currentPage === 0}
+                                className={`px-4 py-2 rounded-sm border ${currentPage === 0
+                                    ? "bg-gray-200 text-gray-400 cursor-not-allowed"
+                                    : "bg-gray-100 hover:bg-gray-200 text-gray-700"
+                                    }`}
+                            >
+                                Previous
+                            </button>
+
+                            {/* Page indicator */}
+                            <h2 className="text-gray-600 text-sm sm:text-base">
+                                Page {currentPage + 1} of {totalPages}
+                            </h2>
+
+                            {/* Right buttons */}
+                            <div className="flex gap-2">
+                                <button
+                                    onClick={handleSkipPage}
+                                    className="px-4 py-2 rounded-sm bg-gray-500 hover:bg-gray-600 text-white font-medium"
+                                >
+                                    Skip
+                                </button>
+
+                                <button
+                                    onClick={handleNextPage}
+                                    className="px-4 py-2 rounded-sm bg-blue-500 hover:bg-blue-600 text-white font-medium"
+                                >
+                                    Next
+                                </button>
+
+                                {(loopCount > 0 || currentPage === totalPages - 1) && (
+                                    <button
+                                        onClick={() => setShowConfirmSubmit(true)}
+                                        className="px-4 py-2 rounded-sm bg-green-500 hover:bg-green-600 text-white font-medium"
+                                    >
+                                        Submit
+                                    </button>
+                                )}
+                            </div>
+                        </div>
+
+                        {/* Small screens: Vertical layout */}
+                        <div className="flex flex-col sm:hidden w-full gap-2">
+                            {/* Page indicator on top */}
+                            <h2 className="text-gray-600 text-sm text-center sm:text-base">
+                                Page {currentPage + 1} of {totalPages}
+                            </h2>
+
+                            {/* Buttons horizontally */}
+                            <div className="flex justify-between items-center w-full gap-2">
+                                {/* Left side: Previous */}
+                                <div>
+                                    <button
+                                        onClick={() => setCurrentPage(prev => Math.max(prev - 1, 0))}
+                                        disabled={currentPage === 0}
+                                        className={`px-4 py-2 rounded-sm border ${currentPage === 0
+                                                ? "bg-gray-200 text-gray-400 cursor-not-allowed"
+                                                : "bg-gray-100 hover:bg-gray-200 text-gray-700"
+                                            }`}
+                                    >
+                                        Previous
+                                    </button>
+                                </div>
+
+                                {/* Right side: Skip, Next, Submit */}
+                                <div className="flex gap-2">
+                                    <button
+                                        onClick={handleSkipPage}
+                                        className="px-4 py-2 rounded-sm bg-gray-500 hover:bg-gray-600 text-white font-medium"
+                                    >
+                                        Skip
+                                    </button>
+
+                                    <button
+                                        onClick={handleNextPage}
+                                        className="px-4 py-2 rounded-sm bg-blue-500 hover:bg-blue-600 text-white font-medium"
+                                    >
+                                        Next
+                                    </button>
+
+                                    {(loopCount > 0 || currentPage === totalPages - 1) && (
+                                        <button
+                                            onClick={() => setShowConfirmSubmit(true)}
+                                            className="px-4 py-2 rounded-sm bg-green-500 hover:bg-green-600 text-white font-medium"
+                                        >
+                                            Submit
+                                        </button>
+                                    )}
+                                </div>
+                            </div>
+
+                        </div>
                     </div>
+
+
                 </>
             ) : (
-                <p className="text-center text-gray-500 text-lg">No questions available.</p>
+                // No questions available message
+                <p className="text-center text-gray-500 text-lg mb-6">
+                    {departmentContactData[0]?.ChildName ||
+                        "This exam session is closed. Please verify the exam schedule or contact the admin if needed."}
+                </p>
             )}
 
-            {/* Confirm Submit Modal */}
+            {/* Confirmation Modal */}
             {showConfirmSubmit && (
                 <div className="fixed inset-0 bg-black/40 z-50 flex items-center justify-center">
-                    <div className="bg-white rounded-lg p-6 max-w-sm text-center shadow-lg">
+                    <div className="bg-white rounded-sm p-6   max-w-2xl text-center shadow-lg">
+
                         <h3 className="text-xl font-semibold mb-4">Confirm Submission</h3>
                         <p className="mb-6">Are you sure you want to submit your answers?</p>
                         <div className="flex justify-around">
-                            <button onClick={() => setShowConfirmSubmit(false)} className="px-4 py-2 bg-gray-300 rounded hover:bg-gray-400">Cancel</button>
-                            <button onClick={() => { setShowConfirmSubmit(false); handleSubmitExam(); }} className="px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600">Yes, Submit</button>
+                            <button
+                                onClick={() => setShowConfirmSubmit(false)}
+                                className="px-4 py-2 bg-gray-300 rounded hover:bg-gray-400"
+                            >
+                                Cancel
+                            </button>
+                            <button
+                                onClick={() => {
+                                    setShowConfirmSubmit(false);
+                                    handleSubmitExam();
+                                }}
+                                className="px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600"
+                            >
+                                Yes, Submit
+                            </button>
                         </div>
                     </div>
                 </div>
@@ -294,9 +623,13 @@ export default function ExamStartPage() {
 
             {/* Success Modal */}
             {showSuccessModal && (
-               <div className="fixed inset-0 bg-black/40 z-50 flex items-center justify-center">
+                <div className="fixed inset-0 bg-black/40 z-50 flex items-center justify-center">
                     <div className="bg-white rounded-lg p-6 max-w-sm text-center shadow-lg">
-                        <img src="/images/FashionTex-Logo.png" alt="Logo" className="w-24 h-20 mx-auto mb-4 object-contain" />
+                        <img
+                            src="/images/FashionTex-Logo.png"
+                            alt="Logo"
+                            className="w-24 h-20 mx-auto mb-4 object-contain"
+                        />
                         <h3 className="text-xl font-bold mb-2">Fashion Tex Ltd</h3>
                         <p className="text-gray-700">Thank you for completing the recruitment exam.</p>
                         <p className="text-gray-500 mt-3">You will be logged out shortly...</p>

@@ -71,7 +71,7 @@ export default function ExamLandingPage() {
   return (
     <div className="flex items-center justify-center p-2 min-h-screen bg-gray-50">
       <div >
-        <h1 className="text-3xl font-extrabold mb-6 text-center text-gray-800">
+        <h1 className="text-2xl sm:text-2xl md:text-2xl lg:text-2xl font-bold mb-6 text-center text-gray-800">
           Exam Instructions
         </h1>
 
@@ -126,7 +126,7 @@ export default function ExamLandingPage() {
         <div className="mt-8 text-center">
           <button
             onClick={handleStartExam}
-            className="px-8 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-bold rounded-xl shadow-lg hover:shadow-xl hover:scale-105 transform transition-all duration-300"
+            className="px-8 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-bold rounded-sm shadow-lg hover:shadow-xl hover:scale-105 transform transition-all duration-300"
           >
             Start Exam
           </button>

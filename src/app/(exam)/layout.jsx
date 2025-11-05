@@ -31,7 +31,7 @@ export default function DashboardLayout({ children }) {
               {/* Main Content */}
               <div className="flex-1 flex flex-col">
                 {/* Navbar */}
-                <header className="sticky top-0 z-40 bg-white shadow-sm">
+                <header className="sticky top-0 z-40 bg-white shadow-sm rounded-none">
                   <Navbar />
                 </header>
 
@@ -46,7 +46,7 @@ export default function DashboardLayout({ children }) {
                 <main className="flex-1 bg-gradient-to-br from-purple-100 via-purple-200 to-purple-50 p-6 md:p-10 min-h-[calc(100vh-80px)]">
                   {children}
                 </main> */}
-                <main className="flex-1 bg-gradient-to-br from-blue-100 via-blue-200 to-blue-50 p-6 md:p-10 min-h-[calc(100vh-80px)]">
+                <main className="flex-1 bg-gradient-to-br from-blue-100 via-blue-200 to-blue-50 p-6 md:p-10 min-h-[calc(100vh-80px)] rounded-none">
                   {children}
                 </main>
 

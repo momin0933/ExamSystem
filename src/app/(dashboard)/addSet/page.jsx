@@ -109,7 +109,7 @@ export default function AddSet() {
                         body: [
                             [
                                 { text: `${idx + 1}. ${q.question}`, style: "question" },
-                                { text: `Mark: ${q.qnMark || 0}`, style: "mark", alignment: "right" }
+                                { text: `${q.qnMark || 0}`, style: "mark", alignment: "right" }
                             ]
                         ]
                     },
@@ -428,7 +428,7 @@ export default function AddSet() {
                             </tbody> */}
                             <tbody className="bg-white text-xs text-gray-800">
                                 {filteredSet.length === 0 ? (
-                                    <tr><td colSpan="5" className="text-center py-4">No data found</td></tr>
+                                    <tr><td colSpan="6" className="text-center py-4">No data found</td></tr>
                                 ) : (
                                     filteredSet.map((set, index) => (
                                         <tr key={set.Id} className="border-b border-gray-300 hover:bg-[#4775a0] group">
@@ -493,7 +493,7 @@ export default function AddSet() {
                                     <span className="font-normal">{viewData.TotalQuestions}</span>
                                 </span>
                                 <span>
-                                    <b>Total Mark: </b>
+                                    <b>Total Marks: </b>
                                     <span className="font-normal">{viewData.TotalMark}</span>
                                 </span>
                             </div>
@@ -569,7 +569,7 @@ export default function AddSet() {
                                                         {index + 1}. {q.question}
                                                     </h5>
                                                     <span className="absolute top-0 right-0 text-gray-700 font-normal">
-                                                        Mark: {q.qnMark}
+                                                        {q.qnMark}
                                                     </span>
 
                                                     {q.qnImage && (
@@ -609,14 +609,14 @@ export default function AddSet() {
                                 <button
                                     type="button"
                                     onClick={handleDownload}
-                                    className="px-4 py-1.5 bg-blue-600 text-white rounded-lg shadow hover:bg-blue-700 transition duration-200 ease-in-out flex items-center"
+                                    className="px-4 py-1.5 bg-blue-600 text-white rounded-sm shadow hover:bg-blue-700 transition duration-200 ease-in-out flex items-center"
                                 >
                                     Download
                                 </button>
 
                                 <button
                                     onClick={() => setIsViewModalOpen(false)}
-                                    className="px-4 py-1.5 bg-gray-200 text-gray-700 rounded-lg shadow hover:bg-gray-300 transition duration-200 ease-in-out"
+                                    className="px-4 py-1.5 bg-gray-200 text-gray-700 rounded-sm shadow hover:bg-gray-300 transition duration-200 ease-in-out"
                                 >
                                     Close
                                 </button>
