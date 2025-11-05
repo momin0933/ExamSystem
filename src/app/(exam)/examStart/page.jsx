@@ -323,14 +323,12 @@ export default function ExamStartPage() {
 
     return (
         <div className="max-w-3xl mx-auto px-6 py-4 bg-white shadow-md rounded-sm">
-
             <div className="relative flex flex-col items-center mb-3 px-4 sm:px-6 md:px-8 py-4 bg-white">
                 <img
                     src="/images/FashionTex-Logo.png"
                     alt="Logo"
                     className="w-28 h-12 sm:w-32 sm:h-12 md:w-40 md:h-12 xl:w-44 xl:h-12 object-contain drop-shadow-md mb-2"
                 />
-
                 {timeLeft !== null && (
 
                     <div className="absolute 
@@ -351,7 +349,7 @@ export default function ExamStartPage() {
                     </div>
 
                 )}
-                <h1 className="text-lg sm:text-lg md:text-xl lg:text-2xl xl:text-3xl font-extrabold text-gray-800 tracking-wide text-center mb-1">
+                <h1 className="text-lg sm:text-lg md:text-xl lg:text-2xl xl:text-3xl font-semibold text-gray-800 tracking-wide text-center mb-1">
                     Fashion Tex Group Of Company
                 </h1>
                 <p className="text-lg text-gray-800 font-medium text-center">

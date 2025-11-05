@@ -109,7 +109,7 @@ export default function AddSet() {
                         body: [
                             [
                                 { text: `${idx + 1}. ${q.question}`, style: "question" },
-                                { text: `Mark: ${q.qnMark || 0}`, style: "mark", alignment: "right" }
+                                { text: `${q.qnMark || 0}`, style: "mark", alignment: "right" }
                             ]
                         ]
                     },
