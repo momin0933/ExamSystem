@@ -9,7 +9,7 @@ import 'aos/dist/aos.css';
 // Icons
 import { FaFileExcel } from 'react-icons/fa';
 import { IoMdAddCircle } from 'react-icons/io';
-import { FiEdit, FiTrash2, FiEye } from "react-icons/fi";
+import { FiEdit, FiTrash2, FiEye, FiX } from "react-icons/fi";
 
 // Context and Components
 import { AuthContext } from '../../provider/AuthProvider';
@@ -32,6 +32,7 @@ export default function AddExam() {
   const [exams, setExams] = useState([]);
   const [filteredExams, setFilteredExams] = useState([]);
   const [viewData, setViewData] = useState(null);
+  const [examTimeError, setExamTimeError] = useState("");
 
   // Form States
   const [formData, setFormData] = useState({
@@ -248,11 +249,26 @@ export default function AddExam() {
     debugger;
     e.preventDefault();
     setLoading(true);
+    setExamTimeError("");
 
     try {
       // Input validation
       if (!formData.setId) throw new Error("Please select a question set.");
       if (!formData.name?.trim()) throw new Error("Exam name cannot be empty.");
+      //  Exam time validation
+      if (!examHour && !examMinute) {
+        setExamTimeError("Please enter exam time (hour or minute).");
+        setTimeout(() => setExamTimeError(""), 2000);
+        setLoading(false);
+        return;
+      }
+
+      if (Number(examHour) === 0 && Number(examMinute) === 0) {
+        setExamTimeError("Exam time cannot be 0 hours and 0 minutes.");
+        setTimeout(() => setExamTimeError(""), 2000);
+        setLoading(false);
+        return;
+      }
 
       // Format exam time safely
       let examTime = null;
@@ -439,11 +455,16 @@ export default function AddExam() {
       setIsDeleteModalOpen(false);
     }
   };
-
+  useEffect(() => {
+    document.body.style.overflow = 'hidden';
+    return () => {
+      document.body.style.overflow = 'unset';
+    };
+  }, []);
   // ========== RENDER COMPONENT ==========
 
   return (
-    <div className="overflow-x-auto p-3">
+    <div className="overflow-x-auto p-2">
       <style jsx>{`
         .custom-scrollbar::-webkit-scrollbar { display: none; }
         .custom-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
@@ -471,10 +492,11 @@ export default function AddExam() {
           .fixed-table td:last-child { border-bottom: none; }
         }
       `}</style>
-
-      <div className="rounded-md font-roboto overflow-hidden">
+      <div className="mb-1">
+        <h1 className="text-2xl font-bold text-gray-800">Exam List</h1>
+      </div>
+      <div className="rounded-sm font-roboto overflow-hidden">
         <div className="bg-gradient-to-r from-[#2c3e50] to-[#3498db] sticky top-0 z-20 shadow-md">
-
           {/* Search Input */}
           <div className="px-3 py-2 flex flex-wrap justify-between items-center gap-2">
             <div className='flex items-center gap-3'>
@@ -511,77 +533,80 @@ export default function AddExam() {
           </div>
 
           {/* Exams table */}
-          <table className="min-w-full text-sm text-left text-gray-600">
-            <thead className="bg-gray-100 text-xs uppercase text-gray-700">
-              <tr className="border-b">
-                <th className="px-4 py-2 text-center whitespace-nowrap">SL</th>
-                <th className="px-4 py-2 whitespace-nowrap">Set Name</th>
-                <th className="px-4 py-2 whitespace-nowrap">Exam Name</th>
-                <th className="px-4 py-2 whitespace-nowrap">Total Ques</th>
-                <th className="px-4 py-2 whitespace-nowrap">Total Mark</th>
-                <th className="px-4 py-2 whitespace-nowrap">From Date</th>
-                <th className="px-4 py-2 whitespace-nowrap">To Date</th>
-                <th className="px-4 py-2 whitespace-nowrap">Exam Time</th>
-                <th className="px-4 py-2 text-center whitespace-nowrap">Actions</th>
-              </tr>
-            </thead>
-            <tbody className="bg-white text-xs text-gray-700">
-              {filteredExams.length === 0 ? (
-                <tr key="no-exams">
-                  <td colSpan="7" className="text-center py-4">No exams found</td>
+          <div className="border border-gray-300 rounded-b-md overflow-hidden max-h-[65vh] overflow-y-auto">
+            <table className="min-w-full ">
+              <thead className="bg-gray-100 text-xs uppercase text-gray-800 sticky top-0 z-10">
+                <tr className="border-b">
+                  <th className="px-4 py-2 text-center whitespace-nowrap">SL</th>
+                  <th className="px-4 py-2 whitespace-nowrap">Set</th>
+                  <th className="px-4 py-2 whitespace-nowrap">Exam Name</th>
+                  <th className="px-4 py-2 whitespace-nowrap">Total Ques</th>
+                  <th className="px-4 py-2 whitespace-nowrap">Total Mark</th>
+                  <th className="px-4 py-2 whitespace-nowrap">From Date</th>
+                  <th className="px-4 py-2 whitespace-nowrap">To Date</th>
+                  <th className="px-4 py-2 whitespace-nowrap">Exam Time</th>
+                  <th className="px-4 py-2 text-center whitespace-nowrap">Actions</th>
                 </tr>
-              ) : (
-                filteredExams.map((item, index) => (
-                  <tr key={item.id} className="border-b border-gray-300 hover:bg-gray-50">
-                    <td data-label="SL" className="px-4 py-2 text-center">{index + 1}</td>
-                    <td data-label="Set Name" className="px-4 py-2 ">{item.setName}</td>
-                    <td data-label="Exam Name" className="px-4 py-2 ">{item.examName}</td>
-                    <td data-label="Total Ques" className="px-4 py-2 ">{item.totalQn}</td>
-                    <td data-label="Total Mark" className="px-4 py-2 ">{item.totalMark}</td>
-                    {/* <td data-label="From Date" className="px-4 py-2 text-center">{item.fromDate}</td>
-                    <td data-label="To Date" className="px-4 py-2 text-center">{item.toDate}</td> */}
-                    <td data-label="From Date" className="px-4 py-2 ">
-                      {item.fromDate ? new Date(item.fromDate).toLocaleDateString("en-GB") : "-"}
-                    </td>
-                    <td data-label="To Date" className="px-4 py-2 ">
-                      {item.toDate ? new Date(item.toDate).toLocaleDateString("en-GB") : "-"}
-                    </td>
-
-
-                    <td data-label="Exam Time" className="px-4 py-2">{item.examTime}</td>
-                    <td data-label="Actions" className="px-4 py-2 text-center">
-                      <div className="flex justify-center gap-3">
-                        {/* View Button */}
-                        <button
-                          onClick={() => openViewModal(item)}
-                          className="flex items-center gap-1 px-3 py-1.5 text-sm font-medium border border-blue-500 text-blue-500 rounded hover:bg-blue-500 hover:text-white transition-colors duration-200">
-                          <FiEye />
-                        </button>
-
-                        {/* Edit Button */}
-                        <button
-                          onClick={() => openEditModal(item)}
-                          title="Edit Exam"
-                          className="flex items-center gap-1 px-3 py-1.5 text-sm font-medium border border-[#00925a] text-[#00925a] rounded hover:bg-[#00925a] hover:text-white transition-colors duration-200"
-                        >
-                          <FiEdit className="text-base" />
-                        </button>
-
-                        {/* Delete Button */}
-                        <button
-                          onClick={() => openDeleteModal(item)}
-                          title="Delete Exam"
-                          className="flex items-center gap-1 px-3 py-1.5 text-sm font-medium border border-red-500 text-red-500 rounded hover:bg-red-500 hover:text-white transition-colors duration-200"
-                        >
-                          <FiTrash2 className="text-base" />
-                        </button>
-                      </div>
-                    </td>
+              </thead>
+              <tbody className="bg-white text-xs text-gray-800">
+                {filteredExams.length === 0 ? (
+                  <tr key="no-exams">
+                    <td colSpan="7" className="text-center py-4">No exams found</td>
                   </tr>
-                ))
-              )}
-            </tbody>
-          </table>
+                ) : (
+                  filteredExams.map((item, index) => (
+                    <tr key={item.id} className="border-b border-gray-300 hover:bg-[#4775a0] group">
+                      <td data-label="SL" className="px-4 py-1.5 group-hover:text-white text-center">{index + 1}</td>
+                      <td data-label="Set Name" className="px-4 py-1.5 group-hover:text-white ">{item.setName}</td>
+                      <td data-label="Exam Name" className="px-4 py-1.5 group-hover:text-white ">{item.examName}</td>
+                      <td data-label="Total Ques" className="px-4 py-1.5  group-hover:text-white">{item.totalQn}</td>
+                      <td data-label="Total Mark" className="px-4 py-1.5 group-hover:text-white ">{item.totalMark}</td>
+                      {/* <td data-label="From Date" className="px-4 py-1.5 text-center">{item.fromDate}</td>
+                    <td data-label="To Date" className="px-4 py-1.5 text-center">{item.toDate}</td> */}
+                      <td data-label="From Date" className="px-4 py-1.5 group-hover:text-white ">
+                        {item.fromDate ? new Date(item.fromDate).toLocaleDateString("en-GB") : "-"}
+                      </td>
+                      <td data-label="To Date" className="px-4 py-1.5 group-hover:text-white ">
+                        {item.toDate ? new Date(item.toDate).toLocaleDateString("en-GB") : "-"}
+                      </td>
+
+
+                      <td data-label="Exam Time" className="px-4 py-1.5 group-hover:text-white">{item.examTime}</td>
+                      <td data-label="Actions" className="px-4 py-1.5 group-hover:text-white text-center">
+                        <div className="flex justify-center gap-3">
+                          {/* View Button */}
+                          <button
+                            onClick={() => openViewModal(item)}
+                            className="flex items-center gap-1 px-3 py-1 text-sm font-medium border border-blue-500 text-blue-500  rounded-sm group-hover:!text-white group-hover:border-white transition-colors duration-200"
+                          >
+                            <FiEye />
+                          </button>
+
+                          {/* Edit Button */}
+                          <button
+                            onClick={() => openEditModal(item)}
+                            title="Edit Exam"
+                            className="flex items-center gap-1 px-3 py-1 text-sm font-medium border border-[#00925a] text-[#00925a] rounded-sm group-hover:!text-white group-hover:border-white transition-colors duration-200"
+                          >
+                            <FiEdit className="text-base" />
+                          </button>
+
+                          {/* Delete Button */}
+                          <button
+                            onClick={() => openDeleteModal(item)}
+                            title="Delete Exam"
+                            className="flex items-center gap-1 px-3 py-1 text-sm font-medium border border-red-500 text-red-500 rounded-sm group-hover:bg-red-500 group-hover:!text-white transition-colors duration-200"
+                          >
+                            <FiTrash2 className="text-base" />
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
+          </div>
         </div>
       </div>
 
@@ -594,18 +619,18 @@ export default function AddExam() {
                 onClick={() => setShowModal(false)}
                 className="btn btn-sm btn-circle btn-ghost absolute right-2 top-2"
               >
-                ✕
+                <FiX className="w-4 h-4" />
               </button>
             </form>
 
             <div className="border-b border-gray-300 pb-2 mb-4">
-              <h3 className="font-bold text-lg">{isEdit ? 'Edit Exam' : 'Exam Entry'}</h3>
+              <h3 className="font-bold text-lg text-gray-800">{isEdit ? 'Edit Exam' : 'Exam Entry'}</h3>
             </div>
 
             <form onSubmit={handleSubmit} className="space-y-4 text-sm">
               {/* Question Set Selection */}
               <div className='flex items-center gap-2 mt-2'>
-                <label className="w-1/3 text-sm font-semibold text-gray-700">Select Set: <span className="text-red-500">*</span></label>
+                <label className="w-1/3 text-sm font-semibold text-gray-700">Select Set <span className="text-red-500">*</span></label>:
                 <Select
                   options={questionSet}
                   value={questionSet.find(opt => opt.value === formData.setId) || null}
@@ -616,7 +641,7 @@ export default function AddExam() {
                     totalQn: option?.totalQn || 0
                   })}
                   placeholder="Select or search question set..."
-                  className="w-full"
+                  className="w-full focus:outline-none focus:ring-0 focus:ring-blue-400 focus:border-blue-400"
                   isClearable
                   isSearchable
                   required
@@ -625,63 +650,64 @@ export default function AddExam() {
 
               {/* Exam Name Input */}
               <div className='flex items-center gap-2 mt-2'>
-                <label className="w-1/3 text-sm font-semibold text-gray-700">Exam Name: <span className="text-red-500">*</span></label>
+                <label className="w-1/3 text-sm font-semibold text-gray-700">Exam Name <span className="text-red-500">*</span></label>:
                 <input
                   type="text"
                   value={formData.name}
                   onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                  className="w-full border px-3 py-2 rounded"
+                  className="w-full border px-3 py-2 rounded-sm focus:outline-none focus:ring-0 focus:ring-blue-400 focus:border-blue-400"
                   placeholder="Enter exam name"
                   required
                 />
               </div>
               {/* Exam From Date */}
               <div className='flex items-center gap-2 mt-2'>
-                <label className="w-1/3 text-sm font-semibold text-gray-700">Exam From Date:</label>
+                <label className="w-1/3 text-sm font-semibold text-gray-700">Exam From Date <span className="text-red-500">*</span></label>:
                 <input
                   type="date"
                   value={formData.examFromDate || ""}
                   onChange={(e) => setFormData({ ...formData, examFromDate: e.target.value })}
-                  className="w-full border px-3 py-2 rounded"
+                  required
+                  className="w-full border px-3 py-2 rounded-sm focus:outline-none focus:ring-0 focus:ring-blue-400 focus:border-blue-400"
                 />
               </div>
 
               {/* Exam To Date */}
               <div className='flex items-center gap-2 mt-2'>
-                <label className="w-1/3 text-sm font-semibold text-gray-700">Exam To Date:</label>
+                <label className="w-1/3 text-sm font-semibold text-gray-700">Exam To Date <span className="text-red-500">*</span></label>:
                 <input
                   type="date"
                   value={formData.examToDate || ""}
                   onChange={(e) => setFormData({ ...formData, examToDate: e.target.value })}
-                  className="w-full border px-3 py-2 rounded"
+                  required
+                  className="w-full border px-3 py-2 rounded-sm focus:outline-none focus:ring-0 focus:ring-blue-400 focus:border-blue-400"
                 />
               </div>
 
               {/* Total Mark and Questions Display */}
               <div className="flex items-center gap-6">
                 <div className="flex items-center gap-3 w-1/2">
-                  <label className="w-1/3 text-sm font-semibold text-gray-700">Total Mark</label>
-                  <input
-                    type="number"
-                    value={formData.totalMark ?? 0}
-                    readOnly
-                    className="w-2/3 border px-3 py-2 rounded bg-gray-100 text-gray-600"
-                  />
-                </div>
-
-                <div className="flex items-center gap-3 w-1/2">
-                  <label className="w-1/3 text-sm font-semibold text-gray-700">Total Ques</label>
+                  <label className="w-1/3 text-sm font-semibold text-gray-700">Total Ques</label>:
                   <input
                     type="number"
                     value={formData.totalQn ?? 0}
                     readOnly
-                    className="w-2/3 border px-3 py-2 rounded bg-gray-100 text-gray-600"
+                    className="w-2/3 border px-3 py-2 rounded-sm bg-gray-100 text-gray-700"
+                  />
+                </div>
+                <div className="flex items-center gap-3 w-1/2">
+                  <label className="w-1/3 text-sm font-semibold text-gray-700">Total Mark</label>:
+                  <input
+                    type="number"
+                    value={formData.totalMark ?? 0}
+                    readOnly
+                    className="w-2/3 border px-3 py-2 rounded-sm bg-gray-100 text-gray-700"
                   />
                 </div>
               </div>
 
               {/* Exam Time Input */}
-              <div className="flex items-center gap-3">
+              {/* <div className="flex items-center gap-3">
                 <label className="w-1/3 text-sm font-semibold text-gray-700">Exam Time</label>
                 <div className="flex gap-2 items-center">
                   <input
@@ -690,8 +716,9 @@ export default function AddExam() {
                     max="23"
                     value={examHour}
                     onChange={(e) => setExamHour(e.target.value)}
-                    className="w-16 border px-2 py-1 rounded text-center"
+                    className="w-16 border px-2 py-1 rounded-sm text-center focus:outline-none focus:ring-0 focus:ring-blue-400 focus:border-blue-400"
                     placeholder="hh"
+                    required
                   />
                   <span>hh</span>
                   <span>:</span>
@@ -701,12 +728,58 @@ export default function AddExam() {
                     max="59"
                     value={examMinute}
                     onChange={(e) => setExamMinute(e.target.value)}
-                    className="w-16 border px-2 py-1 rounded text-center"
+                    className="w-16 border px-2 py-1 rounded-sm text-center focus:outline-none focus:ring-0 focus:ring-blue-400 focus:border-blue-400"
                     placeholder="mm"
+                    required
                   />
                   <span>mm</span>
                 </div>
+              </div> */}
+
+              <div className="flex flex-col w-full">
+                <div className="flex items-center gap-3">
+                  <label className="w-1/3 text-sm font-semibold text-gray-700">
+                    Exam Time<span className="text-red-500">*</span>
+                  </label>
+                  <div className="flex gap-2 items-center">
+                    <input
+                      type="number"
+                      min="0"
+                      max="23"
+                      value={examHour}
+                      onChange={(e) => {
+                        setExamHour(e.target.value);
+                        setExamTimeError(""); // clear error when user types
+                      }}
+                      className="w-16 border px-2 py-1 rounded-sm text-center focus:outline-none focus:ring-0 focus:ring-blue-400 focus:border-blue-400"
+                      placeholder="hh"
+                      required
+                    />
+                    <span>hh</span>
+                    <span>:</span>
+                    <input
+                      type="number"
+                      min="0"
+                      max="59"
+                      value={examMinute}
+                      onChange={(e) => {
+                        setExamMinute(e.target.value);
+                        setExamTimeError("");
+                      }}
+                      className="w-16 border px-2 py-1 rounded-sm text-center focus:outline-none focus:ring-0 focus:ring-blue-400 focus:border-blue-400"
+                      placeholder="mm"
+                      required
+                    />
+                    <span>mm</span>
+                  </div>
+                </div>
+
+                {/* Error message under inputs */}
+                {examTimeError && (
+                  <p className="text-red-500 text-sm mt-1 ml-[33%]">{examTimeError}</p>
+                )}
               </div>
+
 
               {/* Form Actions */}
               <div className="flex justify-end space-x-2 pt-4">
@@ -742,7 +815,7 @@ export default function AddExam() {
               onClick={() => setIsViewModalOpen(false)}
               className="absolute top-4 right-4 text-gray-400 hover:text-gray-700 font-bold transition"
             >
-              ✕
+              <FiX className="w-4 h-4" />
             </button>
 
             {/* Header */}
@@ -795,14 +868,15 @@ export default function AddExam() {
                 viewData.Questions.map((q, index) => (
                   <div key={q.qnId || index}>
                     {/* Question Header */}
-                    <div className="mb-4 relative">
-                      <h4 className="font-normal ">
+                    <div className="mb-4 flex justify-between items-start">
+                      <h4 className="font-normal flex-1 mr-4">
                         {index + 1}. {q.question}
                       </h4>
-                      <span className="absolute top-0 right-0 font-normal">
+                      <span className="font-normal whitespace-nowrap">
                         Mark: {q.qnMark}
                       </span>
                     </div>
+
 
                     {/* Question Image */}
                     {q.qnImage && (

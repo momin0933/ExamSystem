@@ -10,8 +10,7 @@ import toast from 'react-hot-toast';
 
 import { FaFileExcel } from 'react-icons/fa';
 import { IoMdAddCircle } from 'react-icons/io';
-import { FiEdit, FiTrash2 } from "react-icons/fi";
-
+import { FiEdit, FiTrash2, FiX, FiSave } from "react-icons/fi";
 import config from '@/config';
 import { AuthContext } from '../../provider/AuthProvider';
 import DeleteConfirmModal from '../../components/DeleteConfirmModal';
@@ -240,10 +239,10 @@ export default function SubjectManage() {
 
     return (
 
-        <div className="overflow-x-auto p-3 ">
+        <div className="overflow-x-auto p-2 ">
 
             <div className="mb-1">
-                <h1 className="text-2xl font-bold text-gray-800">Position List</h1>
+                <h1 className="text-2xl font-bold  text-gray-800">Position List</h1>
             </div>
             {/* ------------------- SEARCH & ACTIONS ------------------- */}
             <div className="rounded-sm font-roboto overflow-hidden">
@@ -267,7 +266,10 @@ export default function SubjectManage() {
                                 />
                                 {searchQuery && (
                                     <button onClick={() => setSearchQuery('')} className="absolute inset-y-0 right-0 pr-3 flex items-center">
-                                        ✕
+                                        {/* <FiX className="w-4 h-4" /> */}
+                                        <svg className="h-4 w-4 text-gray-400 hover:text-gray-600" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                                            <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+                                        </svg>
                                     </button>
                                 )}
                             </div>
@@ -286,35 +288,54 @@ export default function SubjectManage() {
                 {/* ------------------- TABLE WRAPPER ------------------- */}
                 <div className="border border-gray-300 rounded-b-md overflow-hidden max-h-[64vh] overflow-y-auto">
                     <table className="min-w-full text-sm text-left text-gray-600">
-                        <thead className="bg-gray-100 text-xs uppercase text-gray-700 sticky top-0 z-10">
+                        <thead className="bg-gray-100 text-xs uppercase  text-gray-800 sticky top-0 z-10">
                             <tr className="border-b">
                                 <th className="px-4 py-2">SL</th>
                                 <th className="px-4 py-2">Department Name</th>
                                 <th className="px-4 py-2">Position Name</th>
-                                <th className="px-4 py-2">Entry Date</th>
+                                <th className="px-4 py-2 text-center">Entry Date</th>
                                 <th className="px-4 py-2 text-center">Actions</th>
                             </tr>
                         </thead>
-                        <tbody className="bg-white text-xs text-gray-700">
+                        <tbody className="bg-white text-xs text-gray-800">
                             {filteredSubject.length === 0 ? (
                                 <tr>
                                     <td colSpan="5" className="text-center py-4">No data found</td>
                                 </tr>
                             ) : (
                                 filteredSubject.map((subject, index) => (
-                                    <tr key={subject.Id} className="border-b border-gray-300 hover:bg-gray-50">
-                                        <td className="px-4 py-2">{index + 1}</td>
-                                        <td className="px-4 py-2">{subject.Department}</td>
-                                        <td className="px-4 py-2">{subject.Name}</td>
-                                        <td className="px-4 py-2">{subject.EntryDate ? new Date(subject.EntryDate).toLocaleDateString("en-GB") : "-"}</td>
-                                        <td className="px-4 py-2 text-center">
+                                    <tr key={subject.Id} className="border-b border-gray-300  text-gray-800 hover:bg-[#4775a0] group">
+                                        <td className="px-4 py-1.5 group-hover:text-white">{index + 1}</td>
+                                        <td className="px-4 py-1.5 group-hover:text-white">{subject.Department}</td>
+                                        <td className="px-4 py-1.5 group-hover:text-white">{subject.Name}</td>
+                                        <td className="px-4 py-1.5 group-hover:text-white text-center">{subject.EntryDate ? new Date(subject.EntryDate).toLocaleDateString("en-GB") : "-"}</td>
+                                        <td className="px-4 py-1.5  text-center">
                                             <div className="flex justify-center gap-3">
-                                                <button onClick={() => openEditModal(subject)} className="flex items-center gap-1 px-3 py-1.5 text-sm font-medium border border-[#00925a] text-[#00925a] rounded hover:bg-[#00925a] hover:text-white">
+                                                {/* <button onClick={() => openEditModal(subject)} className="flex items-center gap-1 px-3 py-1 text-sm font-medium border border-[#00925a] text-[#00925a] rounded-sm hover:bg-[#00925a] hover:text-white">
                                                     <FiEdit />
                                                 </button>
-                                                <button onClick={() => openDeleteModal(subject.Id)} className="flex items-center gap-1 px-3 py-1.5 text-sm font-medium border border-red-500 text-red-500 rounded hover:bg-red-500 hover:text-white">
+                                                <button onClick={() => openDeleteModal(subject.Id)} className="flex items-center gap-1 px-3 py-1 text-sm font-medium border border-red-500 text-red-500 rounded-sm hover:bg-red-500 hover:text-white">
+                                                    <FiTrash2 />
+                                                </button> */}
+
+                                                <button
+                                                    onClick={() => openEditModal(subject)}
+                                                    className="flex items-center gap-1 px-3 py-1 text-sm font-medium rounded-sm border border-[#00925a] text-[#00925a] 
+             transition-colors duration-200
+              group-hover:!text-white group-hover:border-white "
+                                                >
+                                                    <FiEdit />
+                                                </button>
+
+                                                <button
+                                                    onClick={() => openDeleteModal(subject.Id)}
+                                                    className="flex items-center gap-1 px-3 py-1 text-sm font-medium rounded-sm border border-red-500 text-red-500
+             transition-colors duration-200
+             group-hover:bg-red-500 group-hover:!text-white "
+                                                >
                                                     <FiTrash2 />
                                                 </button>
+
                                             </div>
                                         </td>
                                     </tr>
@@ -330,13 +351,13 @@ export default function SubjectManage() {
             {showModal && (
                 <div className="fixed inset-0 bg-black/20 z-50 flex items-center justify-center">
                     <div data-aos="zoom-in" className="bg-white rounded-sm shadow-md p-6 w-full max-w-xl relative">
-                        <button onClick={handleCloseModal} className="btn btn-sm btn-circle btn-ghost absolute right-2 top-2">✕</button>
+                        <button onClick={handleCloseModal} className="btn btn-sm btn-circle btn-ghost absolute right-2 top-2"><FiX className="w-4 h-4" /></button>
 
-                        <h3 className="font-bold text-lg border-b border-gray-300 pb-2 mb-4">    {isEdit ? 'Department and Position Update' : 'Department and Position Entry'}</h3>
+                        <h3 className="font-bold text-lg text-gray-800  border-b border-gray-300 pb-2 mb-4">    {isEdit ? 'Department and Position Update' : 'Department and Position Entry'}</h3>
 
                         <form onSubmit={isEdit ? handleUpdateSubmit : handleSubmit} className="space-y-4 text-sm">
                             <div className="flex items-center gap-2 mt-2">
-                                <label className="w-1/3 text-sm font-semibold text-gray-700">Department: <span className="text-red-500">*</span></label>
+                                <label className="w-1/3 text-sm font-semibold text-gray-800">Department <span className="text-red-500">*</span></label>:
                                 <div className="w-full  ">
                                     <Select
                                         options={departmentData.map(d => ({ value: d.ChildId, label: d.ChildName }))}
@@ -348,7 +369,7 @@ export default function SubjectManage() {
                                             setSelectedDepartmentLabel(selected?.label || '');
                                         }}
                                         placeholder="Select or search department..."
-                                 
+                                        className="text-gray-800"
                                         isSearchable
                                         required
                                     />
@@ -356,37 +377,34 @@ export default function SubjectManage() {
                             </div>
 
                             <div className='flex items-center gap-2 mt-2'>
-                                <label className="w-1/3 text-sm font-semibold text-gray-700">Position Name: <span className="text-red-500">*</span></label>
+                                <label className="w-1/3 text-sm font-semibold text-gray-800">Position Name <span className="text-red-500">*</span></label>:
                                 <input
                                     type="text"
                                     name="name"
                                     value={formData.name}
                                     onChange={handleChange}
-                                    className="w-full border px-3 py-2 rounded"
+                                    className="w-full border border-gray-400 px-3 py-2 rounded-sm"
                                     required
                                 />
                             </div>
-
-                            {/* <div className="flex justify-end space-x-2 pt-4">
-                                <button type="button" onClick={handleCloseModal} className="px-3 py-1 bg-gray-500 text-white rounded hover:bg-gray-600">Cancel</button>
-                                <button type="submit" className="px-3 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">{isEdit ? 'Update' : 'Save'}</button>
-                            </div> */}
-                            <div className="flex justify-end space-x-2 pt-4">
+                            <div className="flex justify-end space-x-3 pt-2">
+                                {/* Cancel Button */}
                                 <button
                                     type="button"
                                     onClick={handleCloseModal}
-                                    className="px-4 py-2 bg-gray-500 text-white rounded-md hover:bg-gray-600 transition-colors duration-200"
+                                    className="px-4 py-2 bg-gray-500 text-white rounded-sm shadow hover:bg-gray-600 transition"
                                 >
                                     Cancel
                                 </button>
+
+                                {/* Submit Button */}
                                 <button
                                     type="submit"
-                                    className="px-4 py-2 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-md hover:from-blue-700 hover:to-indigo-700 shadow-md transition-all duration-200"
+                                    className="px-4 py-2 bg-blue-600 text-white rounded-sm shadow hover:bg-blue-700 transition"
                                 >
-                                    {isEdit ? 'Update' : 'Save'}
+                                    {isEdit ? "Update" : "Save"}
                                 </button>
                             </div>
-
                         </form>
                     </div>
                 </div>

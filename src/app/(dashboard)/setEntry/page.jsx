@@ -5,6 +5,8 @@ import Select from "react-select";
 import { AuthContext } from '../../provider/AuthProvider';
 import config from '@/config';
 import { toast } from 'react-hot-toast';
+
+import { FiX } from "react-icons/fi";
 import React, { useState, useEffect, useContext } from 'react';
 import AOS from 'aos';
 
@@ -571,366 +573,395 @@ export default function SetEntryPage() {
         };
     }, []);
 
-
     return (
-        <div className="overflow-x-auto p-3">
-            <div className="max-w-5xl mx-auto">
-                <div className="flex items-center justify-between mb-4">
-                    <h2 className="text-2xl font-bold">{isEdit ? "Edit Set" : "Add New Set"}</h2>
-                    {!showPreview && (
-                        <button
-                            type="button"
-                            onClick={handleShowPreview}
-                            className="px-4 py-2 bg-green-600 text-white rounded-md shadow hover:bg-green-700 transition"
-                        >
-                            Add (Preview)
-                        </button>
-                    )}
-                </div>
-                <div className="border border-gray-300 rounded-b-md overflow-hidden max-h-[68vh] overflow-y-auto">
-                    <form onSubmit={handleSubmit} className="space-y-4 text-sm bg-white p-3 rounded-sm shadow">
-                        <div >
+        <div className="overflow-x-auto p-2">
 
-                            <div className="flex items-center gap-4 mb-2">
-                                {/* Set Name */}
-                                <div className="flex items-center gap-2 w-1/3">
-                                    <label className="text-sm font-semibold text-gray-700 w-1/3 whitespace-nowrap">
-                                        Set Name:
-                                    </label>
-                                    <input
-                                        type="text"
-                                        name="name"
-                                        value={formData.name}
-                                        onChange={handleChange}
-                                        className="w-2/3 border border-gray-300 px-3 py-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400 transition-all duration-200"
-                                        required
-                                    />
-                                </div>
-
-                                {/* Subject */}
-                                <div className="flex items-center gap-2 w-1/3">
-                                    <label className="text-sm font-semibold text-gray-700 w-1/3 whitespace-nowrap">
-                                        Subject:
-                                    </label>
-                                    <div className="w-2/3">
-                                        {subjectData.length > 0 && (
-                                            <Select
-                                                name="filterSubject"
-                                                value={subjectData.find((s) => s.value === selectedSubject) || null}
-                                                onChange={(selected) => {
-                                                    const subId = selected?.value || "";
-                                                    setSelectedSubject(subId);
-                                                     setQuestionCount("");
-                                                    fetchQuestionsBySubject(subId);
-                                                }}
-                                                options={subjectData}
-                                                placeholder="Search or choose..."
-                                                className="text-sm"
-                                                isClearable
-                                                isSearchable
-                                            />
-                                        )}
-                                    </div>
-                                </div>
-
-                                {/* Available Questions */}
-                                <div className="flex items-center gap-2 w-1/3">
-                                    <label className="text-sm font-semibold text-gray-700 w-2/3 whitespace-nowrap">
-                                        Available Questions:
-                                    </label>
-                                    <input
-                                        name="availableQuestions"
-                                        value={availableQuestions}
-                                        readOnly
-                                        className="w-1/3 border border-gray-200 px-3 py-2 rounded-lg bg-gray-100 text-gray-600 focus:outline-none"
-                                    />
-                                </div>
+            <div className="flex items-center justify-between mb-2">
+                <h2 className="text-2xl font-bold text-gray-800">{isEdit ? "Edit Set" : "Add New Set"}</h2>
+                {!showPreview && (
+                    <button
+                        type="button"
+                        onClick={handleShowPreview}
+                        className="px-2 py-1 bg-green-600 text-white rounded-sm shadow hover:bg-green-700 transition"
+                    >
+                        Preview
+                    </button>
+                )}
+            </div>
+            <div className="border border-gray-300 rounded-b-md overflow-hidden max-h-[68vh] overflow-y-auto">
+                <form onSubmit={handleSubmit} className="space-y-4 text-sm bg-white p-3 rounded-sm shadow">
+                    <div >
+                        <div className="flex items-center gap-4 mb-2">
+                            {/* Set Name */}
+                            <div className="flex items-center gap-2 w-1/3">
+                                <label className="text-sm font-semibold text-gray-800 w-1/3 whitespace-nowrap">
+                                    Set Name<span className="text-red-500">*</span>
+                                </label>:
+                                <input
+                                    type="text"
+                                    name="name"
+                                    value={formData.name}
+                                    onChange={handleChange}
+                                    className="w-2/3 border border-gray-300 px-3 py-2 rounded-sm focus:outline-none focus:ring-1 focus:ring-blue-400 transition-all duration-200"
+                                    required
+                                />
                             </div>
 
+                            {/* Subject */}
+                            <div className="flex items-center gap-2 w-1/3">
+                                <label className="text-sm font-semibold text-gray-700 w-1/3 whitespace-nowrap">
+                                    Subject<span className="text-red-500">*</span>
+                                </label>:
+                                <div className="w-2/3">
+                                    {subjectData.length > 0 && (
+                                        // <Select
+                                        //     name="filterSubject"
+                                        //     value={subjectData.find((s) => s.value === selectedSubject) || null}
+                                        //     onChange={(selected) => {
+                                        //         const subId = selected?.value || "";
+                                        //         setSelectedSubject(subId);
+                                        //         setQuestionCount("");
+                                        //         fetchQuestionsBySubject(subId);
+                                        //     }}
+                                        //     options={subjectData}
+                                        //     placeholder="Search or choose..."
+                                        //     className="text-sm z-auto"
+                                        //     isClearable
+                                        //     isSearchable
+                                        //     required
+                                        //     menuPortalTarget={document.body} 
+                                        //     menuPosition="fixed"          
+                                        //     styles={{
+                                        //         menuPortal: (base) => ({ ...base, zIndex: 9999 }) p
+                                        //     }}
+                                        // />
 
-                            {/* ---------------- SECOND ROW ---------------- */}
-                            <div className="flex items-center gap-4 mb-4">
-                                {/* Add Mode */}
-                                {!isEdit && (
-                                    <div className="flex items-center gap-2 w-1/3">
-                                        <label className="text-sm font-semibold text-gray-700 w-1/3 whitespace-nowrap">
-                                            Add Mode:
-                                        </label>
-                                        <select
-                                            value={addMode}
-                                            onChange={(e) => handleModeChange(e.target.value)}
-                                            className="w-2/3 border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-400 transition-all duration-200"
-                                        >
-                                            <option value="">-- Select Mode --</option>
-                                            <option value="manual">Add Manual Question</option>
-                                            <option value="random">Add Random Question</option>
-                                        </select>
-                                    </div>
-                                )}
-
-                                {/* Total Mark */}
-                                <div className="flex items-center gap-2 w-1/3">
-                                    <label className="text-sm font-semibold text-gray-700 w-1/3 whitespace-nowrap">
-                                        Total Mark:
-                                    </label>
-                                    <input
-                                        name="mark"
-                                        value={totalMark}
-                                        readOnly
-                                        className="w-2/3 border border-gray-200 px-3 py-2 rounded-lg bg-gray-100 text-gray-600 focus:outline-none"
-                                    />
-                                </div>
-
-                                {/* Total Selected Questions */}
-                                <div className="flex items-center gap-2 w-1/3">
-                                    <label className="text-sm font-semibold text-gray-700 w-2/3 whitespace-nowrap">
-                                        Total Selected Questions:
-                                    </label>
-                                    <input
-                                        name="totalQuestions"
-                                        value={selectedQuestions.length}
-                                        readOnly
-                                        className="w-1/3 border border-gray-200 px-3 py-2 rounded-lg bg-gray-100 text-gray-600 focus:outline-none"
-                                    />
-                                </div>
-                            </div>
-
-                        </div>
-
-                        {/* ---------------- CONDITIONAL BLOCKS ---------------- */}
-                        {(addMode === "manual" || isEdit) && (
-                            <>
-                                <div className="border border-gray-200 rounded-lg p-3 bg-gray-50 max-h-64 overflow-y-auto mt-2">
-                                    {questionData.length === 0 ? (
-                                        <p className="text-gray-400 text-sm italic text-center py-3">
-                                            {selectedSubject
-                                                ? "No questions found for this subject."
-                                                : "Please select a subject to view questions."}
-                                        </p>
-                                    ) : (
-                                        <table className="w-full text-sm border-collapse">
-                                            <thead className="bg-gray-100 sticky top-0">
-                                                <tr>
-                                                    <th className="w-10 p-2 border-b text-left">Select</th>
-                                                    <th className="p-2 border-b text-left">Question</th>
-                                                    <th className="w-24 p-2 border-b text-left">Type</th>
-                                                    <th className="w-20 p-2 border-b text-left">Mark</th>
-                                                </tr>
-                                            </thead>
-                                            <tbody>
-                                                {questionData.map((q) => (
-                                                    <tr
-                                                        key={q.QuestionId}
-                                                        className="hover:bg-gray-50 border-b last:border-0"
-                                                    >
-                                                        <td className="p-2 text-center">
-                                                            <input
-                                                                type="checkbox"
-                                                                checked={isQuestionSelected(q.QuestionId)}
-                                                                onChange={() => handleCheckboxChange(q)}
-                                                                className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-400"
-                                                            />
-                                                        </td>
-                                                        <td className="p-2 text-gray-700">{q.Name}</td>
-                                                        <td className="p-2 text-gray-600">{q.QnType}</td>
-                                                        <td className="p-2 text-gray-600">{q.Mark}</td>
-                                                    </tr>
-                                                ))}
-                                            </tbody>
-                                        </table>
+                                        <Select
+                                            name="filterSubject"
+                                            value={subjectData.find((s) => s.value === selectedSubject) || null}
+                                            onChange={(selected) => {
+                                                const subId = selected?.value || "";
+                                                setSelectedSubject(subId);
+                                                setQuestionCount("");
+                                                fetchQuestionsBySubject(subId);
+                                            }}
+                                            options={subjectData}
+                                            placeholder="Search or choose..."
+                                            className="text-sm z-auto"
+                                            isClearable
+                                            isSearchable
+                                            required
+                                            menuPortalTarget={document.body} 
+                                            menuPosition="fixed"             
+                                            styles={{
+                                                menuPortal: (base) => ({ ...base, zIndex: 9999 }) 
+                                            }}
+                                        />
                                     )}
                                 </div>
+                            </div>
 
-                            </>
-                        )}
+                            {/* Available Questions */}
+                            <div className="flex items-center gap-2 w-1/3">
+                                <label className="text-sm font-semibold text-gray-700 w-2/3 whitespace-nowrap">
+                                    Available Questions:
+                                </label>
+                                <input
+                                    name="availableQuestions"
+                                    value={availableQuestions}
+                                    readOnly
+                                    className="w-1/3 border border-gray-200 px-3 py-2 rounded-sm bg-gray-100 text-gray-600 focus:outline-none"
 
-                        {addMode === "random" && !isEdit && (
-                            <>
-                                <div className="border border-gray-200 rounded-lg p-4 bg-gray-50 mt-2">
-                                    {/* ----------- INPUT + BUTTON ROW ----------- */}
-                                    <div className="flex flex-wrap items-center justify-between gap-4 mb-3">
-                                        {/* Number of Questions Input */}
-                                        <div className="flex items-center gap-2 w-full sm:w-[50%]">
-                                            <label className="text-sm font-semibold text-gray-700 whitespace-nowrap">
-                                                Number of Questions:
-                                            </label>
-                                            <input
-                                                type="number"
-                                                min="1"
-                                                value={questionCount}
-                                                onChange={(e) => setQuestionCount(e.target.value)}
-                                                className="border border-gray-300 px-3 py-2 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-400 transition-all duration-200 w-32"
-                                            />
-                                        </div>
+                                />
+                            </div>
+                        </div>
 
-                                        {/* Add Random Button */}
-                                        <div className="flex justify-end w-full sm:w-auto">
-                                            <button
-                                                type="button"
-                                                onClick={fetchRandomQuestions}
-                                                className="px-4 py-2 bg-blue-500 text-white text-sm font-medium rounded-md shadow-sm hover:bg-blue-600 transition-all duration-200"
-                                            >
-                                                Add Random Questions
-                                            </button>
-                                        </div>
-                                    </div>
+
+                        {/* ---------------- SECOND ROW ---------------- */}
+                        <div className="flex items-center gap-4 mb-4">
+                            {/* Add Mode */}
+                            {!isEdit && (
+                                <div className="flex items-center gap-2 w-1/3">
+                                    <label className="text-sm font-semibold text-gray-700 w-1/3 whitespace-nowrap">
+                                        Add Mode<span className="text-red-500">*</span>
+                                    </label>:
+                                    <select
+                                        value={addMode}
+                                        onChange={(e) => handleModeChange(e.target.value)}
+                                        required
+                                        className="w-2/3 border border-gray-300 rounded-sm px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-400 transition-all duration-200"
+                                    >
+                                        <option value="">-- Select Mode --</option>
+                                        <option value="manual">Add Manual Question</option>
+                                        <option value="random">Add Random Question</option>
+                                    </select>
                                 </div>
-                            </>
-                        )}
+                            )}
 
-                        {/* Modal */}
-                        {showPreview && selectedQuestions.length > 0 && (
-                            <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
-                                <div
-                                    className="bg-white rounded-lg shadow-lg w-11/12 max-w-4xl p-4 relative"
-                                    data-aos="fade-up"
-                                >
-                                    {/* Close Button */}
-                                    <button
-                                        onClick={() => setShowPreview(false)}
-                                        className="absolute top-3 right-3 text-gray-600 hover:text-gray-900 text-lg font-bold"
-                                    >
-                                        &times;
-                                    </button>
+                            {/* Total Mark */}
+                            <div className="flex items-center gap-2 w-1/3">
+                                <label className="text-sm font-semibold text-gray-700 w-1/3 whitespace-nowrap">
+                                    Total Mark:
+                                </label>
+                                <input
+                                    name="mark"
+                                    value={totalMark}
+                                    readOnly
+                                    className="w-2/3 border border-gray-200 px-3 py-2 rounded-sm bg-gray-100 text-gray-600 focus:outline-none"
+                                />
+                            </div>
 
-                                    {/* Modal Header */}
-                                    <h2
-                                        className="text-xl font-bold mb-4 text-gray-800"
-                                        data-aos="fade-up"
-                                        data-aos-delay="100"
-                                    >
-                                        Show Selected Questions
-                                    </h2>
+                            {/* Total Selected Questions */}
+                            <div className="flex items-center gap-2 w-1/3">
+                                <label className="text-sm font-semibold text-gray-700 w-2/3 whitespace-nowrap">
+                                    Total Selected Questions:
+                                </label>
+                                <input
+                                    name="totalQuestions"
+                                    value={selectedQuestions.length}
+                                    readOnly
+                                    className="w-1/3 border border-gray-200 px-3 py-2 rounded-sm bg-gray-100 text-gray-600 focus:outline-none"
+                                />
+                            </div>
+                        </div>
 
-                                    {/* Table */}
-                                    <div className="overflow-x-auto">
-                                        <table className="w-full text-sm border border-gray-300 rounded overflow-hidden">
-                                            <thead className="bg-blue-50 text-gray-700">
-                                                <tr>
-                                                    <th className="border px-2 py-1">SL</th>
-                                                    <th className="border px-2 py-1">Subject</th>
-                                                    <th className="border px-2 py-1">Type</th>
-                                                    <th className="border px-2 py-1">Total Qn</th>
-                                                    <th className="border px-2 py-1">Mark</th>
+                    </div>
+
+                    {/* ---------------- CONDITIONAL BLOCKS ---------------- */}
+                    {(addMode === "manual" || isEdit) && (
+                        <>
+                            <div className="border border-gray-200 rounded-lg p-3 bg-gray-50 max-h-64 overflow-y-auto mt-2">
+                                {questionData.length === 0 ? (
+                                    <p className="text-gray-400 text-sm italic text-center py-3">
+                                        {selectedSubject
+                                            ? "No questions found for this subject."
+                                            : "Please select a subject to view questions."}
+                                    </p>
+                                ) : (
+                                    <table className="w-full text-sm border-collapse">
+                                        <thead className="bg-gray-100 sticky top-0">
+                                            <tr>
+                                                <th className="w-10 p-2 border-b text-left">Select</th>
+                                                <th className="p-2 border-b text-left">Question</th>
+                                                <th className="w-24 p-2 border-b text-left">Type</th>
+                                                <th className="w-20 p-2 border-b text-left">Mark</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {questionData.map((q) => (
+                                                <tr
+                                                    key={q.QuestionId}
+                                                    className="hover:bg-gray-50 border-b last:border-0"
+                                                >
+                                                    <td className="p-2 text-center">
+                                                        <input
+                                                            type="checkbox"
+                                                            checked={isQuestionSelected(q.QuestionId)}
+                                                            onChange={() => handleCheckboxChange(q)}
+                                                            className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-400"
+                                                        />
+                                                    </td>
+                                                    <td className="p-2 text-gray-700">{q.Name}</td>
+                                                    <td className="p-2 text-gray-600">{q.QnType}</td>
+                                                    <td className="p-2 text-gray-600">{q.Mark}</td>
                                                 </tr>
-                                            </thead>
-                                            <tbody>
-                                                {(() => {
-                                                    const grouped = selectedQuestions.reduce((acc, q) => {
-                                                        if (!acc[q.SubjectName]) acc[q.SubjectName] = {};
-                                                        if (!acc[q.SubjectName][q.QnType])
-                                                            acc[q.SubjectName][q.QnType] = { count: 0, totalMark: 0 };
-                                                        acc[q.SubjectName][q.QnType].count++;
-                                                        acc[q.SubjectName][q.QnType].totalMark += Number(q.Mark) || 0;
-                                                        return acc;
-                                                    }, {});
+                                            ))}
+                                        </tbody>
+                                    </table>
+                                )}
+                            </div>
 
-                                                    const subjects = Object.entries(grouped);
-                                                    let grandTotalQuestions = 0;
-                                                    let grandTotalMarks = 0;
+                        </>
+                    )}
 
-                                                    return (
-                                                        <>
-                                                            {subjects.map(([subject, types], idx) => {
-                                                                const totalForSubject = Object.values(types).reduce(
-                                                                    (acc, t) => ({ count: acc.count + t.count, totalMark: acc.totalMark + t.totalMark }),
-                                                                    { count: 0, totalMark: 0 }
-                                                                );
-                                                                grandTotalQuestions += totalForSubject.count;
-                                                                grandTotalMarks += totalForSubject.totalMark;
-
-                                                                return (
-                                                                    <React.Fragment key={idx}>
-                                                                        {Object.entries(types).map(([type, data], tIdx) => (
-                                                                            <tr
-                                                                                key={`${subject}-${type}`}
-                                                                                className="bg-white hover:bg-gray-50"
-                                                                                data-aos="fade-up"
-                                                                                data-aos-delay={tIdx * 50}
-                                                                            >
-                                                                                {tIdx === 0 && (
-                                                                                    <>
-                                                                                        <td className="border px-2 py-1 text-center font-medium" rowSpan={Object.keys(types).length}>
-                                                                                            {idx + 1}
-                                                                                        </td>
-                                                                                        <td className="border px-2 py-1 font-semibold text-gray-800" rowSpan={Object.keys(types).length}>
-                                                                                            {subject}
-                                                                                        </td>
-                                                                                    </>
-                                                                                )}
-                                                                                <td className="border px-2 py-1 text-center">{type}</td>
-                                                                                <td className="border px-2 py-1 text-center">{data.count}</td>
-
-                                                                                <td className="border px-2 py-1 text-center">{data.totalMark}</td>
-                                                                            </tr>
-                                                                        ))}
-                                                                        <tr
-                                                                            className="bg-blue-50 font-semibold text-gray-800"
-                                                                            data-aos="fade-up"
-                                                                            data-aos-delay={Object.keys(types).length * 50}
-                                                                        >
-                                                                            <td colSpan={2} className="border px-2 py-1 text-right">Subtotal:</td>
-                                                                            <td className="border px-2 py-1 text-center">Total</td>
-                                                                            <td className="border px-2 py-1 text-center">{totalForSubject.count}</td>
-
-                                                                            <td className="border px-2 py-1 text-center">{totalForSubject.totalMark}</td>
-                                                                        </tr>
-                                                                    </React.Fragment>
-                                                                );
-                                                            })}
-                                                            <tr
-                                                                className="bg-green-100 font-bold text-gray-900"
-                                                                data-aos="fade-up"
-                                                                data-aos-delay={subjects.length * 100}
-                                                            >
-                                                                <td colSpan={2} className="border px-2 py-1 text-right">Grand Total:</td>
-                                                                <td className="border px-2 py-1 text-center">All Types</td>
-                                                                <td className="border px-2 py-1 text-center">{grandTotalQuestions}</td>
-                                                                <td className="border px-2 py-1 text-center">{grandTotalMarks}</td>
-                                                            </tr>
-                                                        </>
-                                                    );
-                                                })()}
-                                            </tbody>
-                                        </table>
+                    {addMode === "random" && !isEdit && (
+                        <>
+                            <div className="border border-gray-200 rounded-lg p-4 bg-gray-50 mt-2">
+                                {/* ----------- INPUT + BUTTON ROW ----------- */}
+                                <div className="flex flex-wrap items-center justify-between gap-4 mb-3">
+                                    {/* Number of Questions Input */}
+                                    <div className="flex items-center gap-2 w-full sm:w-[50%]">
+                                        <label className="text-sm font-semibold text-gray-700 whitespace-nowrap">
+                                            Number of Questions<span className="text-red-500">*</span>
+                                        </label>:
+                                        <input
+                                            type="number"
+                                            min="1"
+                                            value={questionCount}
+                                            onChange={(e) => setQuestionCount(e.target.value)}
+                                            required
+                                            className="border border-gray-300 px-3 py-2 rounded-sm focus:outline-none focus:ring-2 focus:ring-blue-400 transition-all duration-200 w-32"
+                                        />
                                     </div>
 
-                                    {/* Close button at bottom */}
-                                    <div className="flex justify-end mt-4">
+                                    {/* Add Random Button */}
+                                    <div className="flex justify-end w-full sm:w-auto">
                                         <button
-                                            onClick={() => setShowPreview(false)}
-                                            className="px-4 py-2 bg-gray-200 text-gray-800 rounded hover:bg-gray-300"
-                                            data-aos="fade-up"
-                                            data-aos-delay="200"
+                                            type="button"
+                                            onClick={fetchRandomQuestions}
+                                            className="px-4 py-2 bg-blue-500 text-white text-sm font-medium rounded-sm shadow-sm hover:bg-blue-600 transition-all duration-200"
                                         >
-                                            Close
+                                            Add Random Questions
                                         </button>
                                     </div>
                                 </div>
                             </div>
+                        </>
+                    )}
 
-                        )}
-
-
-                        {/* Footer Buttons */}
-                        <div className="flex justify-end gap-2 pt-6 border-t border-gray-200">
-                            <button
-                                type="button"
-                                onClick={() => router.push("/addSet")}
-                                className="px-4 py-2 bg-gray-500 text-white rounded-md shadow hover:bg-gray-600 transition"
+                    {/* Modal */}
+                    {showPreview && selectedQuestions.length > 0 && (
+                        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
+                            <div
+                                className="bg-white rounded-sm shadow-lg w-11/12 max-w-4xl p-4 relative"
+                                data-aos="fade-up"
                             >
-                                Back
-                            </button>
-                            <button
-                                type="submit"
-                                className="px-4 py-2 bg-blue-600 text-white rounded-md shadow hover:bg-blue-700 transition"
-                            >
-                                {isEdit ? "Update" : "Save"}
-                            </button>
+                                {/* Close Button */}
+                                <button
+                                    onClick={() => setShowPreview(false)}
+                                    className="absolute top-3 right-3 text-gray-600 hover:text-gray-900 text-lg font-bold"
+                                >
+                                   <FiX className="w-4 h-4" />
+                                </button>
+
+                                {/* Modal Header */}
+                                <h2
+                                    className="text-xl font-bold mb-4 text-gray-800"
+                                    data-aos="fade-up"
+                                    data-aos-delay="100"
+                                >
+                                    Show Selected Questions
+                                </h2>
+
+                                {/* Table */}
+                                <div className="overflow-x-auto">
+                                    <table className="w-full text-sm border border-gray-300 rounded overflow-hidden">
+                                        <thead className="bg-blue-50 text-gray-700">
+                                            <tr>
+                                                <th className="border px-2 py-1">SL</th>
+                                                <th className="border px-2 py-1">Subject</th>
+                                                <th className="border px-2 py-1">Type</th>
+                                                <th className="border px-2 py-1">Total Qn</th>
+                                                <th className="border px-2 py-1">Mark</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {(() => {
+                                                const grouped = selectedQuestions.reduce((acc, q) => {
+                                                    if (!acc[q.SubjectName]) acc[q.SubjectName] = {};
+                                                    if (!acc[q.SubjectName][q.QnType])
+                                                        acc[q.SubjectName][q.QnType] = { count: 0, totalMark: 0 };
+                                                    acc[q.SubjectName][q.QnType].count++;
+                                                    acc[q.SubjectName][q.QnType].totalMark += Number(q.Mark) || 0;
+                                                    return acc;
+                                                }, {});
+
+                                                const subjects = Object.entries(grouped);
+                                                let grandTotalQuestions = 0;
+                                                let grandTotalMarks = 0;
+
+                                                return (
+                                                    <>
+                                                        {subjects.map(([subject, types], idx) => {
+                                                            const totalForSubject = Object.values(types).reduce(
+                                                                (acc, t) => ({ count: acc.count + t.count, totalMark: acc.totalMark + t.totalMark }),
+                                                                { count: 0, totalMark: 0 }
+                                                            );
+                                                            grandTotalQuestions += totalForSubject.count;
+                                                            grandTotalMarks += totalForSubject.totalMark;
+
+                                                            return (
+                                                                <React.Fragment key={idx}>
+                                                                    {Object.entries(types).map(([type, data], tIdx) => (
+                                                                        <tr
+                                                                            key={`${subject}-${type}`}
+                                                                            className="bg-white hover:bg-gray-50"
+                                                                            data-aos="fade-up"
+                                                                            data-aos-delay={tIdx * 50}
+                                                                        >
+                                                                            {tIdx === 0 && (
+                                                                                <>
+                                                                                    <td className="border px-2 py-1 text-center font-medium" rowSpan={Object.keys(types).length}>
+                                                                                        {idx + 1}
+                                                                                    </td>
+                                                                                    <td className="border px-2 py-1 font-semibold text-gray-800" rowSpan={Object.keys(types).length}>
+                                                                                        {subject}
+                                                                                    </td>
+                                                                                </>
+                                                                            )}
+                                                                            <td className="border px-2 py-1 text-center">{type}</td>
+                                                                            <td className="border px-2 py-1 text-center">{data.count}</td>
+
+                                                                            <td className="border px-2 py-1 text-center">{data.totalMark}</td>
+                                                                        </tr>
+                                                                    ))}
+                                                                    <tr
+                                                                        className="bg-blue-50 font-semibold text-gray-800"
+                                                                        data-aos="fade-up"
+                                                                        data-aos-delay={Object.keys(types).length * 50}
+                                                                    >
+                                                                        <td colSpan={2} className="border px-2 py-1 text-right">Subtotal:</td>
+                                                                        <td className="border px-2 py-1 text-center">Total</td>
+                                                                        <td className="border px-2 py-1 text-center">{totalForSubject.count}</td>
+
+                                                                        <td className="border px-2 py-1 text-center">{totalForSubject.totalMark}</td>
+                                                                    </tr>
+                                                                </React.Fragment>
+                                                            );
+                                                        })}
+                                                        <tr
+                                                            className="bg-green-100 font-bold text-gray-900"
+                                                            data-aos="fade-up"
+                                                            data-aos-delay={subjects.length * 100}
+                                                        >
+                                                            <td colSpan={2} className="border px-2 py-1 text-right">Grand Total:</td>
+                                                            <td className="border px-2 py-1 text-center">All Types</td>
+                                                            <td className="border px-2 py-1 text-center">{grandTotalQuestions}</td>
+                                                            <td className="border px-2 py-1 text-center">{grandTotalMarks}</td>
+                                                        </tr>
+                                                    </>
+                                                );
+                                            })()}
+                                        </tbody>
+                                    </table>
+                                </div>
+
+                                {/* Close button at bottom */}
+                                <div className="flex justify-end mt-4">
+                                    <button
+                                        onClick={() => setShowPreview(false)}
+                                        className="px-4 py-2 bg-gray-200 text-gray-800 rounded hover:bg-gray-300"
+                                        data-aos="fade-up"
+                                        data-aos-delay="200"
+                                    >
+                                        Close
+                                    </button>
+                                </div>
+                            </div>
                         </div>
-                    </form>
-                </div>
+
+                    )}
+
+
+                    {/* Footer Buttons */}
+                    <div className="flex justify-end gap-2 pt-6 border-t border-gray-200">
+                        <button
+                            type="button"
+                            onClick={() => router.push("/addSet")}
+                            className="px-4 py-2 bg-gray-500 text-white rounded-md shadow hover:bg-gray-600 transition"
+                        >
+                            Back
+                        </button>
+                        <button
+                            type="submit"
+                            className="px-4 py-2 bg-blue-600 text-white rounded-md shadow hover:bg-blue-700 transition"
+                        >
+                            {isEdit ? "Update" : "Save"}
+                        </button>
+                    </div>
+                </form>
             </div>
+
         </div>
     );
 }

@@ -4,14 +4,14 @@ import React, { useContext, useEffect, useState } from 'react';
 import { FaFileExcel } from 'react-icons/fa';
 import { AuthContext } from '../../provider/AuthProvider';
 import Link from 'next/link';
-import jsPDF from "jspdf";
-import autoTable from "jspdf-autotable";
+// import jsPDF from "jspdf";
+// import autoTable from "jspdf-autotable";
 import toast from 'react-hot-toast';
 import DeleteConfirmModal from '../../components/DeleteConfirmModal';
 import AOS from 'aos';
 import 'aos/dist/aos.css';
 import { FiEye, FiCheckCircle, FiCheck, FiX } from "react-icons/fi";
-
+import pdfMake from "pdfmake/build/pdfmake";
 
 
 
@@ -210,179 +210,357 @@ export default function AddExam() {
         }
     }, [loginData?.tenantId]);
 
+    // const handleDownload = async () => {
+    //     if (!participateQuestionPaper || participateQuestionPaper.length === 0) return;
+
+    //     const doc = new jsPDF({
+    //         orientation: "portrait",
+    //         unit: "mm",
+    //         format: "a4",
+    //     });
+
+    //     const pageWidth = 210;
+    //     const pageHeight = 297;
+    //     const margin = 14;
+    //     const topMargin = 14;
+    //     const bottomMargin = 14;
+    //     const usableWidth = pageWidth - 2 * margin;
+    //     let y = topMargin;
+
+    //     // Title - Candidate Name
+    //     doc.setFontSize(12);
+    //     doc.setFont("times", "bold");
+    //     doc.text(`${participateQuestionPaper[0].userInfo.name}`, pageWidth / 2, y, { align: "center" });
+    //     y += 6;
+    //     doc.text(`Exam Name: ${participateQuestionPaper[0].examName}`, pageWidth / 2, y, { align: "center" });
+
+
+    //     // Total Score - Top Right
+    //     const totalScore = participateQuestionPaper.reduce((sum, q) => sum + (parseFloat(q.ansMark) || 0), 0);
+    //     const totalMark = participateQuestionPaper.reduce((sum, q) => sum + (parseFloat(q.qnMark) || 0), 0);
+    //     doc.setFontSize(12);
+    //     doc.setFont("times", "bold");
+    //     doc.text(`Total Scored: ${totalScore} / ${totalMark}`, pageWidth - margin, y, { align: "right" });
+    //     y += 8;
+
+    //     // Candidate Info
+    //     const infoText = `Current Organization: ${participateQuestionPaper[0].userInfo.org} |Current Salary: ${participateQuestionPaper[0].userInfo.salary} | Notice Period: ${participateQuestionPaper[0].userInfo.noticePeriod} days`;
+    //     const infoLines = doc.splitTextToSize(infoText, usableWidth);
+    //     infoLines.forEach(line => {
+    //         doc.text(line, pageWidth / 2, y, { align: "center" });
+    //         y += 6;
+    //     });
+    //     y += 4;
+
+    //     // Helper: Convert image URL to Base64
+    //     const getBase64FromUrl = (url) => {
+    //         return new Promise((resolve, reject) => {
+    //             const img = new Image();
+    //             img.crossOrigin = 'Anonymous';
+    //             img.src = url;
+    //             img.onload = function () {
+    //                 const canvas = document.createElement('canvas');
+    //                 canvas.width = img.width;
+    //                 canvas.height = img.height;
+    //                 const ctx = canvas.getContext('2d');
+    //                 ctx.drawImage(img, 0, 0);
+    //                 resolve(canvas.toDataURL('image/jpeg'));
+    //             };
+    //             img.onerror = function (err) {
+    //                 reject(err);
+    //             };
+    //         });
+    //     };
+
+    //     // Questions Loop
+    //     for (const [index, q] of participateQuestionPaper.entries()) {
+    //         if (y + 10 > pageHeight - bottomMargin) {
+    //             doc.addPage();
+    //             y = topMargin;
+    //         }
+
+    //         // Question text (Bold, consistent font size)
+    //         doc.setFontSize(10);
+    //         doc.setFont("times", "bold");
+    //         const questionLines = doc.splitTextToSize(`${index + 1}. ${q.question}`, usableWidth - 50);
+    //         questionLines.forEach((line, i) => {
+    //             doc.text(line, margin, y);
+
+    //             if (i === 0) {
+
+    //                 doc.setFont("times", "bold");
+    //                 doc.setFontSize(10);
+    //                 const markText = `Mark: ${q.qnMark} | Score: ${q.ansMark || 0}`;
+    //                 doc.text(markText, pageWidth - margin, y, { align: "right" });
+    //             }
+    //             y += 6;
+    //         });
+
+    //         // Question image
+    //         if (q.qnImage) {
+    //             try {
+    //                 const imgBase64 = await getBase64FromUrl(q.qnImage);
+    //                 const imgProps = doc.getImageProperties(imgBase64);
+    //                 const imgWidth = 50;
+    //                 const imgHeight = (imgProps.height * imgWidth) / imgProps.width;
+
+    //                 if (y + imgHeight > pageHeight - bottomMargin) {
+    //                     doc.addPage();
+    //                     y = topMargin;
+    //                 }
+
+    //                 doc.addImage(imgBase64, 'JPEG', margin, y, imgWidth, imgHeight);
+    //                 y += imgHeight + 5;
+    //             } catch (err) {
+    //                 console.error("Failed to add image", err);
+    //             }
+    //         }
+
+    //         // MCQ options with symbol
+    //         if (q.qnType === "MCQ" && q.options.length > 0) {
+    //             doc.setFontSize(8);
+    //             doc.setFont("times", "normal");
+    //             q.options.forEach((opt, i) => {
+    //                 const prefix = String.fromCharCode(65 + i) + ". ";
+    //                 let symbol = "";
+
+    //                 if (opt.adminAnswer) symbol = "(Correct Ans)";
+    //                 else if (q.participateAns === opt.text) symbol = "(Applicant Ans)";
+
+    //                 const optionText = `${prefix}${opt.text}${symbol ? " " + symbol : ""}`;
+    //                 const optionLines = doc.splitTextToSize(optionText, usableWidth - 4);
+
+    //                 optionLines.forEach(line => {
+    //                     if (y + 5 > pageHeight - bottomMargin) {
+    //                         doc.addPage();
+    //                         y = topMargin;
+    //                     }
+    //                     doc.text(line, margin + 4, y);
+    //                     y += 5;
+    //                 });
+    //             });
+    //         }
+
+    //         // Descriptive Answer - Justified
+    //         if (q.qnType !== "MCQ") {
+    //             doc.setFontSize(8);
+    //             // ensure sentence has spaces between words
+    //             let rawText = q.participateAns || "No Answer Provided";
+    //             rawText = rawText.replace(/([a-z])([A-Z])/g, '$1 $2').replace(/\s+/g, ' ').trim();
+
+    //             const text = `Answer: ${rawText}`;
+    //             const words = text.split(" ");
+
+    //             // Bold "Answer:" only
+    //             doc.setFont("times", "bold");
+    //             doc.text("Answer:", margin, y);
+    //             const answerLabelWidth = doc.getTextWidth("Answer: ");
+    //             doc.setFont("times", "normal");
+
+    //             let x = margin + answerLabelWidth;
+    //             const lineHeight = 5;
+
+    //             words.slice(1).forEach(word => {
+    //                 const wordWidth = doc.getTextWidth(word + " ");
+    //                 if (x + wordWidth > margin + usableWidth) {
+    //                     y += lineHeight;
+    //                     if (y + lineHeight > pageHeight - bottomMargin) {
+    //                         doc.addPage();
+    //                         y = topMargin;
+    //                     }
+    //                     x = margin;
+    //                 }
+    //                 doc.text(word, x, y);
+    //                 x += wordWidth;
+    //             });
+
+    //             y += 8;
+    //         }
+
+    //         y += 6; // spacing after each question
+    //     }
+
+    //     // Save PDF
+    //     doc.save(`${participateQuestionPaper[0].userInfo.name}_answers.pdf`);
+    // };
+
+
+
+    // Convert image URL to Base64
+    const toBase64 = async (url) => {
+        const res = await fetch(url);
+        const blob = await res.blob();
+        return new Promise((resolve, reject) => {
+            const reader = new FileReader();
+            reader.onloadend = () => resolve(reader.result);
+            reader.onerror = reject;
+            reader.readAsDataURL(blob);
+        });
+    };
+
+    // Load Bangla Font
+    const loadBanglaFont = async () => {
+        const loadFont = async (url) => {
+            const res = await fetch(url);
+            const buffer = await res.arrayBuffer();
+            const bytes = new Uint8Array(buffer);
+            let binary = "";
+            const chunkSize = 0x8000;
+            for (let i = 0; i < bytes.length; i += chunkSize) {
+                const chunk = bytes.subarray(i, i + chunkSize);
+                binary += String.fromCharCode.apply(null, chunk);
+            }
+            return btoa(binary);
+        };
+
+        const normal = await loadFont("/fonts/NotoSansBengali-Regular.ttf");
+        const bold = await loadFont("/fonts/NotoSansBengali-Bold.ttf");
+
+        pdfMake.fonts = {
+            NotoBengali: {
+                normal: "NotoSansBengali-Regular.ttf",
+                bold: "NotoSansBengali-Bold.ttf",
+            },
+        };
+
+        pdfMake.vfs = {
+            "NotoSansBengali-Regular.ttf": normal,
+            "NotoSansBengali-Bold.ttf": bold,
+        };
+    };
+
+    // Generate PDF
     const handleDownload = async () => {
         if (!participateQuestionPaper || participateQuestionPaper.length === 0) return;
 
-        const doc = new jsPDF({
-            orientation: "portrait",
-            unit: "mm",
-            format: "a4",
-        });
+        await loadBanglaFont();
 
-        const pageWidth = 210;
-        const pageHeight = 297;
-        const margin = 14;
-        const topMargin = 14;
-        const bottomMargin = 14;
-        const usableWidth = pageWidth - 2 * margin;
-        let y = topMargin;
-
-        // Title - Candidate Name
-        doc.setFontSize(12);
-        doc.setFont("times", "bold");
-        doc.text(`${participateQuestionPaper[0].userInfo.name}`, pageWidth / 2, y, { align: "center" });
-        y += 6;
-        doc.text(`Exam Name: ${participateQuestionPaper[0].examName}`, pageWidth / 2, y, { align: "center" });
-
-
-        // Total Score - Top Right
+        const candidate = participateQuestionPaper[0].userInfo;
         const totalScore = participateQuestionPaper.reduce((sum, q) => sum + (parseFloat(q.ansMark) || 0), 0);
         const totalMark = participateQuestionPaper.reduce((sum, q) => sum + (parseFloat(q.qnMark) || 0), 0);
-        doc.setFontSize(12);
-        doc.setFont("times", "bold");
-        doc.text(`Total Scored: ${totalScore} / ${totalMark}`, pageWidth - margin, y, { align: "right" });
-        y += 8;
 
-        // Candidate Info
-        const infoText = `Current Organization: ${participateQuestionPaper[0].userInfo.org} |Current Salary: ${participateQuestionPaper[0].userInfo.salary} | Notice Period: ${participateQuestionPaper[0].userInfo.noticePeriod} days`;
-        const infoLines = doc.splitTextToSize(infoText, usableWidth);
-        infoLines.forEach(line => {
-            doc.text(line, pageWidth / 2, y, { align: "center" });
-            y += 6;
-        });
-        y += 4;
+        const content = [];
 
-        // Helper: Convert image URL to Base64
-        const getBase64FromUrl = (url) => {
-            return new Promise((resolve, reject) => {
-                const img = new Image();
-                img.crossOrigin = 'Anonymous';
-                img.src = url;
-                img.onload = function () {
-                    const canvas = document.createElement('canvas');
-                    canvas.width = img.width;
-                    canvas.height = img.height;
-                    const ctx = canvas.getContext('2d');
-                    ctx.drawImage(img, 0, 0);
-                    resolve(canvas.toDataURL('image/jpeg'));
-                };
-                img.onerror = function (err) {
-                    reject(err);
-                };
-            });
-        };
+       // Header: Candidate Name + Exam Name (center) + Total Scored (right)
+content.push({
+    table: {
+        widths: ["*", "auto"], // left (centered stack) + right (score)
+        body: [
+            [
+                {
+                    stack: [
+                        { text: candidate.name, style: "header", alignment: "center" },
+                        { text: `Exam Name: ${participateQuestionPaper[0].examName}`, style: "subheader", alignment: "center" },
+                    ],
+                    border: [false, false, false, false],
+                    alignment: "center",
+                    margin: [0, 0, 0, 0],
+                },
+                {
+                    text: `Total Scored: ${totalScore} / ${totalMark}`,
+                    alignment: "right",
+                    bold: true,
+                    margin: [0, 8, 0, 0], // vertical spacing from top
+                    border: [false, false, false, false],
+                },
+            ],
+        ],
+    },
+    layout: "noBorders",
+    margin: [0, 5, 0, 10], // spacing around header
+});
+
+// Candidate info line (centered)
+content.push({
+    text: `Current Organization: ${candidate.org} | Current Salary: ৳${candidate.salary} | Notice Period: ${candidate.noticePeriod} days`,
+    alignment: "center",
+    style: "info",
+    margin: [0, 0, 0, 10],
+});
+
 
         // Questions Loop
         for (const [index, q] of participateQuestionPaper.entries()) {
-            if (y + 10 > pageHeight - bottomMargin) {
-                doc.addPage();
-                y = topMargin;
-            }
-
-            // Question text (Bold, consistent font size)
-            doc.setFontSize(10);
-            doc.setFont("times", "bold");
-            const questionLines = doc.splitTextToSize(`${index + 1}. ${q.question}`, usableWidth - 50);
-            questionLines.forEach((line, i) => {
-                doc.text(line, margin, y);
-
-                if (i === 0) {
-
-                    doc.setFont("times", "bold");
-                    doc.setFontSize(10);
-                    const markText = `Mark: ${q.qnMark} | Score: ${q.ansMark || 0}`;
-                    doc.text(markText, pageWidth - margin, y, { align: "right" });
-                }
-                y += 6;
+            // Question text with marks
+            content.push({
+                table: {
+                    widths: ["*", 100],
+                    body: [
+                        [
+                            { text: `${index + 1}. ${q.question}`, style: "question" },
+                            { text: `Mark: ${q.qnMark} | Score: ${q.ansMark || 0}`, alignment: "right", style: "mark" },
+                        ],
+                    ],
+                },
+                layout: "noBorders",
+                margin: [0, 5, 0, 5],
             });
 
             // Question image
             if (q.qnImage) {
                 try {
-                    const imgBase64 = await getBase64FromUrl(q.qnImage);
-                    const imgProps = doc.getImageProperties(imgBase64);
-                    const imgWidth = 50;
-                    const imgHeight = (imgProps.height * imgWidth) / imgProps.width;
-
-                    if (y + imgHeight > pageHeight - bottomMargin) {
-                        doc.addPage();
-                        y = topMargin;
-                    }
-
-                    doc.addImage(imgBase64, 'JPEG', margin, y, imgWidth, imgHeight);
-                    y += imgHeight + 5;
+                    const imgData = await toBase64(q.qnImage);
+                    content.push({
+                        image: imgData,
+                        width: 120,
+                        margin: [0, 5, 0, 5],
+                        alignment: "left",
+                    });
                 } catch (err) {
-                    console.error("Failed to add image", err);
+                    console.error("Image load error:", err);
                 }
             }
 
-            // MCQ options with symbol
-            if (q.qnType === "MCQ" && q.options.length > 0) {
-                doc.setFontSize(8);
-                doc.setFont("times", "normal");
+            // MCQ options
+            if (q.qnType === "MCQ" && q.options && q.options.length > 0) {
                 q.options.forEach((opt, i) => {
-                    const prefix = String.fromCharCode(65 + i) + ". ";
                     let symbol = "";
-
                     if (opt.adminAnswer) symbol = "(Correct Ans)";
                     else if (q.participateAns === opt.text) symbol = "(Applicant Ans)";
-
-                    const optionText = `${prefix}${opt.text}${symbol ? " " + symbol : ""}`;
-                    const optionLines = doc.splitTextToSize(optionText, usableWidth - 4);
-
-                    optionLines.forEach(line => {
-                        if (y + 5 > pageHeight - bottomMargin) {
-                            doc.addPage();
-                            y = topMargin;
-                        }
-                        doc.text(line, margin + 4, y);
-                        y += 5;
+                    content.push({
+                        text: `${String.fromCharCode(65 + i)}. ${opt.text} ${symbol}`,
+                        style: "option",
+                        margin: [15, 1, 0, 1],
                     });
                 });
             }
 
-            // Descriptive Answer - Justified
+            // Descriptive answers
             if (q.qnType !== "MCQ") {
-                doc.setFontSize(8);
-                // ensure sentence has spaces between words
                 let rawText = q.participateAns || "No Answer Provided";
-                rawText = rawText.replace(/([a-z])([A-Z])/g, '$1 $2').replace(/\s+/g, ' ').trim();
+                rawText = rawText.replace(/([a-z])([A-Z])/g, "$1 $2").replace(/\s+/g, " ").trim();
 
-                const text = `Answer: ${rawText}`;
-                const words = text.split(" ");
-
-                // Bold "Answer:" only
-                doc.setFont("times", "bold");
-                doc.text("Answer:", margin, y);
-                const answerLabelWidth = doc.getTextWidth("Answer: ");
-                doc.setFont("times", "normal");
-
-                let x = margin + answerLabelWidth;
-                const lineHeight = 5;
-
-                words.slice(1).forEach(word => {
-                    const wordWidth = doc.getTextWidth(word + " ");
-                    if (x + wordWidth > margin + usableWidth) {
-                        y += lineHeight;
-                        if (y + lineHeight > pageHeight - bottomMargin) {
-                            doc.addPage();
-                            y = topMargin;
-                        }
-                        x = margin;
-                    }
-                    doc.text(word, x, y);
-                    x += wordWidth;
+                content.push({
+                    text: [
+                        { text: "Answer: ", bold: true },
+                        { text: rawText },
+                    ],
+                    style: "answer",
+                    alignment: "justify",
+                    margin: [0, 3, 0, 8],
                 });
-
-                y += 8;
             }
-
-            y += 6; // spacing after each question
         }
 
-        // Save PDF
-        doc.save(`${participateQuestionPaper[0].userInfo.name}_answers.pdf`);
+        // Styles
+        const docDefinition = {
+            content,
+            defaultStyle: { font: "NotoBengali", fontSize: 10 },
+            styles: {
+                header: { fontSize: 14, bold: true, margin: [0, 0, 0, 2] },
+                subheader: { fontSize: 12, margin: [0, 0, 0, 4] },
+                info: { fontSize: 10 },
+                question: { fontSize: 10, bold: true },
+                mark: { fontSize: 10 },
+                option: { fontSize: 9 },
+                answer: { fontSize: 9 },
+            },
+            pageMargins: [30, 30, 30, 30],
+        };
+
+        pdfMake.createPdf(docDefinition).download(`${candidate.name}_answers.pdf`);
     };
+
 
 
     useEffect(() => {
@@ -393,7 +571,7 @@ export default function AddExam() {
     }, []);
 
     return (
-        <div className="overflow-x-auto p-3">
+        <div className="overflow-x-auto p-2">
             <style jsx>{`
         .custom-scrollbar::-webkit-scrollbar { display: none; }
         .custom-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
@@ -489,19 +667,19 @@ export default function AddExam() {
                                     </tr>
                                 ) : (
                                     filteredSet.map((item, index) => (
-                                        <tr key={`${item.value}-${index}`} className="border-b border-gray-300 hover:bg-gray-50">
-                                            <td data-label="SL" className="px-4 py-2">{index + 1}</td>
-                                            <td data-label="Name" className="px-4 py-2">{item.examName}</td>
-                                            <td data-label="Name" className="px-4 py-2">{item.label}</td>
-                                            {/* <td data-label="User ID" className="px-4 py-2">{item.value}</td>
-                                        <td data-label="Password" className="px-4 py-2">{item.password}</td> */}
-                                            <td data-label="Organization" className="px-4 py-2">{item.org}</td>
-                                            <td data-label="Salary" className="px-4 py-2">৳ {item.salary}</td>
-                                            <td data-label="Mobile No" className="px-4 py-2">{item.mobileNo}</td>
-                                            <td data-label="Experience" className="px-4 py-2">{item.experience}</td>
-                                            <td data-label="Notice Period" className="px-4 py-2 text-center">{item.noticePeriod}</td>
-                                            <td data-label="Qn Mark" className="px-4 py-2 text-center">{item.totalQnMark}</td>
-                                            <td data-label="Actions" className="px-4 py-2 text-center">
+                                        <tr key={`${item.value}-${index}`} className="border-b border-gray-300 hover:bg-[#4775a0] group">
+                                            <td data-label="SL" className="px-4 py-1.5 group-hover:text-white">{index + 1}</td>
+                                            <td data-label="Name" className="px-4 py-1.5 group-hover:text-white">{item.examName}</td>
+                                            <td data-label="Name" className="px-4 py-1.5 group-hover:text-white">{item.label}</td>
+                                            {/* <td data-label="User ID" className="px-4 py-1.5">{item.value}</td>
+                                        <td data-label="Password" className="px-4 py-1.5">{item.password}</td> */}
+                                            <td data-label="Organization" className="px-4 py-1.5 group-hover:text-white">{item.org}</td>
+                                            <td data-label="Salary" className="px-4 py-1.5 group-hover:text-white">৳ {item.salary}</td>
+                                            <td data-label="Mobile No" className="px-4 py-1.5 group-hover:text-white">{item.mobileNo}</td>
+                                            <td data-label="Experience" className="px-4 py-1.5 group-hover:text-white">{item.experience}</td>
+                                            <td data-label="Notice Period" className="px-4 py-1.5 group-hover:text-white text-center">{item.noticePeriod}</td>
+                                            <td data-label="Qn Mark" className="px-4 py-1.5 group-hover:text-white text-center">{item.totalQnMark}</td>
+                                            <td data-label="Actions" className="px-4 py-1.5 group-hover:text-white text-center">
                                                 <div className="flex justify-center gap-3">
 
                                                     <button
@@ -510,9 +688,9 @@ export default function AddExam() {
                                                             setIsEditMode(false);
                                                             setShowQuestionModal(true);
                                                         }}
-                                                        className="flex items-center gap-1 px-3 py-1.5 text-sm font-medium border border-blue-500 text-blue-500 rounded hover:bg-blue-500 hover:text-white transition-colors duration-200"
+                                                        className="flex items-center gap-1 px-3 py-1 text-sm font-medium border border-blue-500 text-blue-500 rounded-sm group-hover:!text-white group-hover:border-white  transition-colors duration-200"
                                                     >
-                                                        <FiEye className="text-base" />
+                                                        <FiEye  />
                                                     </button>
 
                                                     <button
@@ -521,9 +699,9 @@ export default function AddExam() {
                                                             setIsEditMode(true);
                                                             setShowQuestionModal(true);
                                                         }}
-                                                        className="flex items-center gap-1 px-3 py-1.5 text-sm font-medium border border-green-500 text-green-500 rounded hover:bg-green-500 hover:text-white transition-colors duration-200"
+                                                        className="flex items-center gap-1 px-3 py-1 text-sm font-medium border border-green-500 text-green-500 rounded-sm group-hover:!text-white group-hover:border-white  transition-colors duration-200"
                                                     >
-                                                        <FiCheckCircle className="text-base" />
+                                                        <FiCheckCircle />
                                                     </button>
 
                                                 </div>
@@ -584,7 +762,7 @@ export default function AddExam() {
                                     {participateQuestionPaper.map((q, index) => (
                                         <div key={q.qnId} className="p-4">
                                             {/* Question Header + Marks */}
-                                            <div className="flex justify-between items-start mb-2">
+                                            {/* <div className="flex justify-between items-start mb-2">
                                                 <div>
                                                     <h3 className="font-semibold text-gray-800 text-lg">
                                                         {index + 1}. {q.question}
@@ -595,7 +773,23 @@ export default function AddExam() {
                                                     <span>Mark: {q.qnMark}</span>
                                                     <span>Scored: {q.ansMark}</span>
                                                 </div>
+                                            </div> */}
+                                            <div className="flex justify-between items-start mb-2">
+                                                {/* Left side: question text */}
+                                                <div className="flex-1">
+                                                    <h3 className="font-semibold text-gray-800 text-lg">
+                                                        {index + 1}. {q.question}
+                                                    </h3>
+                                                    <span className="text-sm text-gray-500 font-medium">{q.qnType}</span>
+                                                </div>
+
+                                                {/* Right side: mark and scored */}
+                                                <div className="flex-shrink-0 text-sm text-gray-600 flex gap-4 items-center mt-1">
+                                                    <span>Mark: {q.qnMark}</span>
+                                                    <span>Scored: {q.ansMark}</span>
+                                                </div>
                                             </div>
+
 
                                             {/* MCQ Options */}
                                             {q.qnType === "MCQ" && (

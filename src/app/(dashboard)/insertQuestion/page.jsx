@@ -122,7 +122,7 @@ export default function InsertQuestion() {
             if (!response.ok) throw new Error(await response.text());
 
             const data = await response.json();
-            console.log("Edit Question data",data)
+            console.log("Edit Question data", data)
             const question = data.length ? {
                 QuestionId: data[0].QuestionId,
                 Name: data[0].Name,
@@ -179,8 +179,8 @@ export default function InsertQuestion() {
                 });
 
                 // FIX: Only set existingImage, not questionImage in edit mode
-                setExistingImage(question.Sketch || null);       
-                setQuestionImage(null); 
+                setExistingImage(question.Sketch || null);
+                setQuestionImage(null);
                 // setDescriptiveMode(question.QnType === "Descriptive" ? "manual" : "");
                 setDescriptiveMode("manual");
             }
@@ -556,14 +556,14 @@ export default function InsertQuestion() {
     // }
 
     return (
-        <div className="overflow-x-auto p-3">
+        <div className="overflow-x-auto p-2">
             <div className="mb-2">
                 <h1 className="text-2xl font-bold text-gray-800">
                     {isEdit ? "Edit Question" : "Add New Question"}
                 </h1>
             </div>
             <div className="border border-gray-300 rounded-b-md overflow-hidden max-h-[72vh] overflow-y-auto">
-                <div className="bg-white rounded-lg shadow-md p-6">
+                <div className="bg-white rounded-sm shadow-md p-6">
                     {loading && !isEdit ? (
                         <div className="text-center py-4">Loading...</div>
                     ) : (
@@ -578,34 +578,29 @@ export default function InsertQuestion() {
                             <div className="flex flex-wrap gap-4">
                                 {/* Position Name */}
                                 <div className="flex items-center gap-2 flex-1 min-w-[200px]">
-                                    <label className="w-32 text-sm font-semibold text-gray-700">
-                                        Position Name: <span className="text-red-500">*</span>
-                                    </label>
+                                    <label className="w-32 text-sm font-semibold text-gray-800">
+                                        Position Name <span className="text-red-500">*</span>
+                                    </label>:
                                     <Select
                                         name="subId"
                                         value={subjectData.find((s) => s.value === formData.subId) || null}
                                         onChange={(selected) => setFormData((prev) => ({ ...prev, subId: selected?.value || "" }))}
                                         options={subjectData}
                                         placeholder="Select Position"
-                                        className="flex-1"
+                                        className="flex-1 "
                                         isClearable
                                         classNamePrefix="custom-select"
                                         styles={{
                                             control: (base) => ({
                                                 ...base,
                                                 minHeight: "34px",
-                                                borderColor: "#D1D5DB",
-                                                boxShadow: "0 1px 2px rgba(0,0,0,0.05)",
-                                                "&:hover": { borderColor: "#3B82F6" },
+                                                borderRadius: "4px",
+                                                // borderColor: "#D1D5DB",
+                                                // boxShadow: "0 1px 2px rgba(0,0,0,0.05)",
+                                                // "&:hover": { borderColor: "#3B82F6" },
                                             }),
-                                            menu: (base) => ({
-                                                ...base,
-                                                zIndex: 9999,
-                                            }),
-                                            menuPortal: (base) => ({
-                                                ...base,
-                                                zIndex: 9999,
-                                            }),
+                                            menu: (base) => ({ ...base, zIndex: 9999 }),
+                                            menuPortal: (base) => ({ ...base, zIndex: 9999 }),
                                         }}
                                         menuPortalTarget={isClient ? document.body : null}
                                         required
@@ -614,13 +609,13 @@ export default function InsertQuestion() {
 
                                 {/* Add Mode */}
                                 <div className="flex items-center gap-2 flex-1 min-w-[200px]">
-                                    <label className="w-32 text-sm font-semibold text-gray-700">
-                                        Add Mode: <span className="text-red-500">*</span>
-                                    </label>
+                                    <label className="w-32 text-sm font-semibold text-gray-800">
+                                        Add Mode <span className="text-red-500">*</span>
+                                    </label>:
                                     <select
                                         value={descriptiveMode}
                                         onChange={handleDescriptiveModeChange}
-                                        className="flex-1 border rounded p-2"
+                                        className="flex-1 min-h-[37px] border border-gray-300 rounded-sm px-3 py-1.5 focus:outline-none focus:ring-0 focus:ring-blue-400 focus:border-blue-400 transition-colors duration-200"
                                         required
                                     >
                                         <option value="">-- Select Mode --</option>
@@ -630,17 +625,18 @@ export default function InsertQuestion() {
                                 </div>
                             </div>
 
+
                             {/* Question Type - Show only when manual mode is selected */}
                             {descriptiveMode === "manual" && (
                                 <div className="flex items-center gap-2 flex-1 min-w-[200px]">
-                                    <label className="w-32 text-sm font-semibold text-gray-700">
-                                        Question Type:<span className="text-red-500">*</span>
-                                    </label>
+                                    <label className="w-32 text-sm font-semibold text-gray-800">
+                                        Question Type<span className="text-red-500">*</span>
+                                    </label>:
                                     <select
                                         name="qnTypeId"
                                         value={formData.qnTypeId}
                                         onChange={handleQnTypeChange}
-                                        className="flex-1 border rounded p-2"
+                                        className="flex-1 border border-gray-300 rounded-sm p-2 focus:outline-none focus:ring-0 focus:ring-blue-400 focus:border-blue-400 "
                                         required
                                     >
                                         <option value="">-- Select Question Type --</option>
@@ -654,21 +650,21 @@ export default function InsertQuestion() {
                             {descriptiveMode === "manual" && formData.qnTypeId === "1" && (
                                 <div className="space-y-4">
                                     <div className="flex items-center gap-2 flex-1 min-w-[200px]">
-                                        <label className="w-32 text-sm font-semibold text-gray-700">Question: <span className="text-red-500">*</span></label>
+                                        <label className="w-32 text-sm  font-semibold text-gray-800">Question <span className="text-red-500">*</span></label>:
                                         <textarea
                                             name="name"
                                             value={formData.name}
                                             onChange={handleChange}
-                                            className="flex-1 border rounded p-2"
+                                            className="flex-1 border border-gray-400 rounded-sm p-2 focus:outline-none focus:ring-0 focus:ring-blue-400 focus:border-blue-400 "
                                             rows={3}
                                             required
                                         />
                                     </div>
 
                                     <div className="flex items-center gap-2 flex-1 min-w-[200px]">
-                                        <label className="w-32 text-sm font-semibold text-gray-700">
-                                            Mark: <span className="text-red-500">*</span>
-                                        </label>
+                                        <label className="w-32 text-sm font-semibold text-gray-800">
+                                            Mark <span className="text-red-500">*</span>
+                                        </label>:
                                         <input
                                             type="number"
                                             name="mark"
@@ -681,7 +677,7 @@ export default function InsertQuestion() {
                                                     mark: e.target.value,
                                                 }));
                                             }}
-                                            className="flex-1 border rounded p-2"
+                                            className="flex-1 border border-gray-400 rounded-sm p-2 focus:outline-none focus:ring-0 focus:ring-blue-400 focus:border-blue-400 "
                                             required
                                             min="1"
                                             step="0.1"
@@ -707,13 +703,13 @@ export default function InsertQuestion() {
                                         />
                                     </div> */}
                                     <div className="flex items-center gap-4">
-                                        <label className="text-sm font-semibold text-gray-700 w-32">
+                                        <label className="text-sm font-semibold text-gray-800 w-32">
                                             Question Image
                                         </label>
 
                                         <div className="flex flex-col items-center">
                                             {/* Image Box */}
-                                            <div className="w-40 h-40 rounded-lg border border-gray-300 flex items-center justify-center overflow-hidden relative">
+                                            <div className="w-40 h-40 rounded-sm border border-gray-300 flex items-center justify-center overflow-hidden relative">
                                                 {questionImage ? (
                                                     <img
                                                         src={questionImage}
@@ -758,18 +754,18 @@ export default function InsertQuestion() {
                                         </div>
                                     </div>
                                 </div>
-                            )}                         
+                            )}
                             {descriptiveMode === "manual" && formData.qnTypeId === "2" && (
                                 <>
                                     <div className="flex items-center gap-2 flex-1 min-w-[200px]">
-                                        <label className="w-32 text-sm font-semibold text-gray-700">Question: <span className="text-red-500">*</span></label>
-                                        <textarea name="name" value={formData.name} onChange={handleChange} className="flex-1 border rounded p-2" rows={3} required />
+                                        <label className="w-32 text-sm font-semibold text-gray-800">Question <span className="text-red-500">*</span></label>:
+                                        <textarea name="name" value={formData.name} onChange={handleChange} className="flex-1 border border-gray-400 rounded p-2 focus:outline-none focus:ring-0 focus:ring-blue-400 focus:border-blue-400 " rows={3} required />
                                     </div>
 
                                     <div className="flex items-center gap-2 flex-1 min-w-[200px]">
-                                        <label className="w-32 text-sm font-semibold text-gray-700">
-                                            Mark: <span className="text-red-500">*</span>
-                                        </label>
+                                        <label className="w-32 text-sm font-semibold text-gray-800">
+                                            Mark <span className="text-red-500">*</span>
+                                        </label>:
                                         <input
                                             type="number"
                                             name="mark"
@@ -782,7 +778,7 @@ export default function InsertQuestion() {
                                                     mark: e.target.value,
                                                 }));
                                             }}
-                                            className="flex-1 border rounded p-2"
+                                            className="flex-1 border border-gray-400 rounded p-2 focus:outline-none focus:ring-0 focus:ring-blue-400 focus:border-blue-400 "
                                             required
                                             min="1"
                                             step="0.1"
@@ -810,7 +806,7 @@ export default function InsertQuestion() {
 
                                     {/* <div className="flex items-center gap-4 w-full">
                                      
-                                        <label className="text-sm font-semibold text-gray-700 w-32">
+                                        <label className="text-sm font-semibold text-gray-800 w-32">
                                             Question Image:
                                         </label>
 
@@ -864,8 +860,8 @@ export default function InsertQuestion() {
                             
                                     <div className="mt-3">
                                         <div className="flex gap-2 px-1 mb-1">
-                                            <span className="flex-1 text-sm font-semibold text-gray-700">Options</span>
-                                            <span className="w-21 text-sm font-semibold text-gray-700 text-center">Choose Ans</span>
+                                            <span className="flex-1 text-sm font-semibold text-gray-800">Options</span>
+                                            <span className="w-21 text-sm font-semibold text-gray-800 text-center">Choose Ans</span>
                                             <span className="w-8"></span>
                                         </div>
                                         {formData.options.map((opt, index) => (
@@ -905,13 +901,13 @@ export default function InsertQuestion() {
                                         <div className="flex flex-col gap-2">
                                             {/* Label + Image Input horizontal */}
                                             <div className="flex items-center gap-4">
-                                                <label className="text-sm font-semibold text-gray-700 w-32">
+                                                <label className="text-sm font-semibold text-gray-800 w-32">
                                                     Question Image
                                                 </label>
 
                                                 <div className="flex flex-col items-center">
                                                     {/* Image Box */}
-                                                    <div className="w-40 h-40 rounded-lg border border-gray-300 flex items-center justify-center overflow-hidden relative">
+                                                    <div className="w-40 h-40 rounded-sm border border-gray-300 flex items-center justify-center overflow-hidden relative">
                                                         {(questionImage || existingImage) ? (
                                                             <img
                                                                 src={questionImage || existingImage}
@@ -960,8 +956,8 @@ export default function InsertQuestion() {
                                         {/* Options Section - RIGHT */}
                                         <div className="flex-1">
                                             <div className="flex gap-2 px-1 mb-1">
-                                                <span className="flex-1 text-sm font-semibold text-gray-700">Options</span>
-                                                <span className="w-21 text-sm font-semibold text-gray-700 text-center">Choose Ans</span>
+                                                <span className="flex-1 text-sm font-semibold text-gray-800">Options <span className="text-red-500">*</span></span>
+                                                <span className="w-22 text-sm font-semibold text-gray-800 text-center">Choose Ans<span className="text-red-500">*</span></span>
                                                 <span className="w-8"></span>
                                             </div>
 
@@ -972,7 +968,7 @@ export default function InsertQuestion() {
                                                         value={opt.optionText}
                                                         onChange={(e) => handleOptionChange(index, "optionText", e.target.value)}
                                                         placeholder={`Option ${index + 1}`}
-                                                        className="flex-1 min-w-0 border px-2 py-1 rounded"
+                                                        className="flex-1 border border-gray-400 rounded p-1 focus:outline-none focus:ring-0 focus:ring-blue-400 focus:border-blue-400 "
                                                     />
                                                     <div className="flex justify-center items-center w-16">
                                                         <input
@@ -1011,21 +1007,21 @@ export default function InsertQuestion() {
                             {descriptiveMode === "excel" && (
                                 <div className="space-y-4">
                                     <div className="flex items-center gap-2 flex-1 min-w-[200px]">
-                                        <label className="w-33 text-sm font-semibold text-gray-700">
-                                            Upload Excel File: <span className="text-red-500">*</span>
-                                        </label>
+                                        <label className="w-33 text-sm font-semibold text-gray-800">
+                                            Upload Excel File <span className="text-red-500">*</span>
+                                        </label>:
                                         <input
                                             type="file"
                                             accept=".xlsx, .xls"
                                             onChange={handleExcelUpload}
-                                           className="flex-1 border rounded p-2"
+                                            className="flex-1 border border-gray-400 rounded p-2 focus:outline-none focus:ring-0 focus:ring-blue-400 focus:border-blue-400 "
                                             required
                                         />
                                     </div>
 
                                     {previewQuestions.length > 0 && (
                                         <div>
-                                            <h5 className="font-semibold text-gray-700 mb-2">Preview Questions</h5>
+                                            <h5 className="font-semibold text-gray-800 mb-2">Preview Questions</h5>
                                             <div className="space-y-2 max-h-80 overflow-y-auto p-2 border rounded">
                                                 {previewQuestions.map((q, idx) => (
                                                     <div key={idx} className="p-2 border rounded bg-gray-50">
@@ -1055,13 +1051,15 @@ export default function InsertQuestion() {
                                 <button
                                     type="button"
                                     onClick={() => router.back()}
-                                    className="px-4 py-2 bg-gray-500 text-white rounded hover:bg-gray-600"
+                                    className="px-4 py-2 bg-gray-500 text-white rounded-sm shadow hover:bg-gray-600 transition"
+
                                 >
                                     Back
                                 </button>
+
                                 <button
                                     type="submit"
-                                    className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+                                    className="px-4 py-2 bg-blue-600 text-white rounded-sm shadow hover:bg-blue-700 transition"
                                     disabled={loading}
                                 >
                                     {loading ? (isEdit ? "Updating..." : "Saving...") : (isEdit ? "Update" : "Save")}

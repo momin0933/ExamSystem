@@ -7,7 +7,7 @@ import * as XLSX from 'xlsx';
 import Link from 'next/link';
 import { IoMdAddCircle } from 'react-icons/io';
 import toast from 'react-hot-toast';
-import { FiEdit, FiTrash2, FiEye } from "react-icons/fi";
+import { FiEdit, FiTrash2, FiEye, FiX } from "react-icons/fi";
 import DeleteConfirmModal from '../../components/DeleteConfirmModal';
 import AOS from 'aos';
 import 'aos/dist/aos.css';
@@ -552,6 +552,7 @@ export default function AddCandidate() {
 
     //Insert and Update
     const handleSubmit = async (e) => {
+
         e.preventDefault();
 
         // Basic validation
@@ -594,6 +595,8 @@ export default function AddCandidate() {
                 },
                 body: JSON.stringify(payload),
             });
+
+
 
             if (!response.ok) {
                 const text = await response.text();
@@ -699,7 +702,7 @@ export default function AddCandidate() {
         };
     }, []);
     return (
-        <div className="overflow-x-auto p-3">
+        <div className="overflow-x-auto p-2">
             <style jsx>{`
                 .custom-scrollbar::-webkit-scrollbar { display: none; }
                 .custom-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
@@ -729,7 +732,9 @@ export default function AddCandidate() {
                     .fixed-table td:last-child { border-bottom: none; }
                 }
             `}</style>
-
+            <div className="mb-1">
+                <h1 className="text-2xl font-bold text-gray-800">Candidate List</h1>
+            </div>
             <div className="rounded-md font-roboto overflow-hidden">
                 <div className="bg-gradient-to-r from-[#2c3e50] to-[#3498db] sticky top-0 z-20 shadow-md">
                     <div className="px-3 py-2 flex flex-wrap justify-between items-center gap-2">
@@ -765,8 +770,8 @@ export default function AddCandidate() {
                             <FaFileExcel onClick={handleDownloadExcel} className="text-lg cursor-pointer text-gray-50" />
                         </div>
                     </div>
-                    <div className="border border-gray-300 rounded-b-md overflow-hidden max-h-[70vh] overflow-y-auto">
-                        <table className="min-w-full text-sm text-left text-gray-600">
+                    <div className="border border-gray-300 rounded-b-md overflow-hidden max-h-[65vh] overflow-y-auto">
+                        <table className="min-w-full text-sm text-left text-gray-700">
                             <thead className="bg-gray-100 text-xs uppercase text-gray-700 sticky top-0 z-10">
                                 <tr className="border-b">
                                     <th className="px-4 py-2 text-center">SL</th>
@@ -785,7 +790,7 @@ export default function AddCandidate() {
                             <tbody className="bg-white text-xs text-gray-700">
                                 {filteredSet.length === 0 ? (
                                     <tr key="no-data">
-                                        <td colSpan="6" className="text-center py-4">
+                                        <td colSpan="10" className="text-center py-4">
                                             No data found
                                         </td>
                                     </tr>
@@ -793,49 +798,17 @@ export default function AddCandidate() {
                                     filteredSet.map((candidate, index) => (
                                         <tr
                                             key={candidate.id ?? index}
-                                            className="border-b border-gray-300 hover:bg-gray-50"
+                                            className="border-b border-gray-300 hover:bg-[#4775a0] group"
                                         >
-                                            <td className="px-4 py-2 text-center">{index + 1}</td>
-                                            <td className="px-4 py-2">{candidate.name}</td>
-                                            <td className="px-4 py-2 ">{candidate.userId}</td>
-                                            <td className="px-4 py-2 ">{candidate.password}</td>
-                                            <td className="px-4 py-2 ">{candidate.examName}</td>
-                                            <td className="px-4 py-2 ">{candidate.setName}</td>
-                                            <td className="px-4 py-2 ">{candidate.email}</td>
-                                            <td className="px-4 py-2 text-center">{candidate.mobileNo}</td>
-
-                                            {/* <td className="px-4 py-2 text-center">
-                                            {candidate.isActive ? "Active" : "Inactive"}
-                                        </td> */}
-                                            {/* <td className="px-4 py-2 text-center">
-                                            <button
-                                                onClick={() => handleToggleActive(candidate)}
-                                                className={`px-3 py-1 rounded-full text-xs font-semibold ${candidate.isActive
-                                                    ? "bg-green-100 text-green-700 border border-green-500"
-                                                    : "bg-red-100 text-red-700 border border-red-500"
-                                                    }`}
-                                            >
-                                                {candidate.isActive ? "Active" : "Inactive"}
-                                            </button>
-                                        </td> */}
-                                            {/* <td className="px-4 py-2 text-center">
-                                            <label className="relative inline-flex items-center cursor-pointer">
-                                                <input
-                                                    type="checkbox"
-                                                    className="sr-only peer"
-                                                    checked={candidate.isActive}
-                                                    onChange={() => handleToggleActive(candidate)}
-                                                />
-                                                <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:bg-green-500 transition-colors duration-300"></div>
-                                                <span
-                                                    className={`absolute left-[4px] top-[4px] bg-white w-4 h-4 rounded-full transition-transform duration-300 ${candidate.isActive ? "translate-x-5" : ""
-                                                        }`}
-                                                ></span>
-                                            </label>
-                        
-                                        </td> */}
-
-                                            <td className="px-4 py-2 text-center">
+                                            <td className="px-4 py-1.5 group-hover:text-white text-center">{index + 1}</td>
+                                            <td className="px-4 py-1.5 group-hover:text-white">{candidate.name}</td>
+                                            <td className="px-4 py-1.5 group-hover:text-white">{candidate.userId}</td>
+                                            <td className="px-4 py-1.5  group-hover:text-white">{candidate.password}</td>
+                                            <td className="px-4 py-1.5 group-hover:text-white">{candidate.examName}</td>
+                                            <td className="px-4 py-1.5 group-hover:text-white">{candidate.setName}</td>
+                                            <td className="px-4 py-1.5 group-hover:text-white">{candidate.email}</td>
+                                            <td className="px-4 py-1.5 group-hover:text-white text-center">{candidate.mobileNo}</td>
+                                            <td className="px-4 py-1.5 group-hover:text-white text-center">
                                                 <label className="inline-flex items-center cursor-pointer">
                                                     <div className="relative">
                                                         <input
@@ -852,35 +825,19 @@ export default function AddCandidate() {
                                                     </div>
                                                 </label>
                                             </td>
-
-
-                                            <td className="px-4 py-2 text-center">
+                                            <td className="px-4 py-1.5 text-center">
                                                 <div className="flex items-center justify-center gap-3">
-                                                    {/* <button
-                                                    onClick={async () => {
-                                                        await fetchParticipateQuestionPaper(candidate.id);
-                                                        setIsEditMode(false);
-                                                        setShowQuestionModal(true);
-                                                    }}
-                                                    className="flex items-center gap-1 px-3 py-1.5 text-sm font-medium border border-blue-500 text-blue-500 rounded hover:bg-blue-500 hover:text-white transition-colors duration-200"
-                                                >
-                                                    <FiEye className="text-base" />
-                                                </button> */}
                                                     <button
                                                         onClick={() => openEditCandidateModal(candidate)}
-                                                        className="flex items-center gap-1 px-3 py-1.5 text-sm font-medium border border-[#00925a] text-[#00925a] rounded hover:bg-[#00925a] hover:text-white transition-colors duration-200"
+                                                        className="flex items-center gap-1 px-2 py-1 text-sm font-medium border border-[#00925a] text-[#00925a] rounded group-hover:!text-white group-hover:border-white transition-colors duration-200"
+                                                    
                                                     >
-                                                        <FiEdit className="text-base" />
+                                                        <FiEdit />
                                                     </button>
-                                                    {/* <button
-                                onClick={() => openDeleteModal(candidate)}
-                                className="flex items-center gap-1 px-3 py-1.5 text-sm font-medium border border-red-500 text-red-500 rounded hover:bg-red-500 hover:text-white transition-colors duration-200"
-                            >
-                                <FiTrash2 className="text-base" />
-                            </button> */}
                                                 </div>
                                             </td>
                                         </tr>
+
                                     ))
                                 )}
                             </tbody>
@@ -907,23 +864,23 @@ export default function AddCandidate() {
                             onClick={() => setShowModal(false)}
                             className="btn btn-sm btn-circle btn-ghost absolute right-2 top-2"
                         >
-                            ✕
+                            <FiX className="w-4 h-4" />
                         </button>
 
                         <div className="border-b border-gray-300 pb-2 mb-4">
-                            <h3 className="font-bold text-lg">{isEdit ? "Update Candidate" : "Add Candidate"}</h3>
+                            <h3 className="font-bold text-lg text-gray-700">{isEdit ? "Update Candidate" : "Add Candidate"}</h3>
                         </div>
 
                         <form onSubmit={handleSubmit} className="space-y-4 text-sm">
                             {/* Full Name */}
                             <div className="flex items-center gap-2">
-                                <label className="w-1/3 font-semibold text-gray-700">Full Name: <span className="text-red-500">*</span></label>
+                                <label className="w-1/3 font-semibold text-gray-700">Full Name <span className="text-red-500">*</span></label>:
                                 <input
                                     type="text"
                                     name="name"
                                     value={formData.name}
                                     onChange={handleNameChange}
-                                    className="w-full border rounded p-2"
+                                    className="w-full border rounded-sm p-2 focus:outline-none focus:ring-0 focus:ring-blue-400 focus:border-blue-400 transition-colors duration-200"
                                     placeholder="Enter full name"
                                     required
                                 />
@@ -931,19 +888,19 @@ export default function AddCandidate() {
 
                             {/* UserId */}
                             <div className="flex items-center gap-2">
-                                <label className="w-1/3 font-semibold text-gray-700">User ID</label>
+                                <label className="w-1/3 font-semibold text-gray-700">User ID</label>:
                                 <input
                                     type="text"
                                     name="userId"
                                     value={formData.userId || ""}
                                     readOnly
-                                    className="w-full border rounded p-2 bg-gray-100"
+                                    className="w-full border rounded-sm p-2 bg-gray-100 focus:outline-none focus:ring-0 focus:ring-blue-400 focus:border-blue-400 transition-colors duration-200"
                                 />
                             </div>
 
                             {/* Email */}
                             <div className="flex items-center gap-2">
-                                <label className="w-1/3 font-semibold text-gray-700">Email: <span className="text-red-500">*</span></label>
+                                <label className="w-1/3 font-semibold text-gray-700">Email <span className="text-red-500">*</span></label>:
                                 <input
                                     type="email"
                                     name="email"
@@ -951,7 +908,7 @@ export default function AddCandidate() {
                                     onChange={(e) =>
                                         setFormData((prev) => ({ ...prev, email: e.target.value }))
                                     }
-                                    className="w-full border rounded p-2"
+                                    className="w-full border rounded-sm p-2 focus:outline-none focus:ring-0 focus:ring-blue-400 focus:border-blue-400 transition-colors duration-200"
                                     placeholder="Enter email"
                                     required
                                 />
@@ -959,7 +916,7 @@ export default function AddCandidate() {
 
                             {/* Mobile No */}
                             <div className="flex items-center gap-2">
-                                <label className="w-1/3 font-semibold text-gray-700">Mobile No</label>
+                                <label className="w-1/3 font-semibold text-gray-700">Mobile No</label>:
                                 <input
                                     type="text"
                                     name="mobileNo"
@@ -967,7 +924,7 @@ export default function AddCandidate() {
                                     onChange={(e) =>
                                         setFormData((prev) => ({ ...prev, mobileNo: e.target.value }))
                                     }
-                                    className="w-full border rounded p-2"
+                                    className="w-full border rounded-sm p-2 focus:outline-none focus:ring-0 focus:ring-blue-400 focus:border-blue-400 transition-colors duration-200"
                                     placeholder="Enter mobile number"
 
                                 />
@@ -985,8 +942,8 @@ export default function AddCandidate() {
                             </div> */}
 
                             {/* Exam Dropdown */}
-                            <div className="flex items-center gap-2 mt-2">
-                                <label className="w-1/3 text-sm font-semibold text-gray-700">Select Exam: <span className="text-red-500">*</span></label>
+                            <div className="flex items-center gap-2 mt-2 relative z-50">
+                                <label className="w-1/3 text-sm font-semibold text-gray-700">Select Exam <span className="text-red-500">*</span></label>:
                                 <Select
                                     options={exam.map((ex) => ({
                                         value: ex.id,
@@ -1005,10 +962,22 @@ export default function AddCandidate() {
                                         })
                                     }
                                     placeholder="Select or search exam..."
-                                    className="w-full"
+                                    className="w-full focus:outline-none focus:ring-0 focus:ring-blue-400 focus:border-blue-400 transition-colors duration-200"
                                     isClearable
                                     isSearchable
                                     required
+                                    menuPortalTarget={typeof window !== "undefined" ? document.body : null}
+                                    menuPosition="fixed"
+                                    styles={{
+                                        menuPortal: (base) => ({ ...base, zIndex: 9999 }),
+                                        menu: (base) => ({ ...base, zIndex: 9999 }),
+                                        control: (base) => ({
+                                            ...base,
+                                            minHeight: "36px",
+                                            borderColor: "#D1D5DB",
+                                            "&:hover": { borderColor: "#3B82F6" },
+                                        }),
+                                    }}
                                 />
                             </div>
 
@@ -1046,7 +1015,7 @@ export default function AddCandidate() {
                             }}
                             className="absolute top-4 right-4 text-gray-500 hover:text-gray-800 text-lg font-bold"
                         >
-                            ✕
+                            <FiX className="w-4 h-4" />
                         </button>
 
                         {participateQuestionPaper.length > 0 ? (
