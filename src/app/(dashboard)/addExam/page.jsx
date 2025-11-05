@@ -15,6 +15,7 @@ import { FiEdit, FiTrash2, FiEye, FiX } from "react-icons/fi";
 import { AuthContext } from '../../provider/AuthProvider';
 import DeleteConfirmModal from '../../components/DeleteConfirmModal';
 import config from '@/config';
+import pdfMake from "pdfmake/build/pdfmake";
 
 export default function AddExam() {
   const { loginData } = useContext(AuthContext);
@@ -455,12 +456,172 @@ export default function AddExam() {
       setIsDeleteModalOpen(false);
     }
   };
+
+  //For Image
+  const toBase64 = async (url) => {
+    const res = await fetch(url);
+    const blob = await res.blob();
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onloadend = () => resolve(reader.result);
+      reader.onerror = reject;
+      reader.readAsDataURL(blob);
+    });
+  };
+
+  // For Bangla Font
+  const loadBanglaFont = async () => {
+    const loadFont = async (url) => {
+      const res = await fetch(url);
+      const buffer = await res.arrayBuffer();
+      const bytes = new Uint8Array(buffer);
+      let binary = "";
+      const chunkSize = 0x8000;
+      for (let i = 0; i < bytes.length; i += chunkSize) {
+        const chunk = bytes.subarray(i, i + chunkSize);
+        binary += String.fromCharCode.apply(null, chunk);
+      }
+      return btoa(binary);
+    };
+
+    const normal = await loadFont("/fonts/NotoSansBengali-Regular.ttf");
+    const bold = await loadFont("/fonts/NotoSansBengali-Bold.ttf");
+
+    pdfMake.fonts = {
+      NotoBengali: { normal: "NotoSansBengali-Regular.ttf", bold: "NotoSansBengali-Bold.ttf" }
+    };
+    pdfMake.vfs = {
+      "NotoSansBengali-Regular.ttf": normal,
+      "NotoSansBengali-Bold.ttf": bold
+    };
+  };
+
+  const handleDownload = async () => {
+    if (!viewData || !viewData.Questions || viewData.Questions.length === 0) return;
+
+    await loadBanglaFont();
+
+    const content = [
+      {
+
+        text: `Exam Name: ${viewData.ExamName || "N/A"}`,
+        style: "header",
+        alignment: "center",
+      },
+      {
+        text: `Set Name: ${viewData.SetName || "N/A"}`,
+        style: "subheader",
+        alignment: "center",
+      },
+      {
+        text: `Total Questions: ${viewData.TotalQuestions || 0} | Total Marks: ${viewData.TotalMark || 0}`,
+        style: "subheader",
+        alignment: "center",
+        margin: [0, 0, 0, 10],
+      },
+    ];
+
+    // If exam date/time info exists, show it
+    const infoLines = [];
+    if (viewData.ExamFromDate) infoLines.push(`From: ${viewData.ExamFromDate}`);
+    if (viewData.ExamToDate) infoLines.push(`To: ${viewData.ExamToDate}`);
+    if (viewData.ExamTime) infoLines.push(`Time: ${viewData.ExamTime}`);
+    if (infoLines.length > 0) {
+      content.push({
+        text: infoLines.join(" | "),
+        style: "smallInfo",
+        alignment: "center",
+        margin: [0, 0, 0, 6],
+      });
+    }
+
+    // Group by subject (if available)
+    const groupedQuestions = Object.entries(
+      viewData.Questions.reduce((acc, q) => {
+        const key = q.subjectName || "Questions";
+        if (!acc[key]) acc[key] = [];
+        acc[key].push(q);
+        return acc;
+      }, {})
+    );
+
+    for (const [subject, questions] of groupedQuestions) {
+      // Subject Header
+      content.push({ text: subject, style: "subjectHeader", margin: [0, 6, 0, 4] });
+
+      for (const [index, q] of questions.entries()) {
+        // Question text & mark
+        content.push({
+          table: {
+            widths: ["*", 50],
+            body: [
+              [
+                { text: `${index + 1}. ${q.question}`, style: "question" },
+                { text: `${q.qnMark || 0}`, style: "mark", alignment: "right" },
+              ],
+            ],
+          },
+          layout: "noBorders",
+          margin: [0, 2, 0, 2],
+        });
+
+        // Question image
+        if (q.qnImage) {
+          try {
+            const imgData = await toBase64(q.qnImage);
+            content.push({
+              image: imgData,
+              width: 200,
+              margin: [0, 5, 0, 5],
+            });
+          } catch (err) {
+            console.error("Image load error:", err);
+          }
+        }
+
+        // MCQ Options
+        if (q.qnType === "MCQ" && q.options && q.options.length > 0) {
+          q.options.forEach((opt, i) => {
+            content.push({
+              text: `${String.fromCharCode(65 + i)}. ${opt.text}${opt.isCorrect ? " ✓" : ""
+                }`,
+              style: "option",
+              margin: [12, 1, 0, 1],
+            });
+          });
+        }
+      }
+    }
+
+    const docDefinition = {
+      content,
+      defaultStyle: { font: "NotoBengali" },
+      styles: {
+        header: { fontSize: 16, bold: true, margin: [0, 0, 0, 8] },
+        subheader: { fontSize: 14, margin: [0, 0, 0, 5] },
+        smallInfo: { fontSize: 12, bold: true, color: "#555" },
+        subjectHeader: { fontSize: 12, bold: true, color: "#2b4b80" },
+        question: { fontSize: 11 },
+        mark: { fontSize: 11, },
+        option: { fontSize: 10 },
+      },
+      pageMargins: [40, 40, 40, 40],
+    };
+
+    pdfMake.createPdf(docDefinition).download(
+      `${viewData.ExamName?.replace(/\s+/g, "_") || "Exam"}_${viewData.SetName || "Set"}.pdf`
+    );
+  };
+
   useEffect(() => {
     document.body.style.overflow = 'hidden';
     return () => {
       document.body.style.overflow = 'unset';
     };
   }, []);
+
+
+
   // ========== RENDER COMPONENT ==========
 
   return (
@@ -551,7 +712,7 @@ export default function AddExam() {
               <tbody className="bg-white text-xs text-gray-800">
                 {filteredExams.length === 0 ? (
                   <tr key="no-exams">
-                    <td colSpan="7" className="text-center py-4">No exams found</td>
+                    <td colSpan="9" className="text-center py-4">No exams found</td>
                   </tr>
                 ) : (
                   filteredExams.map((item, index) => (
@@ -836,7 +997,7 @@ export default function AddExam() {
                 <span className="font-normal">{viewData.TotalQuestions}</span>
               </span>
               <span>
-                <b>Total Mark: </b>
+                <b>Total Marks: </b>
                 <span className="font-normal">{viewData.TotalMark}</span>
               </span>
 
@@ -863,17 +1024,17 @@ export default function AddExam() {
 
 
             {/* Questions List */}
-            <div className="space-y-6">
+            <div className="space-y-2">
               {viewData.Questions && viewData.Questions.length > 0 ? (
                 viewData.Questions.map((q, index) => (
                   <div key={q.qnId || index}>
                     {/* Question Header */}
-                    <div className="mb-4 flex justify-between items-start">
+                    <div className="mb-2 flex justify-between items-start">
                       <h4 className="font-normal flex-1 mr-4">
                         {index + 1}. {q.question}
                       </h4>
                       <span className="font-normal whitespace-nowrap">
-                        Mark: {q.qnMark}
+                        {q.qnMark}
                       </span>
                     </div>
 
@@ -896,9 +1057,9 @@ export default function AddExam() {
                         {q.options.map((opt, i) => (
                           <li
                             key={i}
-                            className="p-2 rounded text-sm text-gray-700 hover:bg-gray-100 flex items-center"
+                            className="p-1 rounded-sm text-sm text-gray-700 hover:bg-gray-100 flex items-center"
                           >
-                            <span className="font-medium mr-1">{String.fromCharCode(65 + i)}.</span>
+                            <span className="font-normal">{String.fromCharCode(65 + i)}.</span>
                             {opt.text}
                             {opt.isCorrect && (
                               <span className="ml-2 text-green-600 font-semibold">✓</span>
@@ -915,10 +1076,17 @@ export default function AddExam() {
             </div>
 
             {/* Close Button */}
-            <div className="flex justify-end mt-6">
+            <div className="flex justify-end gap-3 mt-6">
+              <button
+                type="button"
+                onClick={handleDownload}
+                className="px-4 py-1.5 bg-blue-600 text-white rounded-sm shadow hover:bg-blue-700 transition duration-200 ease-in-out flex items-center"
+              >
+                Download
+              </button>
               <button
                 onClick={() => setIsViewModalOpen(false)}
-                className="px-5 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition"
+                className="px-4 py-1.5 bg-gray-200 text-gray-700 rounded-sm shadow hover:bg-gray-300 transition duration-200 ease-in-out"
               >
                 Close
               </button>

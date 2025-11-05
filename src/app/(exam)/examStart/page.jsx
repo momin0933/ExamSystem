@@ -4,6 +4,7 @@ import { AuthContext } from '../../provider/AuthProvider';
 import config from "@/config";
 import toast from 'react-hot-toast';
 import { useRouter } from 'next/navigation';
+import { LuAlarmClock } from "react-icons/lu";
 
 export default function ExamStartPage() {
     // Context and hooks
@@ -16,21 +17,21 @@ export default function ExamStartPage() {
     const [answers, setAnswers] = useState({});
     const [participateId, setParticipateId] = useState(null);
     const [departmentContactData, setDepartmentContactData] = useState([]);
-    
+
     // UI and navigation states
     const [loading, setLoading] = useState(false);
     const [timeLeft, setTimeLeft] = useState(null);
     const [currentPage, setCurrentPage] = useState(0);
     const [loopCount, setLoopCount] = useState(0);
     const [highlightedQuestions, setHighlightedQuestions] = useState([]);
-    
+
     // Modal states
     const [showConfirmSubmit, setShowConfirmSubmit] = useState(false);
     const [showSuccessModal, setShowSuccessModal] = useState(false);
 
     // Constants
     const questionsPerPage = 3;
-    
+
     // Computed values
     const startIndex = currentPage * questionsPerPage;
     const endIndex = startIndex + questionsPerPage;
@@ -42,7 +43,7 @@ export default function ExamStartPage() {
      */
     const formatTime = (seconds) => {
         if (seconds === null || seconds < 0) return "00:00:00";
-        
+
         const hrs = Math.floor(seconds / 3600);
         const mins = Math.floor((seconds % 3600) / 60);
         const secs = seconds % 60;
@@ -53,9 +54,9 @@ export default function ExamStartPage() {
      * Handle answer selection for a question
      */
     const handleAnswerChange = (value, questionId) => {
-        setAnswers(prev => ({ 
-            ...prev, 
-            [questionId]: value 
+        setAnswers(prev => ({
+            ...prev,
+            [questionId]: value
         }));
     };
 
@@ -85,7 +86,7 @@ export default function ExamStartPage() {
      */
     const handleSkipPage = () => {
         const nextPage = (currentPage + 1) % totalPages;
-        
+
         if (nextPage === 0) {
             setLoopCount(prev => prev + 1);
         }
@@ -106,16 +107,16 @@ export default function ExamStartPage() {
             setLoading(true);
             const response = await fetch(`${config.API_BASE_URL}api/Procedure/GetData`, {
                 method: "POST",
-                headers: { 
-                    TenantId: loginData.tenantId, 
-                    "Content-Type": "application/json" 
+                headers: {
+                    TenantId: loginData.tenantId,
+                    "Content-Type": "application/json"
                 },
                 body: JSON.stringify({
                     operation: "",
                     procedureName: "SP_GetQuestionPaperByParticipate",
-                    parameters: { 
-                        QueryChecker: 1, 
-                        ParticipateId: loginData.UserAutoId 
+                    parameters: {
+                        QueryChecker: 1,
+                        ParticipateId: loginData.UserAutoId
                     },
                 }),
             });
@@ -143,7 +144,7 @@ export default function ExamStartPage() {
                     };
                     acc.push(question);
                 }
-                
+
                 // Safe option handling
                 if (item.QnType === "MCQ" && item.Option) {
                     question.options.push(item.Option);
@@ -185,9 +186,9 @@ export default function ExamStartPage() {
         try {
             const res = await fetch(`${config.API_BASE_URL}api/Procedure/GetData`, {
                 method: 'POST',
-                headers: { 
-                    TenantId: loginData.tenantId, 
-                    'Content-Type': 'application/json' 
+                headers: {
+                    TenantId: loginData.tenantId,
+                    'Content-Type': 'application/json'
                 },
                 body: JSON.stringify({
                     operation: '',
@@ -195,11 +196,11 @@ export default function ExamStartPage() {
                     parameters: { QueryChecker: 2 },
                 }),
             });
-            
+
             if (!res.ok) {
                 throw new Error(`HTTP error! status: ${res.status}`);
             }
-            
+
             const data = await res.json();
             setDepartmentContactData(Array.isArray(data) ? data : []);
         } catch (err) {
@@ -220,7 +221,7 @@ export default function ExamStartPage() {
             if (!participateId) {
                 throw new Error("Participate ID is missing!");
             }
-            
+
             if (!questions || questions.length === 0) {
                 throw new Error("No questions found!");
             }
@@ -233,12 +234,12 @@ export default function ExamStartPage() {
             const payload = questions.map((q) => {
                 const ansValue = answers[q.questionId] ?? "NA";
                 let ansMark = 0;
-                
+
                 // Calculate marks only for answered MCQ questions
                 if (q.qnType === "MCQ" && ansValue !== "NA" && ansValue === q.correctOption) {
                     ansMark = q.mark || 0;
                 }
-                
+
                 return {
                     ParticipateId: participateId,
                     QnId: q.questionId,
@@ -254,9 +255,9 @@ export default function ExamStartPage() {
 
             const response = await fetch(`${config.API_BASE_URL}api/Participate/AddParticipateAns`, {
                 method: "POST",
-                headers: { 
-                    "Content-Type": "application/json", 
-                    TenantId: loginData.tenantId 
+                headers: {
+                    "Content-Type": "application/json",
+                    TenantId: loginData.tenantId
                 },
                 body: JSON.stringify(payload),
             });
@@ -298,7 +299,7 @@ export default function ExamStartPage() {
     useEffect(() => {
         // Fetch data when tenantId is available
         if (!loginData?.tenantId) return;
-        
+
         fetchQuestionPaper();
         fetchDepartmentContractInfo();
     }, [loginData?.tenantId]);
@@ -306,39 +307,50 @@ export default function ExamStartPage() {
     useEffect(() => {
         // Timer countdown effect
         if (timeLeft === null) return;
-        
+
         if (timeLeft <= 0) {
             toast.error("⏰ Time's up! Auto-submitting your exam...");
             handleSubmitExam();
             return;
         }
-        
+
         const timer = setInterval(() => {
             setTimeLeft(prev => prev !== null ? prev - 1 : null);
         }, 1000);
-        
+
         return () => clearInterval(timer);
     }, [timeLeft]);
 
     return (
         <div className="max-w-3xl mx-auto px-6 py-4 bg-white shadow-md rounded-sm">
-            {/* Header with timer and logo */}
-            <div className="relative flex flex-col items-center mb-3 px-4 sm:px-6 md:px-8 py-4 bg-white">
-                {/* Timer display */}
-                {timeLeft !== null && (
-                    <div className="absolute top-4 right-4 sm:top-4 sm:right-6 md:top-4 md:right-8 bg-white border border-red-200 px-3 sm:px-4 py-1 sm:py-2 rounded-sm shadow-sm">
-                        <p className="font-bold text-red-600 tracking-wider text-sm sm:text-base">
-                            ⏰ <span className="text-red-700">{formatTime(timeLeft)}</span>
-                        </p>
-                    </div>
-                )}
 
-                {/* Company logo and name */}
+            <div className="relative flex flex-col items-center mb-3 px-4 sm:px-6 md:px-8 py-4 bg-white">
                 <img
                     src="/images/FashionTex-Logo.png"
                     alt="Logo"
                     className="w-28 h-12 sm:w-32 sm:h-12 md:w-40 md:h-12 xl:w-44 xl:h-12 object-contain drop-shadow-md mb-2"
                 />
+
+                {timeLeft !== null && (
+
+                    <div className="absolute 
+                top-1 right-2 
+                sm:top-2 sm:right-3 
+                md:top-3 md:right-4
+                lg:top-3 lg:right-4
+                bg-white border border-red-200 
+                px-2 sm:px-2 md:px-3
+                py-1 sm:py-1 md:py-1.5
+                rounded-sm ">
+
+                        <p className="flex items-center gap-2  
+               text-sm sm:text-base md:text-md lg:text-lg">
+                            <LuAlarmClock className="text-red-400" />
+                            <span className="text-red-500">{formatTime(timeLeft)}</span>
+                        </p>
+                    </div>
+
+                )}
                 <h1 className="text-lg sm:text-lg md:text-xl lg:text-2xl xl:text-3xl font-extrabold text-gray-800 tracking-wide text-center mb-1">
                     Fashion Tex Group Of Company
                 </h1>
@@ -362,11 +374,10 @@ export default function ExamStartPage() {
                         return (
                             <div
                                 key={q.questionId}
-                                className={`mb-6 p-3 rounded-sm  transition-all duration-500 ${
-                                    isHighlighted
-                                        ? 'bg-red-100 border border-red-400'
-                                        : 'bg-white border border-gray-300'
-                                }`}
+                                className={`mb-6 p-3 rounded-sm  transition-all duration-500 ${isHighlighted
+                                    ? 'bg-red-100 border border-red-400'
+                                    : 'bg-white border border-gray-300'
+                                    }`}
                             >
                                 {/* Question header */}
                                 <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-2">
@@ -430,15 +441,14 @@ export default function ExamStartPage() {
                     })}
 
                     {/* Navigation controls */}
-                    <div className="flex flex-col sm:flex-row justify-between items-center w-full mt-6 gap-3">
+                    {/* <div className="flex flex-col sm:flex-row justify-between items-center w-full mt-6 gap-3">
                         <button
                             onClick={() => setCurrentPage(prev => Math.max(prev - 1, 0))}
                             disabled={currentPage === 0}
-                            className={`px-4 py-2 rounded-sm border w-full sm:w-auto ${
-                                currentPage === 0
-                                    ? "bg-gray-200 text-gray-400 cursor-not-allowed"
-                                    : "bg-gray-100 hover:bg-gray-200 text-gray-700"
-                            }`}
+                            className={`px-4 py-2 rounded-sm border w-full sm:w-auto ${currentPage === 0
+                                ? "bg-gray-200 text-gray-400 cursor-not-allowed"
+                                : "bg-gray-100 hover:bg-gray-200 text-gray-700"
+                                }`}
                         >
                             Previous
                         </button>
@@ -462,7 +472,7 @@ export default function ExamStartPage() {
                                 Next
                             </button>
 
-                            {/* Show submit button after completing at least one loop or on last page */}
+                           
                             {(loopCount > 0 || currentPage === totalPages - 1) && (
                                 <button
                                     onClick={() => setShowConfirmSubmit(true)}
@@ -472,13 +482,116 @@ export default function ExamStartPage() {
                                 </button>
                             )}
                         </div>
+                    </div> */}
+
+                    <div className="flex flex-col w-full mt-6 gap-2">
+
+                        {/* Large screens: Horizontal layout */}
+                        <div className="hidden sm:flex justify-between items-center w-full gap-2">
+                            {/* Previous button */}
+                            <button
+                                onClick={() => setCurrentPage(prev => Math.max(prev - 1, 0))}
+                                disabled={currentPage === 0}
+                                className={`px-4 py-2 rounded-sm border ${currentPage === 0
+                                    ? "bg-gray-200 text-gray-400 cursor-not-allowed"
+                                    : "bg-gray-100 hover:bg-gray-200 text-gray-700"
+                                    }`}
+                            >
+                                Previous
+                            </button>
+
+                            {/* Page indicator */}
+                            <h2 className="text-gray-600 text-sm sm:text-base">
+                                Page {currentPage + 1} of {totalPages}
+                            </h2>
+
+                            {/* Right buttons */}
+                            <div className="flex gap-2">
+                                <button
+                                    onClick={handleSkipPage}
+                                    className="px-4 py-2 rounded-sm bg-gray-500 hover:bg-gray-600 text-white font-medium"
+                                >
+                                    Skip
+                                </button>
+
+                                <button
+                                    onClick={handleNextPage}
+                                    className="px-4 py-2 rounded-sm bg-blue-500 hover:bg-blue-600 text-white font-medium"
+                                >
+                                    Next
+                                </button>
+
+                                {(loopCount > 0 || currentPage === totalPages - 1) && (
+                                    <button
+                                        onClick={() => setShowConfirmSubmit(true)}
+                                        className="px-4 py-2 rounded-sm bg-green-500 hover:bg-green-600 text-white font-medium"
+                                    >
+                                        Submit
+                                    </button>
+                                )}
+                            </div>
+                        </div>
+
+                        {/* Small screens: Vertical layout */}
+                        <div className="flex flex-col sm:hidden w-full gap-2">
+                            {/* Page indicator on top */}
+                            <h2 className="text-gray-600 text-sm text-center sm:text-base">
+                                Page {currentPage + 1} of {totalPages}
+                            </h2>
+
+                            {/* Buttons horizontally */}
+                            <div className="flex justify-between items-center w-full gap-2">
+                                {/* Left side: Previous */}
+                                <div>
+                                    <button
+                                        onClick={() => setCurrentPage(prev => Math.max(prev - 1, 0))}
+                                        disabled={currentPage === 0}
+                                        className={`px-4 py-2 rounded-sm border ${currentPage === 0
+                                                ? "bg-gray-200 text-gray-400 cursor-not-allowed"
+                                                : "bg-gray-100 hover:bg-gray-200 text-gray-700"
+                                            }`}
+                                    >
+                                        Previous
+                                    </button>
+                                </div>
+
+                                {/* Right side: Skip, Next, Submit */}
+                                <div className="flex gap-2">
+                                    <button
+                                        onClick={handleSkipPage}
+                                        className="px-4 py-2 rounded-sm bg-gray-500 hover:bg-gray-600 text-white font-medium"
+                                    >
+                                        Skip
+                                    </button>
+
+                                    <button
+                                        onClick={handleNextPage}
+                                        className="px-4 py-2 rounded-sm bg-blue-500 hover:bg-blue-600 text-white font-medium"
+                                    >
+                                        Next
+                                    </button>
+
+                                    {(loopCount > 0 || currentPage === totalPages - 1) && (
+                                        <button
+                                            onClick={() => setShowConfirmSubmit(true)}
+                                            className="px-4 py-2 rounded-sm bg-green-500 hover:bg-green-600 text-white font-medium"
+                                        >
+                                            Submit
+                                        </button>
+                                    )}
+                                </div>
+                            </div>
+
+                        </div>
                     </div>
+
+
                 </>
             ) : (
                 // No questions available message
                 <p className="text-center text-gray-500 text-lg mb-6">
-                    {departmentContactData[0]?.ChildName || 
-                     "This exam session is closed. Please verify the exam schedule or contact the admin if needed."}
+                    {departmentContactData[0]?.ChildName ||
+                        "This exam session is closed. Please verify the exam schedule or contact the admin if needed."}
                 </p>
             )}
 
@@ -486,21 +599,21 @@ export default function ExamStartPage() {
             {showConfirmSubmit && (
                 <div className="fixed inset-0 bg-black/40 z-50 flex items-center justify-center">
                     <div className="bg-white rounded-sm p-6   max-w-2xl text-center shadow-lg">
-                        
+
                         <h3 className="text-xl font-semibold mb-4">Confirm Submission</h3>
                         <p className="mb-6">Are you sure you want to submit your answers?</p>
                         <div className="flex justify-around">
-                            <button 
-                                onClick={() => setShowConfirmSubmit(false)} 
+                            <button
+                                onClick={() => setShowConfirmSubmit(false)}
                                 className="px-4 py-2 bg-gray-300 rounded hover:bg-gray-400"
                             >
                                 Cancel
                             </button>
-                            <button 
-                                onClick={() => { 
-                                    setShowConfirmSubmit(false); 
-                                    handleSubmitExam(); 
-                                }} 
+                            <button
+                                onClick={() => {
+                                    setShowConfirmSubmit(false);
+                                    handleSubmitExam();
+                                }}
                                 className="px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600"
                             >
                                 Yes, Submit
@@ -514,10 +627,10 @@ export default function ExamStartPage() {
             {showSuccessModal && (
                 <div className="fixed inset-0 bg-black/40 z-50 flex items-center justify-center">
                     <div className="bg-white rounded-lg p-6 max-w-sm text-center shadow-lg">
-                        <img 
-                            src="/images/FashionTex-Logo.png" 
-                            alt="Logo" 
-                            className="w-24 h-20 mx-auto mb-4 object-contain" 
+                        <img
+                            src="/images/FashionTex-Logo.png"
+                            alt="Logo"
+                            className="w-24 h-20 mx-auto mb-4 object-contain"
                         />
                         <h3 className="text-xl font-bold mb-2">Fashion Tex Ltd</h3>
                         <p className="text-gray-700">Thank you for completing the recruitment exam.</p>
