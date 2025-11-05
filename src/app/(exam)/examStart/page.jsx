@@ -18,7 +18,9 @@ export default function ExamStartPage() {
     const [timeLeft, setTimeLeft] = useState(null);
     const [hasLooped, setHasLooped] = useState(false);
     const [passCount, setPassCount] = useState(1);
-
+    const [unansweredQuestions, setUnansweredQuestions] = useState([]);
+    const [departmentContactData, setDepartmentContactData] = useState([]);
+    const [highlightedQuestions, setHighlightedQuestions] = useState([]);
 
     const [loopCount, setLoopCount] = useState(0);
 
@@ -81,11 +83,49 @@ export default function ExamStartPage() {
     //     setCurrentPage(prev => (prev + 1) % totalPages);
     // };
 
+    // const handleNextPage = () => {
+    //     // const allAnswered = currentQuestions.every(q => answers[q.questionId]);
+    //     // if (!allAnswered) {
+    //     //     alert("Please answer all questions on this page before moving to the next page.");
+    //     //     return;
+    //     // }
+
+    //     // Find unanswered questions on the current page
+    //     const unanswered = currentQuestions
+    //         .filter(q => !answers[q.questionId])
+    //         .map(q => q.questionId);
+
+    //     if (unanswered.length > 0) {
+    //         // Highlight unanswered questions
+    //         // setUnansweredQuestions(unanswered);
+    //         setHighlightedQuestions(unanswered.map(q => q.questionId));
+    //         setTimeout(() => setHighlightedQuestions([]), 1000);
+
+    //         return; // Stop moving to next page
+    //     }
+
+    //     // Clear highlights if all answered
+    //     setUnansweredQuestions([]);
+    //     const nextPage = (currentPage + 1) % totalPages;
+
+    //     // Increment loop count if completed a full loop
+    //     if (nextPage === 0) setLoopCount(prev => prev + 1);
+
+    //     setCurrentPage(nextPage);
+    // };
+
     const handleNextPage = () => {
-        const allAnswered = currentQuestions.every(q => answers[q.questionId]);
-        if (!allAnswered) {
-            alert("Please answer all questions on this page before moving to the next page.");
-            return;
+        // Find unanswered questions on the current page
+        const unanswered = currentQuestions.filter(q => !answers[q.questionId]);
+
+        if (unanswered.length > 0) {
+            // Highlight unanswered questions
+            setHighlightedQuestions(unanswered.map(q => q.questionId));
+
+            // Remove highlight after 1 second
+            setTimeout(() => setHighlightedQuestions([]), 1000);
+
+            return; // Stop moving to next page
         }
 
         const nextPage = (currentPage + 1) % totalPages;
@@ -178,7 +218,26 @@ export default function ExamStartPage() {
             setLoading(false);
         }
     };
+    const fetchDepartmentContractInfo = async () => {
+        try {
+            const res = await fetch(`${config.API_BASE_URL}api/Procedure/GetData`, {
+                method: 'POST',
+                headers: { TenantId: loginData.tenantId, 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    operation: '',
+                    procedureName: 'SP_QuestionManage',
+                    parameters: { QueryChecker: 8 },
+                }),
+            });
+            if (!res.ok) throw new Error('Failed to load department data');
+            const data = await res.json();
 
+            console.log("Department Contract info", data)
+            setDepartmentContactData(data);
+        } catch (err) {
+            toast.error('Failed to load Department data');
+        }
+    };
     /** Load participateId from localStorage */
     useEffect(() => {
         const id = localStorage.getItem("participateId");
@@ -190,7 +249,12 @@ export default function ExamStartPage() {
     }, []);
 
     /** Fetch questions after loginData available */
-    useEffect(() => { fetchQuestionPaper(); }, [loginData]);
+    // useEffect(() => { fetchQuestionPaper(); }, [loginData]);
+    useEffect(() => {
+        if (!loginData?.tenantId) return;
+        fetchQuestionPaper();
+        fetchDepartmentContractInfo();
+    }, [loginData?.tenantId]);
 
     /** Timer countdown effect */
     useEffect(() => {
@@ -292,6 +356,7 @@ export default function ExamStartPage() {
         }
     };
 
+
     const currentQuestion = questions[currentIndex];
 
     return (
@@ -384,11 +449,11 @@ export default function ExamStartPage() {
                 <p className="text-center text-gray-500 text-lg">Loading questions...</p>
             ) : currentQuestions.length > 0 ? (
                 <>
-                    {currentQuestions.map((q, idx) => {
+                    {/* {currentQuestions.map((q, idx) => {
                         const questionNumber = currentPage * questionsPerPage + idx + 1; // continuous numbering
                         return (
                             <div key={q.questionId} className="mb-6">
-                                {/* Question text with numbering */}
+                             
                                 <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-2">
                                     <h3
                                         className="text-lg sm:text-xl font-semibold text-gray-800 select-none break-words sm:pr-4"
@@ -412,7 +477,7 @@ export default function ExamStartPage() {
                                     />
                                 )}
 
-                                {/* Answer input (MCQ / Textarea) */}
+                              
                                 {q.qnType === "MCQ" ? (
                                     <div className="mb-2 space-y-2">
                                         {q.options.map((opt, i) => (
@@ -434,6 +499,68 @@ export default function ExamStartPage() {
                                         rows={5}
                                         className="w-full p-3 border rounded focus:ring-2 focus:ring-blue-400 focus:outline-none text-gray-700"
                                         value={answers[q.questionId] || ""}
+                                        onChange={e => handleAnswerChange(e.target.value, q.questionId)}
+                                        placeholder="Type your answer here..."
+                                    />
+                                )}
+                            </div>
+                        );
+                    })} */}
+
+                    {currentQuestions.map((q, idx) => {
+                        const questionNumber = currentPage * questionsPerPage + idx + 1;
+                        const isUnanswered = unansweredQuestions.includes(q.questionId);
+
+                        return (
+                            <div
+                                key={q.questionId}
+                              
+                                className={`mb-6 p-3 rounded-md transition-all duration-500 ${highlightedQuestions.includes(q.questionId)
+                                        ? 'bg-red-100 border border-red-400'
+                                        : 'bg-white border border-gray-200'
+                                    }`}
+                            >
+                                {/* Question text */}
+                                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-2">
+                                    <h3
+                                        className="text-lg sm:text-xl font-semibold text-gray-800 select-none break-words sm:pr-4"
+                                        onContextMenu={e => e.preventDefault()}
+                                        onDragStart={e => e.preventDefault()}
+                                        onMouseDown={e => e.preventDefault()}
+                                    >
+                                        {questionNumber}. {q.question}
+                                    </h3>
+
+                                    <p className="text-sm text-gray-500 mt-1 sm:mt-0 flex-shrink-0">
+                                        Mark: <span className="font-medium">{q.mark}</span>
+                                    </p>
+                                </div>
+
+                                {/* MCQ or Textarea */}
+                                {q.qnType === 'MCQ' ? (
+                                    <div className="mb-2 space-y-2">
+                                        {q.options.map((opt, i) => (
+                                            <label
+                                                key={i}
+                                                className="flex items-center gap-2 p-2 border rounded-sm hover:bg-gray-50 cursor-pointer"
+                                            >
+                                                <input
+                                                    type="radio"
+                                                    name={`q${q.questionId}`}
+                                                    value={opt}
+                                                    checked={answers[q.questionId] === opt}
+                                                    onChange={() => handleAnswerChange(opt, q.questionId)}
+                                                    className="w-5 h-5 accent-blue-500"
+                                                />
+                                                <span className="text-gray-700">{opt}</span>
+                                            </label>
+                                        ))}
+                                    </div>
+                                ) : (
+                                    <textarea
+                                        rows={5}
+                                        className="w-full p-3 border rounded focus:ring-2 focus:ring-blue-400 focus:outline-none text-gray-700"
+                                        value={answers[q.questionId] || ''}
                                         onChange={e => handleAnswerChange(e.target.value, q.questionId)}
                                         placeholder="Type your answer here..."
                                     />
@@ -491,9 +618,20 @@ export default function ExamStartPage() {
 
                 </>
             ) : (
-                <p className="text-center text-gray-500 text-lg">
-                    This exam session is closed. Please verify the exam schedule or contact the admin if needed.
+                // <p className="text-center text-gray-500 text-lg">
+                //     This exam session is closed. Please verify the exam schedule or contact the admin (
+                //     {departmentContactData.map((child, idx) => (
+                //         <span key={child.ChildId}>
+                //              {child.ChildName}
+                //             {idx < departmentContactData.length - 1 ? ", " : ""}
+                //         </span>
+                //     ))}
+                //     ) if needed.
+                // </p>
+                <p className="text-center text-gray-500 text-lg mb-6">
+                    {departmentContactData.length > 0 && departmentContactData[0].ChildName}
                 </p>
+
             )}
 
             {/* Confirm Submit Modal */}

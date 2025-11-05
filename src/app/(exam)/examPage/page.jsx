@@ -126,7 +126,7 @@ export default function ExamLandingPage() {
         <div className="mt-8 text-center">
           <button
             onClick={handleStartExam}
-            className="px-8 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-bold rounded-xl shadow-lg hover:shadow-xl hover:scale-105 transform transition-all duration-300"
+            className="px-8 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-bold rounded-sm shadow-lg hover:shadow-xl hover:scale-105 transform transition-all duration-300"
           >
             Start Exam
           </button>
