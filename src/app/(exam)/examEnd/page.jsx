@@ -16,7 +16,7 @@ export default function ExamEndPage() {
 
     return (
         <div className="flex justify-center items-center">
-            <div className="bg-white shadow-lg rounded-2xl  text-center max-w-lg w-full">
+            <div className="bg-white shadow-lg rounded-sm  text-center max-w-xl w-full">
 
                 {/* Logo */}
                 <div className="mb-2">
