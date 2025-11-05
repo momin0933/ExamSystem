@@ -13,6 +13,7 @@ const Sidebar = dynamic(() => import("./Sidebar"));
 
 export default function Navbar() {
   const { loginData, logout } = useContext(AuthContext);
+  console.log("Navber Login Data",loginData)
   const { isCollapsed, setIsCollapsed } = useContext(DataContext);
   const toggleSidebar = () => setIsCollapsed(!isCollapsed);
   const [isDropdownOpen, setDropdownOpen] = useState(false);
@@ -24,7 +25,7 @@ export default function Navbar() {
 
         {/* ===== Left: Sidebar Toggle ===== */}
         <div className="flex items-center gap-2">
-          {/* Desktop Sidebar Toggle */}
+         
           <button
             onClick={toggleSidebar}
             className="hidden sm:flex items-center justify-center w-10 h-10 cursor-pointer transition"
@@ -32,7 +33,7 @@ export default function Navbar() {
             <RxHamburgerMenu className="text-2xl text-gray-50" />
           </button>
 
-          {/* Mobile Toggle */}
+   
           <button
             onClick={() => setIsNavOpen(!isNavOpen)}
             className="sm:hidden flex items-center justify-center w-10 h-10 rounded-lg hover:bg-gray-100 transition"
@@ -40,7 +41,7 @@ export default function Navbar() {
             <RxHamburgerMenu className="text-2xl text-gray-700" />
           </button>
 
-          {/* Mobile Sidebar */}
+      
           {isNavOpen && (
             <div
               data-aos="fade-right"
