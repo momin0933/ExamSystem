@@ -37,8 +37,8 @@ export default function ParticipatePage() {
     }
 
     const handleNext = async (e) => {
-        e.preventDefault(); 
-        setErrors({}); 
+        e.preventDefault();
+        setErrors({});
 
         // Validation
         if (!formData.MobileNo?.trim() || !formData.NoticePeriod?.trim()) {
@@ -59,7 +59,7 @@ export default function ParticipatePage() {
                     : 0,
                 CurrentOrg: formData.CurrentOrg || "NA",
                 Experience: formData.Experience || "00 Years",
-                NoticePeriod: Number(formData.NoticePeriod), 
+                NoticePeriod: Number(formData.NoticePeriod),
                 Remarks: formData.Remarks || null,
                 EntryBy: loginData?.UserId,
                 EntryDate: new Date().toISOString(),
@@ -99,16 +99,24 @@ export default function ParticipatePage() {
 
     return (
         <div className="min-h-screen flex justify-center items-start pt-10 px-4">
-            <div className="bg-white shadow-lg rounded-2xl w-full max-w-4xl p-8">
-                <h2 className="text-3xl font-bold text-gray-800 mb-4 text-center">
+            <div className="bg-white shadow-lg rounded-sm w-full max-w-4xl p-8">
+                {/* <h2 className="text-3xl font-bold text-gray-800 mb-4 text-center">
+                    Exam Participation Form
+                </h2> */}
+                <h2
+                    className="text-2xl sm:text-2xl md:text-2xl lg:text-2xl font-bold text-gray-800 mb-4 text-center leading-tight"
+                >
                     Exam Participation Form
                 </h2>
 
+
                 <form onSubmit={handleNext}>
                     {/* Title */}
-                    <h2 className="text-xl font-semibold text-gray-800 border-b pb-2 mb-6">
+                    <h2 className="text-xl font-semibold text-gray-800  pb-2 ">
                         Candidate Information
                     </h2>
+                    <hr className="w-full h-[0.5px] mb-6 border-0 bg-gradient-to-r from-gray-300 to-gray-300 rounded-none" />
+
 
                     {/* Grid container - 2 fields per row */}
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-5">
@@ -116,11 +124,11 @@ export default function ParticipatePage() {
                         {/* Candidate Name */}
                         <div className="flex items-center">
                             <label className="w-1/3 text-gray-700 font-medium text-sm">
-                                Candidate Name:
-                            </label>
+                                Candidate Name
+                            </label>:&nbsp;
                             <input
                                 type="text"
-                                className="w-2/3 border border-gray-300 p-1 rounded-lg bg-gray-100 text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                className="w-2/3 border border-gray-300 p-1 rounded-sm bg-gray-100 text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-500"
                                 placeholder="Candidate Name"
                                 value={candidate.name || ""}
                                 readOnly
@@ -128,37 +136,32 @@ export default function ParticipatePage() {
                         </div>
 
                         {/* Mobile No - required */}
-                        <div className="flex items-center gap-2">
+                        <div className="flex items-center">
                             <label className="w-1/3 text-sm font-medium text-gray-700">
-                                Mobile No: <span className="text-red-500">*</span>
-                            </label>
-                            <div className="w-2/3 flex flex-col">
-                                <input
-                                    type="text"
-                                    name="MobileNo"
-                                    value={formData.MobileNo}
-                                    onChange={handleChange}
-                                    className={`w-full border p-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 ${errors.MobileNo ? "border-red-500" : "border-gray-300"
-                                        }`}
-                                    placeholder="Enter mobile number"
-                                    required
-                                />
-                                {/* {errors.MobileNo && (
-                                    <p className="text-red-500 text-sm mt-1">{errors.MobileNo}</p>
-                                )} */}
-                            </div>
+                                Mobile No<span className="text-red-500">*</span>
+                            </label>:&nbsp;
+                            <input
+                                type="text"
+                                name="MobileNo"
+                                value={formData.MobileNo}
+                                onChange={handleChange}
+                                className={`w-2/3 border p-1 rounded-sm focus:outline-none focus:ring-2 focus:ring-blue-500 ${errors.MobileNo ? "border-red-500" : "border-gray-300"
+                                    }`}
+                                placeholder="Enter mobile number"
+                                required
+                            />
                         </div>
 
 
                         {/* Current Salary - optional */}
                         <div className="flex items-center">
                             <label className="w-1/3 text-gray-700 font-medium text-sm">
-                                Current Salary:
-                            </label>
+                                Current Salary
+                            </label>:&nbsp;
                             <input
                                 type="number"
                                 name="CurrentSalary"
-                                className="w-2/3 border border-gray-300 p-1 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                className="w-2/3 border border-gray-300 p-1 rounded-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
                                 placeholder="Enter Current Salary"
                                 value={formData.CurrentSalary}
                                 onChange={handleChange}
@@ -168,12 +171,12 @@ export default function ParticipatePage() {
                         {/* Current Organization - optional */}
                         <div className="flex items-center">
                             <label className="w-1/3 text-gray-700 font-medium text-sm">
-                                Current Organization:
-                            </label>
+                                Current Organization
+                            </label>:&nbsp;
                             <input
                                 type="text"
                                 name="CurrentOrg"
-                                className="w-2/3 border border-gray-300 p-1 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                className="w-2/3 border border-gray-300 p-1 rounded-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
                                 placeholder="Enter Organization Name"
                                 value={formData.CurrentOrg}
                                 onChange={handleChange}
@@ -183,14 +186,14 @@ export default function ParticipatePage() {
                         {/* Experience - optional */}
                         <div className="flex items-center">
                             <label className="w-1/3 text-gray-700 font-medium text-sm">
-                                Experience:
-                            </label>
+                                Experience
+                            </label>:&nbsp;
                             <input
                                 type="text"
                                 name="Experience"
                                 value={formData.Experience}
                                 onChange={handleChange}
-                                className="w-2/3 border border-gray-300 p-1 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                className="w-2/3 border border-gray-300 p-1 rounded-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
                                 placeholder="Enter experience (e.g., 1 year)"
                             />
                         </div>
@@ -198,12 +201,12 @@ export default function ParticipatePage() {
                         {/* Notice Period - optional */}
                         <div className="flex items-center">
                             <label className="w-1/3 text-gray-700 font-medium text-sm">
-                                Notice Period: (days)<span className="text-red-500">*</span>
-                            </label>
+                                Notice Period (days)<span className="text-red-500">*</span>
+                            </label>:&nbsp;
                             <input
                                 type="number"
                                 name="NoticePeriod"
-                                className="w-2/3 border border-gray-300 p-1 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                className="w-2/3 border border-gray-300 p-1 rounded-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
                                 placeholder="Enter Notice Period"
                                 value={formData.NoticePeriod}
                                 onChange={handleChange}
@@ -221,9 +224,9 @@ export default function ParticipatePage() {
                         <button
                             type="submit"
                             onClick={handleNext}
-                            className="bg-gradient-to-r from-blue-600 to-indigo-600 text-white py-2 px-5 rounded-lg font-semibold hover:shadow-lg hover:scale-105 transform transition-all duration-300"
+                            className="bg-gradient-to-r from-blue-500 to-indigo-500 text-white py-2 px-5 rounded-sm font-semibold hover:shadow-sm hover:scale-105 transform transition-all duration-300"
                         >
-                            Next →
+                            Next
                         </button>
                     </div>
                 </form>

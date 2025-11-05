@@ -77,6 +77,7 @@ export default function ExamStartPage() {
                 : [];
             setQuestions(formatted);
             setCurrentIndex(0);
+            console.log("Exam Question", formatted)
 
             // Initialize timer if available
             if (formatted.length > 0 && formatted[0].examTime) {
@@ -208,14 +209,19 @@ export default function ExamStartPage() {
     const currentQuestion = questions[currentIndex];
 
     return (
-        <div className="max-w-3xl mx-auto px-6 py-4 bg-white shadow-md rounded-lg">
+        <div className="max-w-3xl mx-auto px-6 py-4 bg-white shadow-md rounded-sm">
             {/* Header with timer */}
-            <div className="relative flex justify-center items-center mb-6 px-6 py-4 bg-white">
+            <div className="relative flex justify-center items-center mb-3 px-6 py-4 bg-white">
                 <div className="flex flex-col items-center text-center">
-                    <img src="/images/FashionTex-Logo.png" alt="Logo" className="w-24 h-20 object-contain drop-shadow-md" />
-                    <h1 className="text-2xl font-extrabold text-gray-800 tracking-wide mt-2">Fashion Tex Group Of Company</h1>
+                    <img src="/images/FashionTex-Logo.png" alt="Logo" className="w-40 h-16 object-contain drop-shadow-md" />
+                    <h1 className="text-lg sm:text-lg md:text-xl lg:text-2xl xl:text-3xl font-extrabold text-gray-800 tracking-wide text-center sm:text-left">
+                        Fashion Tex Group Of Company
+                    </h1>
+
                     <h2 className="text-lg font-medium text-gray-600 mt-1">
-                        <span className="text-indigo-700 font-semibold">{questions[0]?.examName || ""}</span>
+                        <p className="text-lg text-gray-800 font-medium mb-1">
+                            Exam Name: <span className="text-indigo-700 font-semibold">{questions[0]?.examName || "N/A"}</span>
+                        </p>
                     </h2>
                 </div>
                 {timeLeft !== null && (
@@ -275,7 +281,7 @@ export default function ExamStartPage() {
                     </div>
                 </>
             ) : (
-                <p className="text-center text-gray-500 text-lg">No questions available.</p>
+                <p className="text-center text-gray-500 text-lg">This exam session is closed. Please verify the exam schedule or contact the admin if needed.</p>
             )}
 
             {/* Confirm Submit Modal */}
@@ -294,7 +300,7 @@ export default function ExamStartPage() {
 
             {/* Success Modal */}
             {showSuccessModal && (
-               <div className="fixed inset-0 bg-black/40 z-50 flex items-center justify-center">
+                <div className="fixed inset-0 bg-black/40 z-50 flex items-center justify-center">
                     <div className="bg-white rounded-lg p-6 max-w-sm text-center shadow-lg">
                         <img src="/images/FashionTex-Logo.png" alt="Logo" className="w-24 h-20 mx-auto mb-4 object-contain" />
                         <h3 className="text-xl font-bold mb-2">Fashion Tex Ltd</h3>
