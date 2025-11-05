@@ -19,6 +19,7 @@ export default function ExamStartPage() {
     const [hasLooped, setHasLooped] = useState(false);
     const [passCount, setPassCount] = useState(1);
 
+
     const [loopCount, setLoopCount] = useState(0);
 
 
@@ -383,80 +384,64 @@ export default function ExamStartPage() {
                 <p className="text-center text-gray-500 text-lg">Loading questions...</p>
             ) : currentQuestions.length > 0 ? (
                 <>
-                    {currentQuestions.map((q, idx) => (
-                        <div key={q.questionId} className="mb-6">
-                            {/* Question */}
-                            {/* <div className="flex justify-between items-center mb-2">
-                                <h3
-                                    className="text-xl font-semibold text-gray-800 select-none"
-                                    onContextMenu={e => e.preventDefault()}
-                                    onDragStart={e => e.preventDefault()}
-                                    onMouseDown={e => e.preventDefault()}
-                                >
-                                    {q.question}
-                                </h3>
-                                <p className="text-sm text-gray-500">
-                                    Mark: <span className="font-medium">{q.mark}</span>
-                                </p>
-                            </div> */}
-                            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-2">
-                                {/* Question text */}
-                                <h3
-                                    className="text-lg sm:text-xl font-semibold text-gray-800 select-none break-words sm:pr-4"
-                                    onContextMenu={e => e.preventDefault()}
-                                    onDragStart={e => e.preventDefault()}
-                                    onMouseDown={e => e.preventDefault()}
-                                >
-                                    {q.question}
-                                </h3>
+                    {currentQuestions.map((q, idx) => {
+                        const questionNumber = currentPage * questionsPerPage + idx + 1; // continuous numbering
+                        return (
+                            <div key={q.questionId} className="mb-6">
+                                {/* Question text with numbering */}
+                                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-2">
+                                    <h3
+                                        className="text-lg sm:text-xl font-semibold text-gray-800 select-none break-words sm:pr-4"
+                                        onContextMenu={e => e.preventDefault()}
+                                        onDragStart={e => e.preventDefault()}
+                                        onMouseDown={e => e.preventDefault()}
+                                    >
+                                        {questionNumber}. {q.question}
+                                    </h3>
 
-                                {/* Mark stays horizontal */}
-                                <p className="text-sm text-gray-500 mt-1 sm:mt-0 flex-shrink-0">
-                                    Mark: <span className="font-medium">{q.mark}</span>
-                                </p>
-                            </div>
-
-
-
-                            {q.sketch && (
-                                <img
-                                    src={q.sketch}
-                                    alt={`Sketch ${idx + 1}`}
-                                    className="w-64 h-48 object-contain border rounded-sm shadow-sm mb-3"
-                                />
-                            )}
-
-                            {/* Answer Input */}
-                            {q.qnType === "MCQ" ? (
-                                <div className="mb-2 space-y-2">
-                                    {q.options.map((opt, i) => (
-                                        <label
-                                            key={i}
-                                            className="flex items-center gap-2 p-2 border rounded-sm hover:bg-gray-50 cursor-pointer"
-                                        >
-                                            <input
-                                                type="radio"
-                                                name={`q${q.questionId}`}
-                                                value={opt}
-                                                checked={answers[q.questionId] === opt}
-                                                onChange={() => handleAnswerChange(opt, q.questionId)}
-                                                className="w-5 h-5 accent-blue-500"
-                                            />
-                                            <span className="text-gray-700">{opt}</span>
-                                        </label>
-                                    ))}
+                                    <p className="text-sm text-gray-500 mt-1 sm:mt-0 flex-shrink-0">
+                                        Mark: <span className="font-medium">{q.mark}</span>
+                                    </p>
                                 </div>
-                            ) : (
-                                <textarea
-                                    rows={5}
-                                    className="w-full p-3 border rounded focus:ring-2 focus:ring-blue-400 focus:outline-none text-gray-700"
-                                    value={answers[q.questionId] || ""}
-                                    onChange={e => handleAnswerChange(e.target.value, q.questionId)}
-                                    placeholder="Type your answer here..."
-                                />
-                            )}
-                        </div>
-                    ))}
+
+                                {q.sketch && (
+                                    <img
+                                        src={q.sketch}
+                                        alt={`Sketch ${questionNumber}`}
+                                        className="w-64 h-48 object-contain border rounded-sm shadow-sm mb-3"
+                                    />
+                                )}
+
+                                {/* Answer input (MCQ / Textarea) */}
+                                {q.qnType === "MCQ" ? (
+                                    <div className="mb-2 space-y-2">
+                                        {q.options.map((opt, i) => (
+                                            <label key={i} className="flex items-center gap-2 p-2 border rounded-sm hover:bg-gray-50 cursor-pointer">
+                                                <input
+                                                    type="radio"
+                                                    name={`q${q.questionId}`}
+                                                    value={opt}
+                                                    checked={answers[q.questionId] === opt}
+                                                    onChange={() => handleAnswerChange(opt, q.questionId)}
+                                                    className="w-5 h-5 accent-blue-500"
+                                                />
+                                                <span className="text-gray-700">{opt}</span>
+                                            </label>
+                                        ))}
+                                    </div>
+                                ) : (
+                                    <textarea
+                                        rows={5}
+                                        className="w-full p-3 border rounded focus:ring-2 focus:ring-blue-400 focus:outline-none text-gray-700"
+                                        value={answers[q.questionId] || ""}
+                                        onChange={e => handleAnswerChange(e.target.value, q.questionId)}
+                                        placeholder="Type your answer here..."
+                                    />
+                                )}
+                            </div>
+                        );
+                    })}
+
 
                     {/* Navigation */}
                     <div className="flex flex-col sm:flex-row justify-between items-center w-full mt-6 gap-3">
@@ -465,8 +450,8 @@ export default function ExamStartPage() {
                             onClick={() => setCurrentPage(prev => Math.max(prev - 1, 0))}
                             disabled={currentPage === 0}
                             className={`px-4 py-2 rounded-sm border ${currentPage === 0
-                                    ? "bg-gray-200 text-gray-400 cursor-not-allowed"
-                                    : "bg-gray-100 hover:bg-gray-200 text-gray-700"
+                                ? "bg-gray-200 text-gray-400 cursor-not-allowed"
+                                : "bg-gray-100 hover:bg-gray-200 text-gray-700"
                                 } w-full sm:w-auto`}
                         >
                             Previous
