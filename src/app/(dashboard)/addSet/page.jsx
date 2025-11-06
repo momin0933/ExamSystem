@@ -377,7 +377,7 @@ export default function AddSet() {
                             >
                                 <IoMdAddCircle className="text-xl" />
                             </Link>
-                            <FaFileExcel onClick={handleDownloadExcel} className="text-lg cursor-pointer text-gray-50" />
+                            {/* <FaFileExcel onClick={handleDownloadExcel} className="text-lg cursor-pointer text-gray-50" /> */}
                         </div>
                     </div>
 

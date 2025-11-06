@@ -161,7 +161,7 @@ export default function AddExam() {
         examTime: exam.ExamTime,
         fromDate: exam.FromDate,
         toDate: exam.ToDate
-      }));
+      })).sort((a, b) => b.id - a.id);
       console.log("Exam Grid formatted Data", formattedExams)
       setExams(formattedExams);
       setFilteredExams(formattedExams);
@@ -689,7 +689,7 @@ export default function AddExam() {
               <Link onClick={handleOpenModal} href="#" passHref className="text-lg text-gray-50 cursor-pointer">
                 <IoMdAddCircle className="text-xl" />
               </Link>
-              <FaFileExcel className="text-lg cursor-pointer text-gray-50" />
+              {/* <FaFileExcel className="text-lg cursor-pointer text-gray-50" /> */}
             </div>
           </div>
 

@@ -21,7 +21,7 @@ const Login = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-r from-blue-100 to-purple-100 flex items-center justify-center p-4">
-      <div className="flex flex-col lg:flex-row w-full max-w-5xl bg-white shadow-2xl rounded-2xl overflow-hidden">
+      <div className="flex flex-col lg:flex-row w-full max-w-5xl bg-white shadow-2xl rounded-sm overflow-hidden">
 
         {/* Left Section - Modern Image with Overlay */}
         <div className="relative w-full lg:w-1/2 min-h-[300px]">
@@ -107,10 +107,10 @@ const Login = () => {
             {/* Submit Button */}
             <button
               type="submit"
-              className={`w-full py-3 rounded-xl text-white font-semibold shadow-sm transition-all duration-300 transform ${
+              className={`w-full py-3 rounded-sm text-white font-semibold shadow-sm transition-all duration-300 transform ${
                 loading
                   ? "bg-blue-300 cursor-not-allowed"
-                  : "bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 hover:shadow-xl"
+                  : "bg-blue-500 hover:bg-blue-700 "
               }`}
               disabled={loading}
             >

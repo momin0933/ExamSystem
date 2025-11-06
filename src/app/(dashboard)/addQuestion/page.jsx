@@ -384,7 +384,7 @@ export default function AddQuestion() {
                             >
                                 <IoMdAddCircle className="text-xl" />
                             </Link>
-                            <FaFileExcel onClick={handleDownloadExcel} className="text-lg cursor-pointer text-gray-50" />
+                            {/* <FaFileExcel onClick={handleDownloadExcel} className="text-lg cursor-pointer text-gray-50" /> */}
                         </div>
                     </div>
                     <div className="border border-gray-300 rounded-b-md overflow-hidden max-h-[65vh] overflow-y-auto">

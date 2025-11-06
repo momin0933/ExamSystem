@@ -114,6 +114,7 @@ export default function AddExam() {
                     org: item.CurrentOrg,
                     salary: item.CurrentSalary,
                     totalQnMark: item.TotalQnMark,
+                    totalAnsMark: item.TotalAnsMark,
                     noticePeriod: item.NoticePeriod,
                     //  noticePeriodLabel: item.NoticePeriod === 1 ? '1 day' : `${item.NoticePeriod} days`,
                     noticePeriodLabel: item.NoticePeriod <= 1
@@ -486,6 +487,8 @@ export default function AddExam() {
             Experience: item.experience,
             "Notice Period": item.noticePeriodLabel,
             "Qn Mark": item.totalQnMark,
+            "Ans Mark": item.totalAnsMark,
+            // "Mark":item.mark
             // Optionally include hidden fields
             // "User ID": item.value,
             // Password: item.password,
