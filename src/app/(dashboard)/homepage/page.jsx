@@ -120,9 +120,15 @@ export default function Homepage() {
       </div>
     </div>
   );
+   useEffect(() => {
+        document.body.style.overflow = 'hidden';
+        return () => {
+            document.body.style.overflow = 'unset';
+        };
+    }, []);
 
   return (
-    <div className="bg-gray-50 min-h-screen p-6">
+
     <div className="font-roboto p-6">
       <div className="mb-8 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <div>
@@ -169,6 +175,6 @@ export default function Homepage() {
         />
       </div>
     </div>
-    </div>
+  
   );
 }
