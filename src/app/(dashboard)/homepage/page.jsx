@@ -1,25 +1,175 @@
 "use client";
 
-import { useState, useEffect, useContext } from 'react';
+import { useState, useEffect, useContext } from "react";
+import { AuthContext } from "../../provider/AuthProvider";
+import config from "@/config";
+import toast from "react-hot-toast";
+import Link from "next/link";
+import { HiOutlineClipboardList, HiOutlineUserGroup, HiOutlineQuestionMarkCircle, HiOutlineUsers, HiHome } from "react-icons/hi";
 
 export default function Homepage() {
+  const { loginData } = useContext(AuthContext);
 
-   useEffect(() => {
-        document.body.style.overflow = 'hidden';
-        return () => {
-            document.body.style.overflow = 'unset';
+  const [dashboardData, setDashboardData] = useState({
+    totalExams: 0,
+    totalCandidates: 0,
+    totalQuestions: 0,
+    totalParticipants: 0,
+  });
+
+  const [animatedCounts, setAnimatedCounts] = useState({
+    totalExams: 0,
+    totalCandidates: 0,
+    totalQuestions: 0,
+    totalParticipants: 0,
+  });
+
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    if (loginData?.tenantId) fetchDashboardData();
+  }, [loginData?.tenantId]);
+
+  const animateCount = (start, end, duration, setter, key) => {
+    const startTime = performance.now();
+    const step = (currentTime) => {
+      const elapsed = currentTime - startTime;
+      const progress = Math.min(elapsed / duration, 1);
+      const easeOut = 1 - Math.pow(1 - progress, 4);
+      const currentValue = Math.floor(start + (end - start) * easeOut);
+      setter((prev) => ({ ...prev, [key]: currentValue }));
+      if (progress < 1) requestAnimationFrame(step);
+    };
+    requestAnimationFrame(step);
+  };
+
+  const startCountAnimations = (newData) => {
+    const duration = 1000;
+    setAnimatedCounts({
+      totalExams: 0,
+      totalCandidates: 0,
+      totalQuestions: 0,
+      totalParticipants: 0,
+    });
+
+    setTimeout(() => {
+      animateCount(0, newData.totalExams, duration, setAnimatedCounts, "totalExams");
+      animateCount(0, newData.totalCandidates, duration, setAnimatedCounts, "totalCandidates");
+      animateCount(0, newData.totalQuestions, duration, setAnimatedCounts, "totalQuestions");
+      animateCount(0, newData.totalParticipants, duration, setAnimatedCounts, "totalParticipants");
+    }, 100);
+  };
+
+  const fetchDashboardData = async () => {
+    try {
+      setLoading(true);
+      const response = await fetch(`${config.API_BASE_URL}api/Procedure/GetData`, {
+        method: "POST",
+        headers: {
+          TenantId: loginData.tenantId,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          operation: "",
+          procedureName: "SP_Dashboard",
+          parameters: { QueryChecker: 1 },
+        }),
+      });
+
+      if (!response.ok) throw new Error("Failed to fetch dashboard data");
+
+      const data = await response.json();
+      if (Array.isArray(data) && data.length > 0) {
+        const newData = {
+          totalExams: data[0].TotalExams || 0,
+          totalCandidates: data[0].TotalCandidates || 0,
+          totalQuestions: data[0].TotalQuestions || 0,
+          totalParticipants: data[0].TotalParticipants || 0,
         };
-    }, []);
-    
-  return (
-  <div className="font-roboto flex items-center justify-center p-6">
-  
-    <p className="text-gray-600 text-sm md:text-base">
-      |THIS IS HOMEPAGE
-    </p>
- 
-</div>
+        setDashboardData(newData);
+        startCountAnimations(newData);
+      } else {
+        toast.error("Invalid dashboard data format");
+      }
+    } catch (error) {
+      console.error(error);
+      toast.error("Failed to load dashboard data");
+    } finally {
+      setLoading(false);
+    }
+  };
 
+  const DashboardCard = ({ title, animatedCount, color, icon }) => (
+    <div
+      className={`bg-white rounded-sm shadow-md p-6 border-l-4 ${color} hover:shadow-lg transition-shadow duration-300`}
+    >
+      <div className="flex items-center justify-between">
+        <div>
+          <p className="text-sm font-medium text-gray-600">{title}</p>
+          <div className="text-2xl font-bold text-gray-800 mt-2">
+            {loading ? (
+              <div className="h-8 bg-gray-200 rounded animate-pulse w-16"></div>
+            ) : (
+              animatedCount.toLocaleString()
+            )}
+          </div>
+        </div>
+        <div className={`p-3 rounded-full ${color.replace("border-", "bg-").replace("-500", "-100")}`}>
+          {icon}
+        </div>
+      </div>
+    </div>
+  );
+
+  return (
+    <div className="font-roboto p-6">
+      <div className="mb-6 flex justify-between items-center gap-2 text-gray-700">
+        <div>
+          <h1 className="text-2xl font-bold text-gray-800 inline">Dashboard</h1>
+        </div>
+        <div className="flex items-center gap-1 text-gray-700">
+          <HiHome className="w-5 h-5 text-blue-500" />{'>'}
+          <Link href="/homepage" className="font-semibold text-gray-700">
+            Home
+          </Link>
+          <span className="text-gray-400">{'>'}</span>
+          <Link href="/homepage" className="font-semibold text-gray-800">
+            Dashboard
+          </Link>
+
+
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+        <DashboardCard
+          title="Total Exams"
+          animatedCount={animatedCounts.totalExams}
+          color="border-blue-500"
+          icon={<HiOutlineClipboardList className="w-6 h-6 text-blue-500" />}
+        />
+
+        <DashboardCard
+          title="Total Candidates"
+          animatedCount={animatedCounts.totalCandidates}
+          color="border-green-500"
+          icon={<HiOutlineUserGroup className="w-6 h-6 text-green-500" />}
+        />
+
+        <DashboardCard
+          title="Total Questions"
+          animatedCount={animatedCounts.totalQuestions}
+          color="border-purple-500"
+          icon={<HiOutlineQuestionMarkCircle className="w-6 h-6 text-purple-500" />}
+        />
+
+        <DashboardCard
+          title="Total Participants"
+          animatedCount={animatedCounts.totalParticipants}
+          color="border-orange-500"
+          icon={<HiOutlineUsers className="w-6 h-6 text-orange-500" />}
+        />
+      </div>
+    </div>
   );
 }
-
