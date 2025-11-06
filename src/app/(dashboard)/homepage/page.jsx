@@ -122,22 +122,20 @@ export default function Homepage() {
   );
 
   return (
+    <div className="bg-gray-50 min-h-screen p-6">
     <div className="font-roboto p-6">
-      <div className="mb-6 flex justify-between items-center gap-2 text-gray-700">
+      <div className="mb-8 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-gray-800 inline">Dashboard</h1>
+          <h1 className="text-2xl font-bold text-gray-900">Dashboard</h1>
+          {/* <p className="text-gray-600 mt-1">Welcome to your Exam Management System</p> */}
         </div>
-        <div className="flex items-center gap-1 text-gray-700">
-          <HiHome className="w-5 h-5 text-blue-500" />{'>'}
-          <Link href="/homepage" className="font-semibold text-gray-700">
+        <div className="flex items-center gap-2 text-gray-600 text-sm">
+          <HiHome className="w-5 h-5 text-blue-500" />
+          <Link href="/homepage" className="font-medium text-gray-700 hover:text-gray-900 transition-colors">
             Home
           </Link>
           <span className="text-gray-400">{'>'}</span>
-          <Link href="/homepage" className="font-semibold text-gray-800">
-            Dashboard
-          </Link>
-
-
+          <span className="font-semibold text-gray-900">Dashboard</span>
         </div>
       </div>
 
@@ -170,6 +168,7 @@ export default function Homepage() {
           icon={<HiOutlineUsers className="w-6 h-6 text-orange-500" />}
         />
       </div>
+    </div>
     </div>
   );
 }
