@@ -5,7 +5,14 @@ import { AuthContext } from "../../provider/AuthProvider";
 import config from "@/config";
 import toast from "react-hot-toast";
 import Link from "next/link";
-import { HiOutlineClipboardList, HiOutlineUserGroup, HiOutlineQuestionMarkCircle, HiOutlineUsers, HiHome } from "react-icons/hi";
+import { 
+  HiOutlineClipboardList, 
+  HiOutlineUserGroup, 
+  HiOutlineQuestionMarkCircle, 
+  HiOutlineUsers, 
+  HiHome,
+  HiOutlineClock 
+} from "react-icons/hi";
 
 export default function Homepage() {
   const { loginData } = useContext(AuthContext);
@@ -15,6 +22,7 @@ export default function Homepage() {
     totalCandidates: 0,
     totalQuestions: 0,
     totalParticipants: 0,
+    activeExams: 0, // Added activeExams
   });
 
   const [animatedCounts, setAnimatedCounts] = useState({
@@ -22,6 +30,7 @@ export default function Homepage() {
     totalCandidates: 0,
     totalQuestions: 0,
     totalParticipants: 0,
+    activeExams: 0, // Added activeExams
   });
 
   const [loading, setLoading] = useState(true);
@@ -50,6 +59,7 @@ export default function Homepage() {
       totalCandidates: 0,
       totalQuestions: 0,
       totalParticipants: 0,
+      activeExams: 0, // Reset activeExams to 0
     });
 
     setTimeout(() => {
@@ -57,6 +67,7 @@ export default function Homepage() {
       animateCount(0, newData.totalCandidates, duration, setAnimatedCounts, "totalCandidates");
       animateCount(0, newData.totalQuestions, duration, setAnimatedCounts, "totalQuestions");
       animateCount(0, newData.totalParticipants, duration, setAnimatedCounts, "totalParticipants");
+      animateCount(0, newData.activeExams, duration, setAnimatedCounts, "activeExams"); // Added activeExams animation
     }, 100);
   };
 
@@ -85,6 +96,7 @@ export default function Homepage() {
           totalCandidates: data[0].TotalCandidates || 0,
           totalQuestions: data[0].TotalQuestions || 0,
           totalParticipants: data[0].TotalParticipants || 0,
+          activeExams: data[0].ActiveExams || 0, // Added ActiveExams from SP
         };
         setDashboardData(newData);
         startCountAnimations(newData);
@@ -99,7 +111,7 @@ export default function Homepage() {
     }
   };
 
-  const DashboardCard = ({ title, animatedCount, color, icon }) => (
+  const DashboardCard = ({ title, animatedCount, color, icon, subtitle }) => (
     <div
       className={`bg-white rounded-sm shadow-md p-6 border-l-4 ${color} hover:shadow-lg transition-shadow duration-300`}
     >
@@ -110,9 +122,13 @@ export default function Homepage() {
             {loading ? (
               <div className="h-8 bg-gray-200 rounded animate-pulse w-16"></div>
             ) : (
-              animatedCount.toLocaleString()
+              // Safe check for animatedCount
+              (animatedCount || 0).toLocaleString()
             )}
           </div>
+          {subtitle && (
+            <p className="text-xs text-gray-500 mt-1">{subtitle}</p>
+          )}
         </div>
         <div className={`p-3 rounded-full ${color.replace("border-", "bg-").replace("-500", "-100")}`}>
           {icon}
@@ -120,15 +136,15 @@ export default function Homepage() {
       </div>
     </div>
   );
-   useEffect(() => {
-        document.body.style.overflow = 'hidden';
-        return () => {
-            document.body.style.overflow = 'unset';
-        };
-    }, []);
+
+  useEffect(() => {
+    document.body.style.overflow = 'hidden';
+    return () => {
+      document.body.style.overflow = 'unset';
+    };
+  }, []);
 
   return (
-
     <div className="font-roboto p-6">
       <div className="mb-8 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <div>
@@ -173,8 +189,15 @@ export default function Homepage() {
           color="border-orange-500"
           icon={<HiOutlineUsers className="w-6 h-6 text-orange-500" />}
         />
+
+        {/* Active Exams Card - Now with proper data */}
+        <DashboardCard
+          title="Running Exams"
+          animatedCount={animatedCounts.activeExams}
+          color="border-teal-500"
+          icon={<HiOutlineClock className="w-6 h-6 text-teal-500" />}
+        />
       </div>
     </div>
-  
   );
 }
