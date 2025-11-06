@@ -69,7 +69,7 @@ const Login = () => {
                 name="UserId"
                 type="text"
                 placeholder="User ID"
-                className="w-full pl-10 pr-4 py-3 rounded-xl border border-gray-300 bg-gray-50 text-gray-900 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none transition shadow-sm"
+                className="w-full pl-10 pr-4 py-3 rounded-sm border border-gray-300 bg-gray-50 text-gray-900 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none transition shadow-sm"
                 value={credentials.UserId}
                 onChange={handleChange}
                 required
@@ -83,7 +83,7 @@ const Login = () => {
                 name="password"
                 type="password"
                 placeholder="Password"
-                className="w-full pl-10 pr-4 py-3 rounded-xl border border-gray-300 bg-gray-50 text-gray-900 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none transition shadow-sm"
+                className="w-full pl-10 pr-4 py-3 rounded-sm border border-gray-300 bg-gray-50 text-gray-900 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none transition shadow-sm"
                 value={credentials.password}
                 onChange={handleChange}
                 required
@@ -107,7 +107,7 @@ const Login = () => {
             {/* Submit Button */}
             <button
               type="submit"
-              className={`w-full py-3 rounded-xl text-white font-semibold shadow-md transition-all duration-300 transform ${
+              className={`w-full py-3 rounded-xl text-white font-semibold shadow-sm transition-all duration-300 transform ${
                 loading
                   ? "bg-blue-300 cursor-not-allowed"
                   : "bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 hover:shadow-xl"

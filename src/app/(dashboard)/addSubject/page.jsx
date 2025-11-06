@@ -286,7 +286,7 @@ export default function SubjectManage() {
                 </div>
 
                 {/* ------------------- TABLE WRAPPER ------------------- */}
-                <div className="border border-gray-300 rounded-b-md overflow-hidden max-h-[64vh] overflow-y-auto">
+                <div className="border border-gray-300 rounded-b-md overflow-hidden max-h-[65vh] overflow-y-auto">
                     <table className="min-w-full text-sm text-left text-gray-600">
                         <thead className="bg-gray-100 text-xs uppercase  text-gray-800 sticky top-0 z-10">
                             <tr className="border-b">
