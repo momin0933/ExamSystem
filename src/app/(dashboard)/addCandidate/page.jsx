@@ -688,13 +688,47 @@ export default function AddCandidate() {
     //     setIsViewModalOpen(true);
     // };
 
-    const handleDownloadExcel = () => {
-        if (filteredQuestion.length === 0) return alert('No data available to export!');
-        const worksheet = XLSX.utils.json_to_sheet(filteredQuestion);
-        const workbook = XLSX.utils.book_new();
-        XLSX.utils.book_append_sheet(workbook, worksheet, 'Questions');
-        XLSX.writeFile(workbook, 'Questions_Report.xlsx');
-    };
+    // const handleDownloadExcel = () => {
+    //     if (filteredQuestion.length === 0) return alert('No data available to export!');
+    //     const worksheet = XLSX.utils.json_to_sheet(filteredQuestion);
+    //     const workbook = XLSX.utils.book_new();
+    //     XLSX.utils.book_append_sheet(workbook, worksheet, 'Questions');
+    //     XLSX.writeFile(workbook, 'Questions_Report.xlsx');
+    // };
+
+
+
+const handleDownloadExcel = () => {
+  if (!filteredSet || filteredSet.length === 0) {
+    alert("No data available to export!");
+    return;
+  }
+
+  // Prepare clean data (optional: remove internal IDs or boolean formatting)
+  const exportData = filteredSet.map(item => ({
+    ID: item.id,
+    Name: item.name,
+    Password: item.password,
+    ExamName: item.examName,
+    SetName: item.setName,
+    UserID: item.userId,
+    Role: item.userRole,
+    Email: item.email,
+    MobileNo: item.mobileNo,
+    IsActive: item.isActive ? "Yes" : "No",
+  }));
+
+  // Create worksheet & workbook
+  const worksheet = XLSX.utils.json_to_sheet(exportData);
+  const workbook = XLSX.utils.book_new();
+
+  // Add sheet to workbook
+  XLSX.utils.book_append_sheet(workbook, worksheet, "Candidate List");
+
+  // Export file
+  XLSX.writeFile(workbook, "Candidate_List.xlsx");
+};
+
     useEffect(() => {
         document.body.style.overflow = 'hidden';
         return () => {

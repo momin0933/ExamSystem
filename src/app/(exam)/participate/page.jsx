@@ -58,7 +58,7 @@ export default function ParticipatePage() {
                     ? Number(formData.CurrentSalary)
                     : 0,
                 CurrentOrg: formData.CurrentOrg || "NA",
-                Experience: formData.Experience || "00 Years",
+                Experience: formData.Experience || "00 Year",
                 NoticePeriod: Number(formData.NoticePeriod),
                 Remarks: formData.Remarks || null,
                 EntryBy: loginData?.UserId,

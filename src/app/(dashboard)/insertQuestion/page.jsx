@@ -538,22 +538,22 @@ export default function InsertQuestion() {
     };
 
 
-    // if (!isClient) {
-    //     return (
-    //         <div className="overflow-x-auto p-3">
-    //             <div className="mb-2">
-    //                 <h1 className="text-2xl font-bold text-gray-800">
-    //                     {isEdit ? "Edit Question" : "Add New Question"}
-    //                 </h1>
-    //             </div>
-    //             <div className="border border-gray-300 rounded-b-md overflow-hidden max-h-[72vh] overflow-y-auto">
-    //                 <div className="bg-white rounded-lg shadow-md p-6">
-    //                     <div className="text-center py-4">Loading...</div>
-    //                 </div>
-    //             </div>
-    //         </div>
-    //     );
-    // }
+    if (!isClient) {
+        return (
+            <div className="overflow-x-auto p-3">
+                <div className="mb-2">
+                    <h1 className="text-2xl font-bold text-gray-800">
+                        {isEdit ? "Edit Question" : "Add New Question"}
+                    </h1>
+                </div>
+                <div className="border border-gray-300 rounded-b-md overflow-hidden max-h-[72vh] overflow-y-auto">
+                    <div className="bg-white rounded-lg shadow-md p-6">
+                        <div className="text-center py-4">Loading...</div>
+                    </div>
+                </div>
+            </div>
+        );
+    }
 
     return (
         <div className="overflow-x-auto p-2">

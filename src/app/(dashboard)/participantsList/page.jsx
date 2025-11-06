@@ -12,8 +12,7 @@ import AOS from 'aos';
 import 'aos/dist/aos.css';
 import { FiEye, FiCheckCircle, FiCheck, FiX } from "react-icons/fi";
 import pdfMake from "pdfmake/build/pdfmake";
-
-
+import * as XLSX from "xlsx";
 
 export default function AddExam() {
     const { loginData } = useContext(AuthContext);
@@ -25,13 +24,65 @@ export default function AddExam() {
     const [showQuestionModal, setShowQuestionModal] = useState(false);
     const [isEditMode, setIsEditMode] = useState(false);
     const [filteredSet, setFilteredSet] = useState([]);
+    const [fromDate, setFromDate] = useState("");
+    const [toDate, setToDate] = useState("");
+
     // Initialize AOS animations
     useEffect(() => {
         AOS.init({ duration: 800, once: true });
     }, []);
 
     // for grid table
-    const fetchParticipate = async () => {
+    // const fetchParticipate = async () => {
+    //     try {
+    //         const response = await fetch(`${config.API_BASE_URL}api/Procedure/GetData`, {
+    //             method: "POST",
+    //             headers: {
+    //                 TenantId: loginData.tenantId,
+    //                 "Content-Type": "application/json",
+    //             },
+    //             body: JSON.stringify({
+    //                 operation: "",
+    //                 procedureName: "SP_Participate",
+    //                 parameters: { QueryChecker: 1 },
+    //             }),
+    //         });
+
+    //         const data = await response.json();
+    //         console.log("Participate List", data);
+
+    //         if (Array.isArray(data)) {
+    //             const formatted = data.map(item => ({
+    //                 id: item.Id,
+    //                 value: item.UserId,
+    //                 examName: item.ExamName,
+    //                 label: item.Name,
+    //                 password: item.Password,
+    //                 org: item.CurrentOrg,
+    //                 salary: item.CurrentSalary,
+    //                 totalQnMark: item.TotalQnMark,
+    //                 noticePeriod: item.NoticePeriod,
+    //                 // noticePeriodLabel: item.NoticePeriod === 1 ? '1 day' : `${item.NoticePeriod} days`,
+    //                 noticePeriodLabel: item.NoticePeriod <= 1
+    //                     ? `${item.NoticePeriod} day`
+    //                     : `${item.NoticePeriod} days`,
+    //                 mobileNo: item.MobileNo,
+    //                 experience: item.Experience,
+    //                 mark: item.Mark,
+    //             }));
+    //             console.log("Participate formatted  List", formatted);
+
+    //             setParticipateList(formatted);
+    //         } else {
+    //             toast.error("Invalid participate data format");
+    //         }
+    //     } catch (error) {
+    //         console.error(error);
+    //         toast.error("Failed to load participate data");
+    //     }
+    // };
+
+    const fetchParticipateByDate = async (fromDate, toDate) => {
         try {
             const response = await fetch(`${config.API_BASE_URL}api/Procedure/GetData`, {
                 method: "POST",
@@ -42,12 +93,16 @@ export default function AddExam() {
                 body: JSON.stringify({
                     operation: "",
                     procedureName: "SP_Participate",
-                    parameters: { QueryChecker: 1 },
+                    parameters: {
+                        QueryChecker: 3,
+                        FromDate: fromDate,
+                        ToDate: toDate
+                    },
                 }),
             });
 
             const data = await response.json();
-            console.log("Participate List", data);
+            console.log("Participate Filtered List", data);
 
             if (Array.isArray(data)) {
                 const formatted = data.map(item => ({
@@ -59,19 +114,26 @@ export default function AddExam() {
                     org: item.CurrentOrg,
                     salary: item.CurrentSalary,
                     totalQnMark: item.TotalQnMark,
+                    totalAnsMark: item.TotalAnsMark,
                     noticePeriod: item.NoticePeriod,
+                    //  noticePeriodLabel: item.NoticePeriod === 1 ? '1 day' : `${item.NoticePeriod} days`,
+                    noticePeriodLabel: item.NoticePeriod <= 1
+                        ? `${item.NoticePeriod} day`
+                        : `${item.NoticePeriod} days`,
                     mobileNo: item.MobileNo,
-                    experience: item.Experience
+                    experience: item.Experience,
+                    entryDate: item.EntryDate,
+                    mark: item.Mark,
                 }));
-                console.log("Participate formatted  List", formatted);
 
+                console.log("Formatted Filtered Participate List", formatted);
                 setParticipateList(formatted);
             } else {
-                toast.error("Invalid participate data format");
+                toast.error("Invalid filtered data format");
             }
         } catch (error) {
             console.error(error);
-            toast.error("Failed to load participate data");
+            toast.error("Failed to load filtered participate data");
         }
     };
 
@@ -141,7 +203,6 @@ export default function AddExam() {
     };
 
     const handleSaveMarks = async (e) => {
-
         e.preventDefault();
         // setLoading(true);
         try {
@@ -177,6 +238,9 @@ export default function AddExam() {
 
             toast.success("Evaluation saved successfully!");
             setIsEditMode(false);
+            // await fetchParticipate(); 
+            await fetchParticipateByDate(fromDate, toDate);
+
         } catch (err) {
             console.error("Error saving evaluation:", err);
             toast.error(err.message || "Error saving evaluation");
@@ -185,206 +249,51 @@ export default function AddExam() {
         }
     };
 
-    useEffect(() => {
 
+    useEffect(() => {
         let searchData = participateList;
         if (searchQuery.trim() !== '') {
             const query = searchQuery.toLowerCase();
             searchData = searchData.filter(item =>
-                item.label.toLowerCase().includes(query) ||
-                item.examName.toLowerCase().includes(query) ||
-                item.value.toLowerCase().includes(query) ||
-                item.org.toLowerCase().includes(query) ||
-                item.password.toLowerCase().includes(query) ||
-                item.salary.toString().toLowerCase().includes(query)
+                item.label?.toLowerCase().includes(query) ||
+                item.examName?.toLowerCase().includes(query) ||
+                item.value?.toLowerCase().includes(query) ||
+                item.org?.toLowerCase().includes(query) ||
+                item.password?.toLowerCase().includes(query) ||
+                String(item.salary || '').toLowerCase().includes(query) ||
+                item.mobileNo?.toLowerCase().includes(query) ||
+                item.experience?.toLowerCase().includes(query)
             );
         }
         setFilteredSet(searchData);
     }, [searchQuery, participateList]);
 
-    useEffect(() => {
-        if (loginData?.tenantId) {
-            fetchParticipate();
-            // fetchParticipateQuestionPaper();
 
-        }
-    }, [loginData?.tenantId]);
+    // useEffect(() => {
+    //     if (loginData?.tenantId) {
+    //         fetchParticipate();
+    //         // fetchParticipateQuestionPaper();
 
-    // const handleDownload = async () => {
-    //     if (!participateQuestionPaper || participateQuestionPaper.length === 0) return;
-
-    //     const doc = new jsPDF({
-    //         orientation: "portrait",
-    //         unit: "mm",
-    //         format: "a4",
-    //     });
-
-    //     const pageWidth = 210;
-    //     const pageHeight = 297;
-    //     const margin = 14;
-    //     const topMargin = 14;
-    //     const bottomMargin = 14;
-    //     const usableWidth = pageWidth - 2 * margin;
-    //     let y = topMargin;
-
-    //     // Title - Candidate Name
-    //     doc.setFontSize(12);
-    //     doc.setFont("times", "bold");
-    //     doc.text(`${participateQuestionPaper[0].userInfo.name}`, pageWidth / 2, y, { align: "center" });
-    //     y += 6;
-    //     doc.text(`Exam Name: ${participateQuestionPaper[0].examName}`, pageWidth / 2, y, { align: "center" });
-
-
-    //     // Total Score - Top Right
-    //     const totalScore = participateQuestionPaper.reduce((sum, q) => sum + (parseFloat(q.ansMark) || 0), 0);
-    //     const totalMark = participateQuestionPaper.reduce((sum, q) => sum + (parseFloat(q.qnMark) || 0), 0);
-    //     doc.setFontSize(12);
-    //     doc.setFont("times", "bold");
-    //     doc.text(`Total Scored: ${totalScore} / ${totalMark}`, pageWidth - margin, y, { align: "right" });
-    //     y += 8;
-
-    //     // Candidate Info
-    //     const infoText = `Current Organization: ${participateQuestionPaper[0].userInfo.org} |Current Salary: ${participateQuestionPaper[0].userInfo.salary} | Notice Period: ${participateQuestionPaper[0].userInfo.noticePeriod} days`;
-    //     const infoLines = doc.splitTextToSize(infoText, usableWidth);
-    //     infoLines.forEach(line => {
-    //         doc.text(line, pageWidth / 2, y, { align: "center" });
-    //         y += 6;
-    //     });
-    //     y += 4;
-
-    //     // Helper: Convert image URL to Base64
-    //     const getBase64FromUrl = (url) => {
-    //         return new Promise((resolve, reject) => {
-    //             const img = new Image();
-    //             img.crossOrigin = 'Anonymous';
-    //             img.src = url;
-    //             img.onload = function () {
-    //                 const canvas = document.createElement('canvas');
-    //                 canvas.width = img.width;
-    //                 canvas.height = img.height;
-    //                 const ctx = canvas.getContext('2d');
-    //                 ctx.drawImage(img, 0, 0);
-    //                 resolve(canvas.toDataURL('image/jpeg'));
-    //             };
-    //             img.onerror = function (err) {
-    //                 reject(err);
-    //             };
-    //         });
-    //     };
-
-    //     // Questions Loop
-    //     for (const [index, q] of participateQuestionPaper.entries()) {
-    //         if (y + 10 > pageHeight - bottomMargin) {
-    //             doc.addPage();
-    //             y = topMargin;
-    //         }
-
-    //         // Question text (Bold, consistent font size)
-    //         doc.setFontSize(10);
-    //         doc.setFont("times", "bold");
-    //         const questionLines = doc.splitTextToSize(`${index + 1}. ${q.question}`, usableWidth - 50);
-    //         questionLines.forEach((line, i) => {
-    //             doc.text(line, margin, y);
-
-    //             if (i === 0) {
-
-    //                 doc.setFont("times", "bold");
-    //                 doc.setFontSize(10);
-    //                 const markText = `Mark: ${q.qnMark} | Score: ${q.ansMark || 0}`;
-    //                 doc.text(markText, pageWidth - margin, y, { align: "right" });
-    //             }
-    //             y += 6;
-    //         });
-
-    //         // Question image
-    //         if (q.qnImage) {
-    //             try {
-    //                 const imgBase64 = await getBase64FromUrl(q.qnImage);
-    //                 const imgProps = doc.getImageProperties(imgBase64);
-    //                 const imgWidth = 50;
-    //                 const imgHeight = (imgProps.height * imgWidth) / imgProps.width;
-
-    //                 if (y + imgHeight > pageHeight - bottomMargin) {
-    //                     doc.addPage();
-    //                     y = topMargin;
-    //                 }
-
-    //                 doc.addImage(imgBase64, 'JPEG', margin, y, imgWidth, imgHeight);
-    //                 y += imgHeight + 5;
-    //             } catch (err) {
-    //                 console.error("Failed to add image", err);
-    //             }
-    //         }
-
-    //         // MCQ options with symbol
-    //         if (q.qnType === "MCQ" && q.options.length > 0) {
-    //             doc.setFontSize(8);
-    //             doc.setFont("times", "normal");
-    //             q.options.forEach((opt, i) => {
-    //                 const prefix = String.fromCharCode(65 + i) + ". ";
-    //                 let symbol = "";
-
-    //                 if (opt.adminAnswer) symbol = "(Correct Ans)";
-    //                 else if (q.participateAns === opt.text) symbol = "(Applicant Ans)";
-
-    //                 const optionText = `${prefix}${opt.text}${symbol ? " " + symbol : ""}`;
-    //                 const optionLines = doc.splitTextToSize(optionText, usableWidth - 4);
-
-    //                 optionLines.forEach(line => {
-    //                     if (y + 5 > pageHeight - bottomMargin) {
-    //                         doc.addPage();
-    //                         y = topMargin;
-    //                     }
-    //                     doc.text(line, margin + 4, y);
-    //                     y += 5;
-    //                 });
-    //             });
-    //         }
-
-    //         // Descriptive Answer - Justified
-    //         if (q.qnType !== "MCQ") {
-    //             doc.setFontSize(8);
-    //             // ensure sentence has spaces between words
-    //             let rawText = q.participateAns || "No Answer Provided";
-    //             rawText = rawText.replace(/([a-z])([A-Z])/g, '$1 $2').replace(/\s+/g, ' ').trim();
-
-    //             const text = `Answer: ${rawText}`;
-    //             const words = text.split(" ");
-
-    //             // Bold "Answer:" only
-    //             doc.setFont("times", "bold");
-    //             doc.text("Answer:", margin, y);
-    //             const answerLabelWidth = doc.getTextWidth("Answer: ");
-    //             doc.setFont("times", "normal");
-
-    //             let x = margin + answerLabelWidth;
-    //             const lineHeight = 5;
-
-    //             words.slice(1).forEach(word => {
-    //                 const wordWidth = doc.getTextWidth(word + " ");
-    //                 if (x + wordWidth > margin + usableWidth) {
-    //                     y += lineHeight;
-    //                     if (y + lineHeight > pageHeight - bottomMargin) {
-    //                         doc.addPage();
-    //                         y = topMargin;
-    //                     }
-    //                     x = margin;
-    //                 }
-    //                 doc.text(word, x, y);
-    //                 x += wordWidth;
-    //             });
-
-    //             y += 8;
-    //         }
-
-    //         y += 6; // spacing after each question
     //     }
+    // }, [loginData?.tenantId]);
 
-    //     // Save PDF
-    //     doc.save(`${participateQuestionPaper[0].userInfo.name}_answers.pdf`);
-    // };
+    useEffect(() => {
+        if (loginData?.tenantId && fromDate && toDate) {
+            fetchParticipateByDate(fromDate, toDate);
+        }
+    }, [fromDate, toDate, loginData?.tenantId]);
 
+    useEffect(() => {
+        const today = new Date();
+        const formDate = new Date();
+        formDate.setDate(today.getDate() - 7);
 
+        // Format dates as YYYY-MM-DD for input[type=date]
+        const formatDate = (date) => date.toISOString().split("T")[0];
+
+        setToDate(formatDate(today));
+        setFromDate(formatDate(formDate));
+    }, []);
 
     // Convert image URL to Base64
     const toBase64 = async (url) => {
@@ -441,42 +350,42 @@ export default function AddExam() {
 
         const content = [];
 
-       // Header: Candidate Name + Exam Name (center) + Total Scored (right)
-content.push({
-    table: {
-        widths: ["*", "auto"], // left (centered stack) + right (score)
-        body: [
-            [
-                {
-                    stack: [
-                        { text: candidate.name, style: "header", alignment: "center" },
-                        { text: `Exam Name: ${participateQuestionPaper[0].examName}`, style: "subheader", alignment: "center" },
+        // Header: Candidate Name + Exam Name (center) + Total Scored (right)
+        content.push({
+            table: {
+                widths: ["*", "auto"], // left (centered stack) + right (score)
+                body: [
+                    [
+                        {
+                            stack: [
+                                { text: candidate.name, style: "header", alignment: "center" },
+                                { text: `Exam Name: ${participateQuestionPaper[0].examName}`, style: "subheader", alignment: "center" },
+                            ],
+                            border: [false, false, false, false],
+                            alignment: "center",
+                            margin: [0, 0, 0, 0],
+                        },
+                        {
+                            text: `Total Scored: ${totalScore} / ${totalMark}`,
+                            alignment: "right",
+                            bold: true,
+                            margin: [0, 8, 0, 0], // vertical spacing from top
+                            border: [false, false, false, false],
+                        },
                     ],
-                    border: [false, false, false, false],
-                    alignment: "center",
-                    margin: [0, 0, 0, 0],
-                },
-                {
-                    text: `Total Scored: ${totalScore} / ${totalMark}`,
-                    alignment: "right",
-                    bold: true,
-                    margin: [0, 8, 0, 0], // vertical spacing from top
-                    border: [false, false, false, false],
-                },
-            ],
-        ],
-    },
-    layout: "noBorders",
-    margin: [0, 5, 0, 10], // spacing around header
-});
+                ],
+            },
+            layout: "noBorders",
+            margin: [0, 5, 0, 10], // spacing around header
+        });
 
-// Candidate info line (centered)
-content.push({
-    text: `Current Organization: ${candidate.org} | Current Salary: ৳${candidate.salary} | Notice Period: ${candidate.noticePeriod} days`,
-    alignment: "center",
-    style: "info",
-    margin: [0, 0, 0, 10],
-});
+        // Candidate info line (centered)
+        content.push({
+            text: `Current Organization: ${candidate.org} | Current Salary: ৳${candidate.salary} | Notice Period: ${candidate.noticePeriod} days`,
+            alignment: "center",
+            style: "info",
+            margin: [0, 0, 0, 10],
+        });
 
 
         // Questions Loop
@@ -562,6 +471,37 @@ content.push({
     };
 
 
+    const handleDownloadExcel = () => {
+        if (participateList.length === 0) {
+            return alert("No data available to export!");
+        }
+
+        // Map participateList to exportable structure
+        const exportData = participateList.map((item, index) => ({
+            SL: index + 1,
+            Exam: item.examName,
+            Name: item.label,
+            Organization: item.org,
+            Salary: item.salary,
+            "Mobile No": item.mobileNo,
+            Experience: item.experience,
+            "Notice Period": item.noticePeriodLabel,
+            "Qn Mark": item.totalQnMark,
+            "Ans Mark": item.totalAnsMark,
+            // "Mark":item.mark
+            // Optionally include hidden fields
+            // "User ID": item.value,
+            // Password: item.password,
+        }));
+
+        const worksheet = XLSX.utils.json_to_sheet(exportData);
+        const workbook = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(workbook, worksheet, "Participants");
+
+        XLSX.writeFile(workbook, "Participants_Report.xlsx");
+    };
+
+
 
     useEffect(() => {
         document.body.style.overflow = 'hidden';
@@ -601,9 +541,34 @@ content.push({
       `}</style>
 
             <div className="rounded-md font-roboto overflow-hidden">
-                <div className="mb-2">
+                <div className="mb-1">
                     <h1 className="text-2xl font-bold text-gray-800">Participant Management</h1>
                 </div>
+
+                <div className="bg-white p-3 rounded-sm shadow-sm flex flex-wrap items-center gap-4 mb-2">
+                    {/* From Date */}
+                    <div className="flex items-center gap-2">
+                        <label className="text-sm font-bold text-gray-700">From Date:</label>
+                        <input
+                            type="date"
+                            value={fromDate}
+                            onChange={(e) => setFromDate(e.target.value)}
+                            className="px-2 py-1 rounded-sm border border-gray-300 focus:ring-1 focus:ring-blue-500"
+                        />
+                    </div>
+
+                    {/* To Date */}
+                    <div className="flex items-center gap-2">
+                        <label className="text-sm font-bold text-gray-700">To Date:</label>
+                        <input
+                            type="date"
+                            value={toDate}
+                            onChange={(e) => setToDate(e.target.value)}
+                            className="px-2 py-1 rounded-sm border border-gray-300 focus:ring-1 focus:ring-blue-500"
+                        />
+                    </div>
+                </div>
+
                 <div className="bg-gradient-to-r from-[#2c3e50] to-[#3498db] sticky top-0 z-20 shadow-md">
                     {/* Header with search and actions */}
                     <div className="px-3 py-2 flex flex-wrap justify-between items-center gap-2">
@@ -636,27 +601,25 @@ content.push({
                             {/* <Link onClick={handleOpenModal} href="#" passHref className="text-lg text-gray-50 cursor-pointer">
                             <IoMdAddCircle className="text-xl" />
                         </Link> */}
-                            <FaFileExcel className="text-lg cursor-pointer text-gray-50" />
+                            <FaFileExcel onClick={handleDownloadExcel} className="text-lg cursor-pointer text-gray-50" />
                         </div>
                     </div>
 
                     {/* Participate  table */}
-                    <div className="border border-gray-300 rounded-b-md overflow-hidden max-h-[63vh] overflow-y-auto">
-                        <table className="min-w-full text-sm text-left text-gray-600">
-                            <thead className="bg-gray-100 text-xs uppercase text-gray-700 sticky top-0 z-10">
+                    <div className="border border-gray-300 rounded-b-md overflow-hidden max-h-[55vh] overflow-y-auto">
+                        <table className="min-w-full text-sm text-left text-gray-600 table-auto">
+                            <thead className="bg-gray-100 text-xs uppercase text-gray-600 sticky top-0 z-10">
                                 <tr className="border-b">
-                                    <th className="px-4 py-2">SL</th>
-                                    <th className="px-4 py-2">Exam Name</th>
-                                    <th className="px-4 py-2">Name</th>
-                                    {/* <th className="px-4 py-2">User ID</th>
-                                    <th className="px-4 py-2">Password</th> */}
-                                    <th className="px-4 py-2">Organization</th>
-                                    <th className="px-4 py-2">Salary</th>
-                                    <th className="px-4 py-2">Mobile No</th>
-                                    <th className="px-4 py-2">Experience</th>
-                                    <th className="px-4 py-2 text-center">Notice Period (days)</th>
-                                    <th className="px-4 py-2">Qn Mark</th>
-                                    <th className="px-4 py-2 text-center">Exam Paper</th>
+                                    <th className="px-4 py-2 ">SL</th>
+                                    <th className="px-4 py-2 ">Exam</th>
+                                    <th className="px-4 py-2 ">Name</th>
+                                    <th className="px-4 py-2 ">Organization</th>
+                                    <th className="px-4 py-2 ">Salary</th>
+                                    <th className="px-4 py-2 ">Mobile No</th>
+                                    <th className="px-4 py-2 ">Experience</th>
+                                    <th className="px-4 py-2 w-[130px] text-center">Notice Period</th>
+                                    <th className="px-4 py-2 w-[90px] text-center">Mark</th>
+                                    <th className="px-4 py-2  text-center">Exam Paper</th>
                                 </tr>
                             </thead>
 
@@ -669,19 +632,16 @@ content.push({
                                     filteredSet.map((item, index) => (
                                         <tr key={`${item.value}-${index}`} className="border-b border-gray-300 hover:bg-[#4775a0] group">
                                             <td data-label="SL" className="px-4 py-1.5 group-hover:text-white">{index + 1}</td>
-                                            <td data-label="Name" className="px-4 py-1.5 group-hover:text-white">{item.examName}</td>
+                                            <td data-label="Exam" className="px-4 py-1.5 group-hover:text-white">{item.examName}</td>
                                             <td data-label="Name" className="px-4 py-1.5 group-hover:text-white">{item.label}</td>
-                                            {/* <td data-label="User ID" className="px-4 py-1.5">{item.value}</td>
-                                        <td data-label="Password" className="px-4 py-1.5">{item.password}</td> */}
                                             <td data-label="Organization" className="px-4 py-1.5 group-hover:text-white">{item.org}</td>
                                             <td data-label="Salary" className="px-4 py-1.5 group-hover:text-white">৳ {item.salary}</td>
                                             <td data-label="Mobile No" className="px-4 py-1.5 group-hover:text-white">{item.mobileNo}</td>
                                             <td data-label="Experience" className="px-4 py-1.5 group-hover:text-white">{item.experience}</td>
-                                            <td data-label="Notice Period" className="px-4 py-1.5 group-hover:text-white text-center">{item.noticePeriod}</td>
-                                            <td data-label="Qn Mark" className="px-4 py-1.5 group-hover:text-white text-center">{item.totalQnMark}</td>
-                                            <td data-label="Actions" className="px-4 py-1.5 group-hover:text-white text-center">
-                                                <div className="flex justify-center gap-3">
-
+                                            <td data-label="Notice Period" className="px-4 py-1.5 group-hover:text-white text-center">{item.noticePeriodLabel}</td>
+                                            <td data-label="Qn Mark" className="px-4 py-1.5 group-hover:text-white text-center">{item.mark}</td>
+                                            <td data-label="Exam Paper" className="px-4 py-1.5 group-hover:text-white text-center">
+                                                <div className="flex justify-center gap-1">
                                                     <button
                                                         onClick={async () => {
                                                             await fetchParticipateQuestionPaper(item.id);
@@ -690,7 +650,7 @@ content.push({
                                                         }}
                                                         className="flex items-center gap-1 px-3 py-1 text-sm font-medium border border-blue-500 text-blue-500 rounded-sm group-hover:!text-white group-hover:border-white  transition-colors duration-200"
                                                     >
-                                                        <FiEye  />
+                                                        <FiEye />
                                                     </button>
 
                                                     <button
@@ -703,15 +663,15 @@ content.push({
                                                     >
                                                         <FiCheckCircle />
                                                     </button>
-
                                                 </div>
                                             </td>
                                         </tr>
                                     ))
-
                                 )}
                             </tbody>
                         </table>
+
+
                     </div>
                 </div>
             </div>
@@ -734,14 +694,14 @@ content.push({
                         {participateQuestionPaper.length > 0 ? (
                             <>
 
-                                <div className="mb-8 p-4 bg-blue-50 rounded-lg text-center mt-5">
+                                <div className="mb-8 p-4 bg-blue-50 rounded-sm text-center mt-5">
                                     <div className="relative ">
                                         <h2 className="text-2xl font-semibold text-center flex flex-col items-center justify-center">
                                             <span className="text-blue-700">{participateQuestionPaper[0]?.userInfo.name}</span>
                                             <span className="text-black">Exam Name: {participateQuestionPaper[0]?.examName}</span>
                                         </h2>
 
-                                        <div className="absolute top-1/2 right-4 -translate-y-1/2 font-semibold text-gray-800 border-3 border-black-400 rounded-lg p-2">
+                                        <div className="absolute top-1/2 right-4 -translate-y-1/2 font-semibold text-gray-800 border-3 border-black-400 rounded-sm p-2">
                                             Total Scored:{" "}
                                             {participateQuestionPaper.reduce((sum, q) => sum + (parseFloat(q.ansMark) || 0), 0)}{" "}
                                             /{" "}
@@ -758,29 +718,17 @@ content.push({
                                 </div>
 
                                 {/* Question List */}
-                                <div className="space-y-4">
+                                <div className="space-y-2">
                                     {participateQuestionPaper.map((q, index) => (
-                                        <div key={q.qnId} className="p-4">
+                                        <div key={q.qnId} className="pt-2 pb-2 pl-4 pr-4">
                                             {/* Question Header + Marks */}
-                                            {/* <div className="flex justify-between items-start mb-2">
-                                                <div>
-                                                    <h3 className="font-semibold text-gray-800 text-lg">
-                                                        {index + 1}. {q.question}
-                                                    </h3>
-                                                    <span className="text-sm text-gray-500 font-medium">{q.qnType}</span>
-                                                </div>
-                                                <div className="text-sm text-gray-600 flex gap-4 mt-1">
-                                                    <span>Mark: {q.qnMark}</span>
-                                                    <span>Scored: {q.ansMark}</span>
-                                                </div>
-                                            </div> */}
-                                            <div className="flex justify-between items-start mb-2">
+                                            <div className="flex justify-between items-start"> {/* Removed mb-2 to reduce space */}
                                                 {/* Left side: question text */}
                                                 <div className="flex-1">
                                                     <h3 className="font-semibold text-gray-800 text-lg">
                                                         {index + 1}. {q.question}
                                                     </h3>
-                                                    <span className="text-sm text-gray-500 font-medium">{q.qnType}</span>
+                                                    {/* <span className="text-sm text-gray-500 font-medium">{q.qnType}</span> */}
                                                 </div>
 
                                                 {/* Right side: mark and scored */}
@@ -790,10 +738,9 @@ content.push({
                                                 </div>
                                             </div>
 
-
                                             {/* MCQ Options */}
                                             {q.qnType === "MCQ" && (
-                                                <ul className="ml-4 space-y-1">
+                                                <ul className="ml-2 space-y-0.5"> {/* Updated ml-4 → ml-2 and space-y-1 → space-y-0.5 */}
                                                     {q.options.map((opt, i) => {
                                                         const isSelected = q.participateAns === opt.text;
                                                         const isCorrect = opt.adminAnswer;
@@ -807,7 +754,6 @@ content.push({
                                                                     : "text-gray-700"
                                                                     }`}
                                                             >
-                                                                {/* <span className="font-medium">{String.fromCharCode(65 + i)}.</span> {opt.text} */}
                                                                 <span className="font-medium mr-1">{String.fromCharCode(65 + i)}.</span>{opt.text}
 
                                                                 {isSelected && !isCorrect && (
@@ -822,6 +768,7 @@ content.push({
                                                     })}
                                                 </ul>
                                             )}
+
                                             {q.qnImage && (
                                                 <div className="mb-2 flex justify-start">
                                                     <img
@@ -832,24 +779,27 @@ content.push({
                                                     />
                                                 </div>
                                             )}
+
+                                            {/* Descriptive Answer */}
                                             {q.qnType !== "MCQ" && (
-                                                <div className="mt-2 ml-2 text-sm pl-2">
+                                                <div className="ml-1 text-sm -mt-1"> {/* Updated ml-2 → ml-1 and added -mt-1 to reduce space */}
                                                     <span className="font-bold">Answer:</span>{" "}
-                                                    {/* <span >{q.participateAns || "No Answer Provided"}</span> */}
                                                     <span style={{ textAlign: "justify", display: "block" }}>
                                                         {q.participateAns || "No Answer Provided"}
                                                     </span>
 
                                                     {/* Editable AnsMark field when in edit mode */}
                                                     {isEditMode ? (
-                                                        <div className="mt-2">
+                                                        <div className="mt-1">
                                                             <label className="font-medium text-gray-700">Score:</label>
                                                             <input
                                                                 type="number"
                                                                 step="0.1"
                                                                 value={q.ansMark || ""}
                                                                 onChange={(e) => {
-                                                                    const newValue = e.target.value;
+                                                                    let newValue = parseFloat(e.target.value);
+                                                                    if (newValue > q.qnMark) newValue = q.qnMark;
+                                                                    if (newValue < 0) newValue = 0;
                                                                     setParticipateQuestionPaper((prev) =>
                                                                         prev.map((pq) =>
                                                                             pq.qnId === q.qnId ? { ...pq, ansMark: newValue } : pq
@@ -860,30 +810,19 @@ content.push({
                                                             />
                                                             <span className="ml-2 text-gray-500 text-sm">/ {q.qnMark}</span>
                                                         </div>
-                                                    ) : (
-                                                        <div className="mt-1">
-                                                            {/* <span className="font-medium text-gray-700">Score:</span>{" "}
-                                                            <span className="text-green-700">{q.ansMark ?? 0}</span>
-                                                            <span className="text-gray-500 text-sm"> / {q.qnMark}</span> */}
-                                                        </div>
-                                                    )}
+                                                    ) : null}
                                                 </div>
                                             )}
-
                                         </div>
                                     ))}
                                 </div>
+
 
                             </>
                         ) : (
                             <p className="text-center text-gray-500 py-12 text-lg">No questions found.</p>
                         )}
 
-                        {/* <div className="flex justify-end space-x-2 pt-4">
-                            <button type="button" onClick={() => setShowQuestionModal(false)} className="px-3 py-1 bg-gray-500 text-white rounded hover:bg-gray-600">
-                                Cancel
-                            </button>
-                        </div> */}
 
                         <div className="flex justify-end space-x-2 pt-4">
                             {!isEditMode && (
