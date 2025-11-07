@@ -21,7 +21,7 @@ export default function ExamLandingPage() {
   };
 
   const fetchTimeAndQuestionNumber = async (userAutoId) => {
- 
+
     try {
       setLoading(true);
       const response = await fetch(`${config.API_BASE_URL}api/Procedure/GetData`, {
@@ -37,15 +37,15 @@ export default function ExamLandingPage() {
           parameters: { QueryChecker: 5, UserAccountId: userAutoId }, // pass UserAutoId here
         }),
       });
-     
+
       if (!response.ok) {
         const text = await response.text();
         throw new Error(text || "Failed to fetch exam info");
       }
-     
+
       const data = await response.json();
       console.log("Exam Time and Question Number", data);
-    
+
       if (Array.isArray(data) && data.length > 0) {
         setExamDuration(data[0].ExamTime);
         setTotalMark(data[0].TotalMark);
@@ -81,8 +81,14 @@ export default function ExamLandingPage() {
             {loading ? (
               <span className="inline-block w-20 h-5 bg-gray-300 rounded animate-pulse"></span>
             ) : (
+              // <span>
+              //   <span className="font-semibold">{examDuration} minutes</span> (make sure to finish on time)
+              // </span>
               <span>
-                <span className="font-semibold">{examDuration} minutes</span> (make sure to finish on time)
+                <span className="bg-yellow-200 text-gray-700 font-semibold px-1 rounded">
+                  {examDuration} minutes
+                </span>{" "}
+                (make sure to finish on time)
               </span>
             )}
           </li>
@@ -91,8 +97,19 @@ export default function ExamLandingPage() {
             {loading ? (
               <span className="inline-block w-10 h-5 bg-gray-300 rounded animate-pulse"></span>
             ) : (
+              // <span>
+              //   <span className="font-semibold">{totalQuestions} questions</span> and <span className="font-semibold">{totalMark} Marks</span> , including multiple-choice and descriptive
+              // </span>
+
               <span>
-                <span className="font-semibold">{totalQuestions} questions</span> and <span className="font-semibold">{totalMark} Marks</span> , including multiple-choice and descriptive
+                <span className="bg-yellow-200 text-gray-700 font-semibold px-1 rounded">
+                  {totalQuestions} questions
+                </span>{" "}
+                and{" "}
+                <span className="bg-yellow-200 text-gray-700 font-semibold px-1 rounded">
+                  {totalMark} Marks
+                </span>
+                , including multiple-choice and descriptive
               </span>
             )}
           </li>
