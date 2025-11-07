@@ -9,7 +9,7 @@ export async function POST(req) {
     if (!to) throw new Error("Recipient email is required");
 
     // Fetch email & app password from your stored procedure
-    const { Email, AppPass } = await fetchEmailCredentials(tenantId);
+    const { Email, AppPass,Weblink } = await fetchEmailCredentials(tenantId);
 
     //  Create transporter dynamically
     const transporter = nodemailer.createTransport({
@@ -17,6 +17,7 @@ export async function POST(req) {
       auth: {
         user: Email,
         pass: AppPass,
+        
       },
     });
 
@@ -29,7 +30,7 @@ Greetings from Fashion Tex.
 
 As part of our recruitment process, please find below the link to the test and your login credentials.
 
-Website link: https://example.com/test-link
+Website link: ${Weblink}
 Username: ${userId}
 Password: ${password}
 
@@ -47,7 +48,7 @@ Fashion Tex`;
 <p>Greetings from <strong>Fashion Tex</strong>.</p>
 <p>As part of our recruitment process, please find below the link to the test and your login credentials.</p>
 <p>
-Website link: <a href="https://example.com/test-link">https://example.com/test-link</a><br/>
+Website link: <a href=${Weblink}>${Weblink}</a><br/>
 Username: <strong>${userId}</strong><br/>
 Password: <strong>${password}</strong>
 </p>

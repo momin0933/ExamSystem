@@ -33,6 +33,7 @@ export default function AddCandidate() {
     const [filteredSet, setFilteredSet] = useState([]);
     const [setData, setSetData] = useState([]);
     const [isEditMode, setIsEditMode] = useState(false);
+    const [sendingEmail, setSendingEmail] = useState(false);
 
     const [formData, setFormData] = useState({
         id: "",
@@ -757,7 +758,7 @@ export default function AddCandidate() {
     // };
 
     const handleSendEmail = async (candidate) => {
-      
+        setSendingEmail(true); // Show loading state
         try {
             const response = await fetch("/api/sendMail", {
                 method: "POST",
@@ -771,7 +772,7 @@ export default function AddCandidate() {
                 }),
             });
 
-            const data = await response.json();   
+            const data = await response.json();
             if (response.ok) {
                 toast.success(`Email sent successfully to ${candidate.email}`);
             } else {
@@ -780,6 +781,8 @@ export default function AddCandidate() {
         } catch (err) {
             console.error(err);
             toast.error("Something went wrong while sending the email.");
+        } finally {
+            setSendingEmail(false); // Always hide loading state
         }
     };
 
