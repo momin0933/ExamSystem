@@ -758,7 +758,7 @@ export default function AddCandidate() {
     // };
 
     const handleSendEmail = async (candidate) => {
-        setSendingEmail(true); // Show loading state
+        setSendingEmail(true); 
         try {
             const response = await fetch("/api/sendMail", {
                 method: "POST",

@@ -22,7 +22,7 @@ export async function POST(req) {
     });
 
     // Email content
-    const subject = "Fashion Tex Recruitment Test Credentials";
+    const subject = "Fashion Tex Recruitment Test";
 
     const text = `Dear ${name},
 
