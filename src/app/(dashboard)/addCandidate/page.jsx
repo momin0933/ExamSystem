@@ -7,7 +7,7 @@ import * as XLSX from 'xlsx';
 import Link from 'next/link';
 import { IoMdAddCircle } from 'react-icons/io';
 import toast from 'react-hot-toast';
-import { FiEdit, FiTrash2, FiEye,FiMail, FiX } from "react-icons/fi";
+import { FiEdit, FiTrash2, FiEye, FiMail, FiX } from "react-icons/fi";
 import DeleteConfirmModal from '../../components/DeleteConfirmModal';
 import AOS from 'aos';
 import 'aos/dist/aos.css';
@@ -728,104 +728,61 @@ export default function AddCandidate() {
         // Export file
         XLSX.writeFile(workbook, "Candidate_List.xlsx");
     };
-// const sendEmail = async (FlatCode, BillDate) => {
-//         debugger;
-//         setPdfForEmail(FlatCode);
-//         setBillDate(BillDate);
-//         try {
-//             const ownerData = await fetchOwnerDetails(FlatCode);
-//             if (!ownerData) throw new Error("Failed to fetch owner details");
 
 
-//             if (!isValidEmail(ownerData.TntEmail)) {
-//                 throw new Error(Invalid email address: ${ownerData.TntEmail});
-//             }
-//             // Wait for the content to render
-//             await new Promise(resolve => setTimeout(resolve, 500));
+    // const handleSendEmail = async (candidate) => {
+    //     try {
+    //         const response = await fetch("/api/sendMail", {
+    //             method: "POST",
+    //             headers: { "Content-Type": "application/json" },
+    //             body: JSON.stringify({
+    //                 to: candidate.email,
+    //                 name: candidate.name,
+    //                 userId: candidate.userId,
+    //                 password: candidate.password,
+    //             }),
+    //         });
 
-//             const pdfContent = document.getElementById("pdf-content");
-//             const cleanedElement = cleanElementForPDF(pdfContent);
+    //         const data = await response.json();
 
-//             const canvas = await html2canvas(cleanedElement, {
-//                 scale: 1.5,
-//                 useCORS: true,
-//                 backgroundColor: "#ffffff",
-//                 scrollX: 0,
-//                 scrollY: 0,
-//                 windowWidth: cleanedElement.scrollWidth,
-//                 windowHeight: cleanedElement.scrollHeight
-//             });
-//             document.body.removeChild(cleanedElement);
-
-//             const pdf = new jsPDF({ orientation: "portrait", unit: "mm", format: "a4" });
-//             const imgWidth = 210;
-//             const imgHeight = (canvas.height * imgWidth) / canvas.width;
-//             pdf.addImage(canvas, "JPEG", 0, 0, imgWidth, imgHeight);
-
-//             const fileName = ${ownerData.Name.replace(/\s+/g, "_")}_${selectedMonth}_${selectedYear}_Utility_Bill.pdf;
-
-//             // Convert PDF to base64
-//             const pdfBlob = pdf.output("blob");
-//             const base64Pdf = await new Promise((resolve) => {
-//                 const reader = new FileReader();
-//                 reader.onloadend = () => resolve(reader.result.split(",")[1]);
-//                 reader.readAsDataURL(pdfBlob);
-//             });
-
-//             // ✅ Send Email
-//             const response = await fetch("/api/sendMail", {
-//                 method: "POST",
-//                 headers: { "Content-Type": "application/json" },
-//                 body: JSON.stringify({
-//                     to: ownerData.TntEmail,
-//                     subject: ${ownerData.Name} - ${selectedMonth} ${selectedYear} Utility Bill,
-//                     text: Dear ${ownerData.Name},\n\nPlease find your bill attached.,
-//                     html: <p>Dear ${ownerData.Name},</p><p>Please find your bill attached.</p>,
-//                     invoiceBase64: base64Pdf,
-//                     fileName: fileName
-//                 })
-//             });
-
-    //         const result = await response.json();
     //         if (response.ok) {
-    //             toast.success("Email send successfully!.");
+    //             toast.success(`Email sent successfully to ${candidate.email}`);
     //         } else {
-    //             throw new Error(result.error || "Failed to send email");
+    //             toast.error(`Failed to send email: ${data.error}`);
     //         }
-
-    //     } catch (error) {
-
-    //         toast.error(error.message || "Failed to send email.");
-    //     } finally {
-    //         setPdfForEmail(null);
+    //     } catch (err) {
+    //         console.error(err);
+    //         toast.error("Something went wrong while sending the email.");
     //     }
     // };
 
-const handleSendEmail = async (candidate) => {
-    try {
-        const response = await fetch("/api/sendMail", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-                to: candidate.email,
-                name: candidate.name,
-                userId: candidate.userId,
-                password: candidate.password,
-            }),
-        });
+    const handleSendEmail = async (candidate) => {
+      
+        try {
+            const response = await fetch("/api/sendMail", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    to: candidate.email,
+                    name: candidate.name,
+                    userId: candidate.userId,
+                    password: candidate.password,
+                    tenantId: loginData?.tenantId,
+                }),
+            });
 
-        const data = await response.json();
-
-        if (response.ok) {
-            toast.success(`Email sent successfully to ${candidate.email}`);
-        } else {
-            toast.error(`Failed to send email: ${data.error}`);
+            const data = await response.json();   
+            if (response.ok) {
+                toast.success(`Email sent successfully to ${candidate.email}`);
+            } else {
+                toast.error(`Failed to send email: ${data.error}`);
+            }
+        } catch (err) {
+            console.error(err);
+            toast.error("Something went wrong while sending the email.");
         }
-    } catch (err) {
-        console.error(err);
-        toast.error("Something went wrong while sending the email.");
-    }
-};
+    };
+
 
 
     useEffect(() => {
@@ -971,7 +928,7 @@ const handleSendEmail = async (candidate) => {
                                                         onClick={() => handleSendEmail(candidate)}
                                                         className="flex items-center gap-1 px-2 py-1 text-sm font-medium border border-blue-500 text-blue-500 rounded hover:bg-blue-500 hover:text-white transition-colors duration-200"
                                                     >
-                                                        <FiMail className="w-4 h-4" />                                               
+                                                        <FiMail className="w-4 h-4" />
                                                     </button>
                                                 </div>
                                             </td>

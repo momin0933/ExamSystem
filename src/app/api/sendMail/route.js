@@ -1,22 +1,29 @@
 import nodemailer from "nodemailer";
-
+import { fetchEmailCredentials } from "@/lib/fetchEmailCredentials";
+ 
 export async function POST(req) {
-    try {
-        const { to, name, userId, password } = await req.json();
+   
+  try {
+    const { to, name, userId, password, tenantId } = await req.json();
 
-        if (!to) throw new Error("Recipient email is required");
+    if (!to) throw new Error("Recipient email is required");
 
-        const transporter = nodemailer.createTransport({
-            service: "gmail",
-            auth: {
-                user: process.env.EMAIL_USER,
-                pass: process.env.EMAIL_PASS,
-            },
-        });
+    // Fetch email & app password from your stored procedure
+    const { Email, AppPass } = await fetchEmailCredentials(tenantId);
 
-        const subject = "Fashion Tex Recruitment Test Credentials";
+    //  Create transporter dynamically
+    const transporter = nodemailer.createTransport({
+      service: "gmail",
+      auth: {
+        user: Email,
+        pass: AppPass,
+      },
+    });
 
-        const text = `Dear ${name},
+    // Email content
+    const subject = "Fashion Tex Recruitment Test Credentials";
+
+    const text = `Dear ${name},
 
 Greetings from Fashion Tex.
 
@@ -36,7 +43,7 @@ Best regards,
 Human Resources
 Fashion Tex`;
 
-        const html = `<p>Dear ${name},</p>
+    const html = `<p>Dear ${name},</p>
 <p>Greetings from <strong>Fashion Tex</strong>.</p>
 <p>As part of our recruitment process, please find below the link to the test and your login credentials.</p>
 <p>
@@ -53,19 +60,25 @@ Password: <strong>${password}</strong>
 Human Resources<br/>
 Fashion Tex</p>`;
 
-        const info = await transporter.sendMail({
-            from: process.env.EMAIL_USER,
-            to,
-            subject,
-            text,
-            html,
-        });
+    const info = await transporter.sendMail({
+      from: Email,
+      to,
+      subject,
+      text,
+      html,
+    });
 
-        console.log("Email sent:", info.response);
+    console.log("Email sent:", info.response);
 
-        return new Response(JSON.stringify({ message: "Email sent successfully" }), { status: 200 });
-    } catch (error) {
-        console.error("Email error:", error);
-        return new Response(JSON.stringify({ error: error.message }), { status: 500 });
-    }
+    return new Response(
+      JSON.stringify({ message: "Email sent successfully" }),
+      { status: 200 }
+    );
+  } catch (error) {
+    console.error("Email error:", error);
+    return new Response(
+      JSON.stringify({ error: error.message }),
+      { status: 500 }
+    );
+  }
 }
