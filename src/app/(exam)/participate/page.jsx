@@ -36,64 +36,75 @@ export default function ParticipatePage() {
         setFormData({ ...formData, [e.target.name]: e.target.value })
     }
 
-    const handleNext = async (e) => {
-        e.preventDefault();
-        setErrors({});
+    // const handleNext = async (e) => {
+    //     e.preventDefault();
+    //     setErrors({});
 
-        // Validation
+    //     // Validation
+    //     if (!formData.MobileNo?.trim() || !formData.NoticePeriod?.trim()) {
+    //         setErrors({
+    //             MobileNo: !formData.MobileNo ? "Mobile No is required" : "",
+    //             NoticePeriod: !formData.NoticePeriod ? "Notice Period is required" : "",
+    //         });
+    //         toast.error("Please fill all required fields.");
+    //         return;
+    //     }
+
+    //     try {
+    //         const payload = {
+    //             CandidateId: formData.CandidateId,
+    //             MobileNo: formData.MobileNo,
+    //             CurrentSalary: formData.CurrentSalary
+    //                 ? Number(formData.CurrentSalary)
+    //                 : 0,
+    //             CurrentOrg: formData.CurrentOrg || "NA",
+    //             Experience: formData.Experience || "00 Year",
+    //             NoticePeriod: Number(formData.NoticePeriod),
+    //             Remarks: formData.Remarks || null,
+    //             EntryBy: loginData?.UserId,
+    //             EntryDate: new Date().toISOString(),
+    //             IsActive: true,
+    //         };
+
+    //         const res = await fetch(`${config.API_BASE_URL}api/Participate/AddParticipate`, {
+    //             method: "POST",
+    //             headers: {
+    //                 "Content-Type": "application/json",
+    //                 TenantId: loginData?.tenantId,
+    //             },
+    //             body: JSON.stringify(payload),
+    //         });
+
+    //         if (!res.ok) {
+    //             const text = await res.text();
+    //             throw new Error(text || "Failed to save participation data");
+    //         }
+
+    //         const resultText = await res.text();
+    //         const savedId = parseInt(resultText, 10);
+
+    //         if (!isNaN(savedId) && savedId > 0) {
+    //             localStorage.setItem("participateId", savedId);
+    //             router.push("/examPage");
+    //         }
+
+    //     } catch (error) {
+    //         console.error("Participation save error:", error);
+    //         toast.error(error.message || "Error saving data.");
+    //     }
+    // };
+    const handleNext = (e) => {
+        e.preventDefault();
+
+        // Optional validation before navigation
         if (!formData.MobileNo?.trim() || !formData.NoticePeriod?.trim()) {
-            setErrors({
-                MobileNo: !formData.MobileNo ? "Mobile No is required" : "",
-                NoticePeriod: !formData.NoticePeriod ? "Notice Period is required" : "",
-            });
             toast.error("Please fill all required fields.");
             return;
         }
 
-        try {
-            const payload = {
-                CandidateId: formData.CandidateId,
-                MobileNo: formData.MobileNo,
-                CurrentSalary: formData.CurrentSalary
-                    ? Number(formData.CurrentSalary)
-                    : 0,
-                CurrentOrg: formData.CurrentOrg || "NA",
-                Experience: formData.Experience || "00 Year",
-                NoticePeriod: Number(formData.NoticePeriod),
-                Remarks: formData.Remarks || null,
-                EntryBy: loginData?.UserId,
-                EntryDate: new Date().toISOString(),
-                IsActive: true,
-            };
-
-            const res = await fetch(`${config.API_BASE_URL}api/Participate/AddParticipate`, {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                    TenantId: loginData?.tenantId,
-                },
-                body: JSON.stringify(payload),
-            });
-
-            if (!res.ok) {
-                const text = await res.text();
-                throw new Error(text || "Failed to save participation data");
-            }
-
-            const resultText = await res.text();
-            const savedId = parseInt(resultText, 10);
-
-            if (!isNaN(savedId) && savedId > 0) {
-                localStorage.setItem("participateId", savedId);
-                router.push("/examPage");
-            }
-
-        } catch (error) {
-            console.error("Participation save error:", error);
-            toast.error(error.message || "Error saving data.");
-        }
+        // Just navigate to the exam page (no API call)
+        router.push("/examPage");
     };
-
 
 
 
@@ -223,7 +234,7 @@ export default function ParticipatePage() {
                     <div className="flex justify-end pt-8">
                         <button
                             type="submit"
-                            onClick={handleNext}
+                            // onClick={handleNext}
                             className="bg-gradient-to-r from-blue-500 to-indigo-500 text-white py-2 px-5 rounded-sm font-semibold hover:shadow-sm hover:scale-105 transform transition-all duration-300"
                         >
                             Next

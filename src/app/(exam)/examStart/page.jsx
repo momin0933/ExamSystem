@@ -212,89 +212,153 @@ export default function ExamStartPage() {
     /**
      * Submit exam answers to API
      */
-    const handleSubmitExam = async (e) => {
+    // const handleSubmitExam = async (e) => {
+    //     e?.preventDefault();
+    //     setLoading(true);
+
+    //     try {
+    //         // Validation checks
+    //         if (!participateId) {
+    //             throw new Error("Participate ID is missing!");
+    //         }
+
+    //         if (!questions || questions.length === 0) {
+    //             throw new Error("No questions found!");
+    //         }
+
+    //         if (!loginData?.tenantId || !loginData?.UserId) {
+    //             throw new Error("User authentication data missing!");
+    //         }
+
+    //         // Prepare payload with safe defaults
+    //         const payload = questions.map((q) => {
+    //             const ansValue = answers[q.questionId] ?? "NA";
+    //             let ansMark = 0;
+
+    //             // Calculate marks only for answered MCQ questions
+    //             if (q.qnType === "MCQ" && ansValue !== "NA" && ansValue === q.correctOption) {
+    //                 ansMark = q.mark || 0;
+    //             }
+
+    //             return {
+    //                 ParticipateId: participateId,
+    //                 QnId: q.questionId,
+    //                 Answer: ansValue,
+    //                 QnMark: q.mark || 0,
+    //                 AnsMark: ansMark,
+    //                 Remarks: null,
+    //                 EntryBy: loginData.UserId,
+    //                 EntryDate: new Date().toISOString(),
+    //                 IsActive: true,
+    //             };
+    //         });
+
+    //         const response = await fetch(`${config.API_BASE_URL}api/Participate/AddParticipateAns`, {
+    //             method: "POST",
+    //             headers: {
+    //                 "Content-Type": "application/json",
+    //                 TenantId: loginData.tenantId
+    //             },
+    //             body: JSON.stringify(payload),
+    //         });
+
+    //         if (!response.ok) {
+    //             const errorText = await response.text();
+    //             throw new Error(errorText || "Failed to submit exam answers");
+    //         }
+
+    //         // Show success and redirect
+    //         setShowSuccessModal(true);
+    //         setTimeout(() => {
+    //             // Clear storage and redirect
+    //             localStorage.removeItem("loginData");
+    //             localStorage.removeItem("participateId");
+    //             router.push("/");
+    //         }, 3000);
+
+    //     } catch (err) {
+    //         console.error("Exam submission error:", err);
+    //         toast.error(err.message || "Error submitting exam answers.");
+    //     } finally {
+    //         setLoading(false);
+    //     }
+    // };
+
+   const handleSubmitExam = async (e) => {
         e?.preventDefault();
         setLoading(true);
 
         try {
-            // Validation checks
-            if (!participateId) {
-                throw new Error("Participate ID is missing!");
-            }
+            if (!questions || questions.length === 0) throw new Error("No questions found!");
+            if (!loginData?.tenantId || !loginData?.UserAutoId) throw new Error("User authentication missing!");
 
-            if (!questions || questions.length === 0) {
-                throw new Error("No questions found!");
-            }
+            const formData = JSON.parse(localStorage.getItem("candidateFormData")) || {};
+            const candidateId = Number(formData?.CandidateId || loginData.UserAutoId);
 
-            if (!loginData?.tenantId || !loginData?.UserId) {
-                throw new Error("User authentication data missing!");
-            }
+            const participateAnsList = questions.map(q => ({
+                QnId: Number(q.questionId),
+                Answer: answers[q.questionId] ?? "NA",
+                QnMark: Number(q.mark || 0),
+                AnsMark: Number((q.qnType === "MCQ" && answers[q.questionId] === q.correctOption) ? q.mark || 0 : 0),
+                Remarks: null,
+                EntryBy: candidateId.toString(),
+                EntryDate: new Date().toISOString(),
+                IsActive: true
+            }));
 
-            // Prepare payload with safe defaults
-            const payload = questions.map((q) => {
-                const ansValue = answers[q.questionId] ?? "NA";
-                let ansMark = 0;
+            const payload = {
+                CandidateId: candidateId,
+                MobileNo: formData?.MobileNo || "N/A",
+                CurrentSalary: Number(formData?.CurrentSalary || 0),
+                CurrentOrg: formData?.CurrentOrg || "NA",
+                Experience: formData?.Experience || "00 Year",
+                NoticePeriod: Number(formData?.NoticePeriod || 0),
+                EntryBy: candidateId.toString(),
+                EntryDate: new Date().toISOString(),
+                IsActive: true,
+                ParticipateAnsList: participateAnsList
+            };
 
-                // Calculate marks only for answered MCQ questions
-                if (q.qnType === "MCQ" && ansValue !== "NA" && ansValue === q.correctOption) {
-                    ansMark = q.mark || 0;
-                }
-
-                return {
-                    ParticipateId: participateId,
-                    QnId: q.questionId,
-                    Answer: ansValue,
-                    QnMark: q.mark || 0,
-                    AnsMark: ansMark,
-                    Remarks: null,
-                    EntryBy: loginData.UserId,
-                    EntryDate: new Date().toISOString(),
-                    IsActive: true,
-                };
-            });
-
-            const response = await fetch(`${config.API_BASE_URL}api/Participate/AddParticipateAns`, {
+            const response = await fetch(`${config.API_BASE_URL}api/Participate/SubmitParticipateWithAnswers`, {
                 method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                    TenantId: loginData.tenantId
-                },
-                body: JSON.stringify(payload),
+                headers: { "Content-Type": "application/json", TenantId: loginData.tenantId },
+                body: JSON.stringify(payload)
             });
 
             if (!response.ok) {
                 const errorText = await response.text();
-                throw new Error(errorText || "Failed to submit exam answers");
+                throw new Error(errorText || "Failed to submit exam");
             }
 
-            // Show success and redirect
             setShowSuccessModal(true);
             setTimeout(() => {
-                // Clear storage and redirect
                 localStorage.removeItem("loginData");
                 localStorage.removeItem("participateId");
+                localStorage.removeItem("candidateFormData");
                 router.push("/");
             }, 3000);
 
         } catch (err) {
-            console.error("Exam submission error:", err);
-            toast.error(err.message || "Error submitting exam answers.");
+            console.error(err);
+            toast.error(err.message || "Error submitting exam.");
         } finally {
             setLoading(false);
         }
     };
 
-    // Effects
-    useEffect(() => {
-        // Load participateId from localStorage
-        const id = localStorage.getItem("participateId");
-        if (id) {
-            setParticipateId(Number(id));
-        } else {
-            toast.error("Participate ID not found, please restart exam.");
-            router.push("/participate");
-        }
-    }, []);
+
+
+    // // Effects
+    // useEffect(() => {
+    //     // Load participateId from localStorage
+    //     const id = localStorage.getItem("participateId");
+    //     if (id) {
+    //         setParticipateId(Number(id));
+    //     } else {
+    //         toast.error("Participate ID not found, please restart exam.");
+    //         router.push("/participate");
+    //     }
+    // }, []);
 
     useEffect(() => {
         // Fetch data when tenantId is available
@@ -545,8 +609,8 @@ export default function ExamStartPage() {
                                         onClick={() => setCurrentPage(prev => Math.max(prev - 1, 0))}
                                         disabled={currentPage === 0}
                                         className={`px-4 py-2 rounded-sm border ${currentPage === 0
-                                                ? "bg-gray-200 text-gray-400 cursor-not-allowed"
-                                                : "bg-gray-100 hover:bg-gray-200 text-gray-700"
+                                            ? "bg-gray-200 text-gray-400 cursor-not-allowed"
+                                            : "bg-gray-100 hover:bg-gray-200 text-gray-700"
                                             }`}
                                     >
                                         Previous
