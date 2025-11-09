@@ -5,6 +5,8 @@ import toast from 'react-hot-toast';
 import Select from 'react-select';
 import AOS from 'aos';
 import 'aos/dist/aos.css';
+import DatePicker from "react-datepicker";
+import "react-datepicker/dist/react-datepicker.css";
 
 // Icons
 import { FaFileExcel } from 'react-icons/fa';
@@ -803,6 +805,7 @@ export default function AddExam() {
                   })}
                   placeholder="Select or search question set..."
                   className="w-full focus:outline-none focus:ring-0 focus:ring-blue-400 focus:border-blue-400"
+                  
                   isClearable
                   isSearchable
                   required
@@ -822,28 +825,40 @@ export default function AddExam() {
                 />
               </div>
               {/* Exam From Date */}
-              <div className='flex items-center gap-2 mt-2'>
-                <label className="w-1/3 text-sm font-semibold text-gray-700">Exam From Date <span className="text-red-500">*</span></label>:
-                <input
-                  type="date"
-                  value={formData.examFromDate || ""}
-                  onChange={(e) => setFormData({ ...formData, examFromDate: e.target.value })}
-                  required
-                  className="w-full border px-3 py-2 rounded-sm focus:outline-none focus:ring-0 focus:ring-blue-400 focus:border-blue-400"
-                />
+              <div className="flex items-center gap-2 mt-2">
+                <label className="w-1/3 text-sm font-semibold text-gray-700">
+                  Exam From Date <span className="text-red-500">*</span>
+                </label>:
+                <div className="w-full">
+                  <DatePicker
+                    selected={formData.examFromDate ? new Date(formData.examFromDate) : null}
+                    onChange={(date) => setFormData({ ...formData, examFromDate: date })}
+                    dateFormat="dd/MM/yyyy"
+                    placeholderText="dd/MM/yyyy"
+                    className="w-full border px-3 py-2 rounded-sm focus:outline-none focus:ring-0 focus:ring-blue-400 focus:border-blue-400"
+                    wrapperClassName="w-full"
+                  />
+                </div>
               </div>
 
+
               {/* Exam To Date */}
-              <div className='flex items-center gap-2 mt-2'>
-                <label className="w-1/3 text-sm font-semibold text-gray-700">Exam To Date <span className="text-red-500">*</span></label>:
-                <input
-                  type="date"
-                  value={formData.examToDate || ""}
-                  onChange={(e) => setFormData({ ...formData, examToDate: e.target.value })}
-                  required
-                  className="w-full border px-3 py-2 rounded-sm focus:outline-none focus:ring-0 focus:ring-blue-400 focus:border-blue-400"
-                />
+              <div className="flex items-center gap-2 mt-2">
+                <label className="w-1/3 text-sm font-semibold text-gray-700">
+                  Exam To Date <span className="text-red-500">*</span>
+                </label>:
+                <div className="w-full">
+                  <DatePicker
+                    selected={formData.examToDate ? new Date(formData.examToDate) : null}
+                    onChange={(date) => setFormData({ ...formData, examToDate: date })}
+                    dateFormat="dd/MM/yyyy"
+                    placeholderText="dd/MM/yyyy"
+                    className="w-full border px-3 py-2 rounded-sm focus:outline-none focus:ring-0 focus:ring-blue-400 focus:border-blue-400"
+                    wrapperClassName="w-full"
+                  />
+                </div>
               </div>
+
 
               {/* Total Mark and Questions Display */}
               <div className="flex items-center gap-6">
@@ -866,37 +881,6 @@ export default function AddExam() {
                   />
                 </div>
               </div>
-
-              {/* Exam Time Input */}
-              {/* <div className="flex items-center gap-3">
-                <label className="w-1/3 text-sm font-semibold text-gray-700">Exam Time</label>
-                <div className="flex gap-2 items-center">
-                  <input
-                    type="number"
-                    min="0"
-                    max="23"
-                    value={examHour}
-                    onChange={(e) => setExamHour(e.target.value)}
-                    className="w-16 border px-2 py-1 rounded-sm text-center focus:outline-none focus:ring-0 focus:ring-blue-400 focus:border-blue-400"
-                    placeholder="hh"
-                    required
-                  />
-                  <span>hh</span>
-                  <span>:</span>
-                  <input
-                    type="number"
-                    min="0"
-                    max="59"
-                    value={examMinute}
-                    onChange={(e) => setExamMinute(e.target.value)}
-                    className="w-16 border px-2 py-1 rounded-sm text-center focus:outline-none focus:ring-0 focus:ring-blue-400 focus:border-blue-400"
-                    placeholder="mm"
-                    required
-                  />
-                  <span>mm</span>
-                </div>
-              </div> */}
-
               <div className="flex flex-col w-full">
                 <div className="flex items-center gap-3">
                   <label className="w-1/3 text-sm font-semibold text-gray-700">

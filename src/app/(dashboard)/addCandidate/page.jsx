@@ -7,7 +7,7 @@ import * as XLSX from 'xlsx';
 import Link from 'next/link';
 import { IoMdAddCircle } from 'react-icons/io';
 import toast from 'react-hot-toast';
-import { FiEdit, FiTrash2, FiEye, FiX } from "react-icons/fi";
+import { FiEdit, FiTrash2, FiEye, FiMail, FiX } from "react-icons/fi";
 import DeleteConfirmModal from '../../components/DeleteConfirmModal';
 import AOS from 'aos';
 import 'aos/dist/aos.css';
@@ -33,6 +33,7 @@ export default function AddCandidate() {
     const [filteredSet, setFilteredSet] = useState([]);
     const [setData, setSetData] = useState([]);
     const [isEditMode, setIsEditMode] = useState(false);
+    const [sendingEmail, setSendingEmail] = useState(false);
 
     const [formData, setFormData] = useState({
         id: "",
@@ -698,36 +699,94 @@ export default function AddCandidate() {
 
 
 
-const handleDownloadExcel = () => {
-  if (!filteredSet || filteredSet.length === 0) {
-    alert("No data available to export!");
-    return;
-  }
+    const handleDownloadExcel = () => {
+        if (!filteredSet || filteredSet.length === 0) {
+            alert("No data available to export!");
+            return;
+        }
 
-  // Prepare clean data (optional: remove internal IDs or boolean formatting)
-  const exportData = filteredSet.map(item => ({
-    ID: item.id,
-    Name: item.name,
-    Password: item.password,
-    ExamName: item.examName,
-    SetName: item.setName,
-    UserID: item.userId,
-    Role: item.userRole,
-    Email: item.email,
-    MobileNo: item.mobileNo,
-    IsActive: item.isActive ? "Yes" : "No",
-  }));
+        // Prepare clean data (optional: remove internal IDs or boolean formatting)
+        const exportData = filteredSet.map(item => ({
+            ID: item.id,
+            Name: item.name,
+            Password: item.password,
+            ExamName: item.examName,
+            SetName: item.setName,
+            UserID: item.userId,
+            Role: item.userRole,
+            Email: item.email,
+            MobileNo: item.mobileNo,
+            IsActive: item.isActive ? "Yes" : "No",
+        }));
 
-  // Create worksheet & workbook
-  const worksheet = XLSX.utils.json_to_sheet(exportData);
-  const workbook = XLSX.utils.book_new();
+        // Create worksheet & workbook
+        const worksheet = XLSX.utils.json_to_sheet(exportData);
+        const workbook = XLSX.utils.book_new();
 
-  // Add sheet to workbook
-  XLSX.utils.book_append_sheet(workbook, worksheet, "Candidate List");
+        // Add sheet to workbook
+        XLSX.utils.book_append_sheet(workbook, worksheet, "Candidate List");
 
-  // Export file
-  XLSX.writeFile(workbook, "Candidate_List.xlsx");
-};
+        // Export file
+        XLSX.writeFile(workbook, "Candidate_List.xlsx");
+    };
+
+
+    // const handleSendEmail = async (candidate) => {
+    //     try {
+    //         const response = await fetch("/api/sendMail", {
+    //             method: "POST",
+    //             headers: { "Content-Type": "application/json" },
+    //             body: JSON.stringify({
+    //                 to: candidate.email,
+    //                 name: candidate.name,
+    //                 userId: candidate.userId,
+    //                 password: candidate.password,
+    //             }),
+    //         });
+
+    //         const data = await response.json();
+
+    //         if (response.ok) {
+    //             toast.success(`Email sent successfully to ${candidate.email}`);
+    //         } else {
+    //             toast.error(`Failed to send email: ${data.error}`);
+    //         }
+    //     } catch (err) {
+    //         console.error(err);
+    //         toast.error("Something went wrong while sending the email.");
+    //     }
+    // };
+
+    const handleSendEmail = async (candidate) => {
+        setSendingEmail(true); 
+        try {
+            const response = await fetch("/api/sendMail", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    to: candidate.email,
+                    name: candidate.name,
+                    userId: candidate.userId,
+                    password: candidate.password,
+                    tenantId: loginData?.tenantId,
+                }),
+            });
+
+            const data = await response.json();
+            if (response.ok) {
+                toast.success(`Email sent successfully to ${candidate.email}`);
+            } else {
+                toast.error(`Failed to send email: ${data.error}`);
+            }
+        } catch (err) {
+            console.error(err);
+            toast.error("Something went wrong while sending the email.");
+        } finally {
+            setSendingEmail(false); // Always hide loading state
+        }
+    };
+
+
 
     useEffect(() => {
         document.body.style.overflow = 'hidden';
@@ -864,9 +923,15 @@ const handleDownloadExcel = () => {
                                                     <button
                                                         onClick={() => openEditCandidateModal(candidate)}
                                                         className="flex items-center gap-1 px-2 py-1 text-sm font-medium border border-[#00925a] text-[#00925a] rounded group-hover:!text-white group-hover:border-white transition-colors duration-200"
-                                                    
+
                                                     >
                                                         <FiEdit />
+                                                    </button>
+                                                    <button
+                                                        onClick={() => handleSendEmail(candidate)}
+                                                        className="flex items-center gap-1 px-2 py-1 text-sm font-medium border border-blue-500 text-blue-500 rounded hover:bg-blue-500 hover:text-white transition-colors duration-200"
+                                                    >
+                                                        <FiMail className="w-4 h-4" />
                                                     </button>
                                                 </div>
                                             </td>
