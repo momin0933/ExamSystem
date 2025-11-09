@@ -102,7 +102,7 @@ export default function ParticipatePage() {
             return;
         }
 
-        // Just navigate to the exam page (no API call)
+        //  navigate to the exam page 
         router.push("/examPage");
     };
 
