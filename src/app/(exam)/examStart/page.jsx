@@ -212,89 +212,153 @@ export default function ExamStartPage() {
     /**
      * Submit exam answers to API
      */
+    // const handleSubmitExam = async (e) => {
+    //     e?.preventDefault();
+    //     setLoading(true);
+
+    //     try {
+    //         // Validation checks
+    //         if (!participateId) {
+    //             throw new Error("Participate ID is missing!");
+    //         }
+
+    //         if (!questions || questions.length === 0) {
+    //             throw new Error("No questions found!");
+    //         }
+
+    //         if (!loginData?.tenantId || !loginData?.UserId) {
+    //             throw new Error("User authentication data missing!");
+    //         }
+
+    //         // Prepare payload with safe defaults
+    //         const payload = questions.map((q) => {
+    //             const ansValue = answers[q.questionId] ?? "NA";
+    //             let ansMark = 0;
+
+    //             // Calculate marks only for answered MCQ questions
+    //             if (q.qnType === "MCQ" && ansValue !== "NA" && ansValue === q.correctOption) {
+    //                 ansMark = q.mark || 0;
+    //             }
+
+    //             return {
+    //                 ParticipateId: participateId,
+    //                 QnId: q.questionId,
+    //                 Answer: ansValue,
+    //                 QnMark: q.mark || 0,
+    //                 AnsMark: ansMark,
+    //                 Remarks: null,
+    //                 EntryBy: loginData.UserId,
+    //                 EntryDate: new Date().toISOString(),
+    //                 IsActive: true,
+    //             };
+    //         });
+
+    //         const response = await fetch(`${config.API_BASE_URL}api/Participate/AddParticipateAns`, {
+    //             method: "POST",
+    //             headers: {
+    //                 "Content-Type": "application/json",
+    //                 TenantId: loginData.tenantId
+    //             },
+    //             body: JSON.stringify(payload),
+    //         });
+
+    //         if (!response.ok) {
+    //             const errorText = await response.text();
+    //             throw new Error(errorText || "Failed to submit exam answers");
+    //         }
+
+    //         // Show success and redirect
+    //         setShowSuccessModal(true);
+    //         setTimeout(() => {
+    //             // Clear storage and redirect
+    //             localStorage.removeItem("loginData");
+    //             localStorage.removeItem("participateId");
+    //             router.push("/");
+    //         }, 3000);
+
+    //     } catch (err) {
+    //         console.error("Exam submission error:", err);
+    //         toast.error(err.message || "Error submitting exam answers.");
+    //     } finally {
+    //         setLoading(false);
+    //     }
+    // };
+
     const handleSubmitExam = async (e) => {
         e?.preventDefault();
         setLoading(true);
 
         try {
-            // Validation checks
-            if (!participateId) {
-                throw new Error("Participate ID is missing!");
-            }
+            if (!questions || questions.length === 0) throw new Error("No questions found!");
+            if (!loginData?.tenantId || !loginData?.UserAutoId) throw new Error("User authentication missing!");
 
-            if (!questions || questions.length === 0) {
-                throw new Error("No questions found!");
-            }
+            const formData = JSON.parse(localStorage.getItem("candidateFormData")) || {};
+            const candidateId = Number(formData?.CandidateId || loginData.UserAutoId);
 
-            if (!loginData?.tenantId || !loginData?.UserId) {
-                throw new Error("User authentication data missing!");
-            }
+            const participateAnsList = questions.map(q => ({
+                QnId: Number(q.questionId),
+                Answer: answers[q.questionId] ?? "NA",
+                QnMark: Number(q.mark || 0),
+                AnsMark: Number((q.qnType === "MCQ" && answers[q.questionId] === q.correctOption) ? q.mark || 0 : 0),
+                Remarks: null,
+                EntryBy: candidateId.toString(),
+                EntryDate: new Date().toISOString(),
+                IsActive: true
+            }));
 
-            // Prepare payload with safe defaults
-            const payload = questions.map((q) => {
-                const ansValue = answers[q.questionId] ?? "NA";
-                let ansMark = 0;
+            const payload = {
+                CandidateId: candidateId,
+                MobileNo: formData?.MobileNo || "N/A",
+                CurrentSalary: Number(formData?.CurrentSalary || 0),
+                CurrentOrg: formData?.CurrentOrg || "NA",
+                Experience: formData?.Experience || "00 Year",
+                NoticePeriod: Number(formData?.NoticePeriod || 0),
+                EntryBy: candidateId.toString(),
+                EntryDate: new Date().toISOString(),
+                IsActive: true,
+                ParticipateAnsList: participateAnsList
+            };
 
-                // Calculate marks only for answered MCQ questions
-                if (q.qnType === "MCQ" && ansValue !== "NA" && ansValue === q.correctOption) {
-                    ansMark = q.mark || 0;
-                }
-
-                return {
-                    ParticipateId: participateId,
-                    QnId: q.questionId,
-                    Answer: ansValue,
-                    QnMark: q.mark || 0,
-                    AnsMark: ansMark,
-                    Remarks: null,
-                    EntryBy: loginData.UserId,
-                    EntryDate: new Date().toISOString(),
-                    IsActive: true,
-                };
-            });
-
-            const response = await fetch(`${config.API_BASE_URL}api/Participate/AddParticipateAns`, {
+            const response = await fetch(`${config.API_BASE_URL}api/Participate/SubmitParticipateWithAnswers`, {
                 method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                    TenantId: loginData.tenantId
-                },
-                body: JSON.stringify(payload),
+                headers: { "Content-Type": "application/json", TenantId: loginData.tenantId },
+                body: JSON.stringify(payload)
             });
 
             if (!response.ok) {
                 const errorText = await response.text();
-                throw new Error(errorText || "Failed to submit exam answers");
+                throw new Error(errorText || "Failed to submit exam");
             }
 
-            // Show success and redirect
             setShowSuccessModal(true);
             setTimeout(() => {
-                // Clear storage and redirect
                 localStorage.removeItem("loginData");
                 localStorage.removeItem("participateId");
+                localStorage.removeItem("candidateFormData");
                 router.push("/");
             }, 3000);
 
         } catch (err) {
-            console.error("Exam submission error:", err);
-            toast.error(err.message || "Error submitting exam answers.");
+            console.error(err);
+            toast.error(err.message || "Error submitting exam.");
         } finally {
             setLoading(false);
         }
     };
 
-    // Effects
-    useEffect(() => {
-        // Load participateId from localStorage
-        const id = localStorage.getItem("participateId");
-        if (id) {
-            setParticipateId(Number(id));
-        } else {
-            toast.error("Participate ID not found, please restart exam.");
-            router.push("/participate");
-        }
-    }, []);
+
+
+    // // Effects
+    // useEffect(() => {
+    //     // Load participateId from localStorage
+    //     const id = localStorage.getItem("participateId");
+    //     if (id) {
+    //         setParticipateId(Number(id));
+    //     } else {
+    //         toast.error("Participate ID not found, please restart exam.");
+    //         router.push("/participate");
+    //     }
+    // }, []);
 
     useEffect(() => {
         // Fetch data when tenantId is available
@@ -545,8 +609,8 @@ export default function ExamStartPage() {
                                         onClick={() => setCurrentPage(prev => Math.max(prev - 1, 0))}
                                         disabled={currentPage === 0}
                                         className={`px-4 py-2 rounded-sm border ${currentPage === 0
-                                                ? "bg-gray-200 text-gray-400 cursor-not-allowed"
-                                                : "bg-gray-100 hover:bg-gray-200 text-gray-700"
+                                            ? "bg-gray-200 text-gray-400 cursor-not-allowed"
+                                            : "bg-gray-100 hover:bg-gray-200 text-gray-700"
                                             }`}
                                     >
                                         Previous
@@ -595,15 +659,56 @@ export default function ExamStartPage() {
 
             {/* Confirmation Modal */}
             {showConfirmSubmit && (
-                <div className="fixed inset-0 bg-black/40 z-50 flex items-center justify-center">
-                    <div className="bg-white rounded-sm p-6   max-w-2xl text-center shadow-lg">
+                // <div className="fixed inset-0 bg-black/40 z-50 flex items-center justify-center">
+                //     <div className="bg-white rounded-sm p-6   max-w-2xl text-center shadow-lg">
 
-                        <h3 className="text-xl font-semibold mb-4">Confirm Submission</h3>
-                        <p className="mb-6">Are you sure you want to submit your answers?</p>
-                        <div className="flex justify-around">
+                //         <h3 className="text-xl font-semibold mb-4">Confirm Submission</h3>
+                //         <p className="mb-6">Are you sure you want to submit your answers?</p>
+                //         <div className="flex justify-around">
+                //             <button
+                //                 onClick={() => setShowConfirmSubmit(false)}
+                //                 className="px-4 py-2 bg-gray-300 rounded hover:bg-gray-400"
+                //             >
+                //                 Cancel
+                //             </button>
+                //             <button
+                //                 onClick={() => {
+                //                     setShowConfirmSubmit(false);
+                //                     handleSubmitExam();
+                //                 }}
+                //                 className="px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600"
+                //             >
+                //                 Yes, Submit
+                //             </button>
+                //         </div>
+                //     </div>
+                // </div>
+
+                <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center animate-fadeIn">
+                    <div className="bg-white rounded-sm shadow-2xl p-8 max-w-md w-full text-center relative animate-scaleUp">
+
+                        {/* Close button */}
+                        <button
+                            onClick={() => setShowConfirmSubmit(false)}
+                            className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 transition-colors"
+                        >
+                            ✕
+                        </button>
+
+                        {/* Icon */}
+                        <div className="flex items-center justify-center mb-2">
+                            <svg className="w-16 h-16 text-green-500 animate-bounce" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m5 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                            </svg>
+                        </div>
+
+                        <h3 className="text-2xl font-bold text-gray-800 mb-2">Confirm Submission</h3>
+                        <p className="text-gray-600 mb-6">Are you sure you want to submit your answers?</p>
+
+                        <div className="flex justify-center gap-4">
                             <button
                                 onClick={() => setShowConfirmSubmit(false)}
-                                className="px-4 py-2 bg-gray-300 rounded hover:bg-gray-400"
+                                className="px-6 py-2 bg-gray-200 text-gray-700 font-medium rounded-sm hover:bg-gray-300 transition-colors"
                             >
                                 Cancel
                             </button>
@@ -612,29 +717,63 @@ export default function ExamStartPage() {
                                     setShowConfirmSubmit(false);
                                     handleSubmitExam();
                                 }}
-                                className="px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600"
+                                className="px-6 py-2 bg-green-500 text-white font-bold rounded-sm hover:bg-green-600 shadow-lg transition-all transform hover:scale-105"
                             >
                                 Yes, Submit
                             </button>
                         </div>
                     </div>
                 </div>
+
             )}
 
             {/* Success Modal */}
             {showSuccessModal && (
-                <div className="fixed inset-0 bg-black/40 z-50 flex items-center justify-center">
-                    <div className="bg-white rounded-lg p-6 max-w-sm text-center shadow-lg">
+                // <div className="fixed inset-0 bg-black/40 z-50 flex items-center justify-center">
+                //     <div className="bg-white rounded-lg p-6 max-w-sm text-center shadow-lg">
+                //         <img
+                //             src="/images/FashionTex-Logo.png"
+                //             alt="Logo"
+                //             className="w-24 h-20 mx-auto mb-4 object-contain"
+                //         />
+                //         <h3 className="text-xl font-bold mb-2">Fashion Tex Ltd</h3>
+                //         <p className="text-gray-700">Thank you for completing the recruitment exam.</p>
+                //         <p className="text-gray-500 mt-3">You will be logged out shortly...</p>
+                //     </div>
+                // </div>
+                <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center animate-fadeIn">
+                    <div className="bg-white rounded-sm p-8 max-w-lg w-full text-center shadow-2xl relative animate-scaleUp">
+
+                        {/* Confetti icon or success checkmark */}
+                        <div className="flex items-center justify-center mb-2">
+                            <svg
+                                className="w-16 h-16 text-green-500 animate-bounce"
+                                fill="none"
+                                stroke="currentColor"
+                                strokeWidth="2"
+                                viewBox="0 0 24 24"
+                            >
+                                <path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m5 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                            </svg>
+                        </div>
+
+                        {/* Logo */}
                         <img
                             src="/images/FashionTex-Logo.png"
                             alt="Logo"
-                            className="w-24 h-20 mx-auto mb-4 object-contain"
+                            className="w-40 h-20 mx-auto mb-2 object-contain"
                         />
-                        <h3 className="text-xl font-bold mb-2">Fashion Tex Ltd</h3>
-                        <p className="text-gray-700">Thank you for completing the recruitment exam.</p>
-                        <p className="text-gray-500 mt-3">You will be logged out shortly...</p>
+
+                        {/* Text */}
+                        <h3 className="text-2xl font-bold text-gray-800 mb-2">Fashion Tex Ltd</h3>
+                        <p className="text-gray-700 mb-2">Thank you for completing the recruitment exam.</p>
+                        <p className="text-gray-500">You will be logged out shortly...</p>
+
+                        {/* Optional decorative border */}
+                        <div className="mt-4 h-1 w-20 mx-auto bg-green-500 rounded-full animate-pulse"></div>
                     </div>
                 </div>
+
             )}
         </div>
     );
