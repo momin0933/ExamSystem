@@ -8,7 +8,7 @@ import { useState, useEffect, useContext } from 'react';
 import DeleteConfirmModal from '../../components/DeleteConfirmModal';
 import { AuthContext } from '../../provider/AuthProvider';
 import { toast } from 'react-hot-toast';
-import { useRouter, useSearchParams } from 'next/navigation';
+import { useRouter } from 'next/navigation'
 import * as XLSX from 'xlsx';
 import pdfMake from "pdfmake/build/pdfmake";
 
@@ -17,7 +17,7 @@ import pdfMake from "pdfmake/build/pdfmake";
 export default function AddSet() {
     const { loginData } = useContext(AuthContext);
     const router = useRouter();
-    const searchParams = useSearchParams();
+    // const searchParams = useSearchParams();
 
     const [setData, setSetData] = useState([]);
     const [filteredSet, setFilteredSet] = useState([]);
@@ -282,10 +282,10 @@ export default function AddSet() {
         fetchSubjectData();
     }, [loginData?.tenantId]);
 
-    useEffect(() => {
-        const id = searchParams?.get("id");
-        if (id) openEditModalById(id);
-    }, [searchParams]);
+    // useEffect(() => {
+    //     const id = searchParams?.get("id");
+    //     if (id) openEditModalById(id);
+    // }, [searchParams]);
 
     useEffect(() => {
         let filtered = setData;
