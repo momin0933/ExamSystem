@@ -6,194 +6,232 @@ import { usePathname } from 'next/navigation';
 import { AiOutlineDashboard, AiOutlineLogout } from 'react-icons/ai';
 import { GoSidebarCollapse } from 'react-icons/go';
 import { FaChevronDown } from "react-icons/fa";
-import { MdOutlineQuiz, MdSubject, MdOutlineAssignmentTurnedIn, MdManageAccounts, MdWork } from "react-icons/md";
+import {
+  MdOutlineQuiz,
+  MdSubject,
+  MdOutlineAssignmentTurnedIn,
+  MdManageAccounts,
+  MdWork
+} from "react-icons/md";
 import { BsPatchQuestion } from "react-icons/bs";
 import { RiStackLine } from "react-icons/ri";
 import { FaUserPlus } from "react-icons/fa";
 
 import { AuthContext } from '../provider/AuthProvider';
 import { DataContext } from '../provider/DataProvider';
+import { motion } from "framer-motion";
 
 const Sidebar = () => {
   const { loginData, logout } = useContext(AuthContext);
   const { isCollapsed, setIsCollapsed } = useContext(DataContext);
   const [activeDropdown, setActiveDropdown] = useState(null);
-  const [isMounted, setIsMounted] = useState(false);
+  const [mounted, setMounted] = useState(false);
   const pathname = usePathname();
 
-  // Map dropdown IDs to their route paths
+  useEffect(() => setMounted(true), []);
+
   const dropdownRouteMap = {
-    2: ["/addSubject", "/addQuestion", "/insertQuestion", "/addSet", "/setEntry","/addExam", "/addCandidate"], // Management
-    3: ["/participantsList"], // Result
-  };
-
-  const toggleDropdown = (index) => {
-    if (!isCollapsed) setActiveDropdown(activeDropdown === index ? null : index);
-  };
-
-  const handleLogout = () => {
-    logout();
+    2: ["/addSubject", "/addQuestion", "/insertQuestion", "/addSet", "/setEntry", "/addExam", "/addCandidate"],
+    3: ["/participantsList"]
   };
 
   useEffect(() => {
-    setIsMounted(true);
-  }, []);
-
-  // Auto open dropdowns based on current pathname
-  useEffect(() => {
-    let matchedDropdown = null;
-    Object.entries(dropdownRouteMap).forEach(([dropdownId, paths]) => {
-      if (paths.some(path => pathname.startsWith(path))) {
-        matchedDropdown = Number(dropdownId);
-      }
+    let open = null;
+    Object.entries(dropdownRouteMap).forEach(([id, paths]) => {
+      if (paths.some(p => pathname.startsWith(p))) open = Number(id);
     });
-    setActiveDropdown(matchedDropdown);
+    setActiveDropdown(open);
   }, [pathname]);
 
-  if (!isMounted) return null;
-
-  // Highlight active link
-  // const getLinkClasses = (href, baseClasses = "") => {
-  //   const isActive = pathname.startsWith(href);
-  //   return `${baseClasses} ${
-  //     isActive
-  //       ? "bg-gray-50/25 text-[#1cefff] font-medium"
-  //       : "text-gray-100 hover:text-[#1cefff] hover:bg-gray-50/25"
-  //   } px-2 py-1 rounded transition-colors duration-200`;
-  // };
-
-  const getLinkClasses = (href, baseClasses = "") => {
-    const isActive = pathname.startsWith(href)||
-    (href === "/addQuestion" && pathname.startsWith("/insertQuestion"))||
-     (href === "/addSet" && pathname.startsWith("/setEntry"));
-    return `${baseClasses} ${isActive
-      ? "bg-blue-100 text-blue-700 font-medium"
-      : "text-black hover:text-blue-800 hover:bg-blue-50"
-      } px-2 py-1 rounded transition-colors duration-200`;
+  const toggleDropdown = (id) => {
+    if (isCollapsed) return;
+    setActiveDropdown(prev => (prev === id ? null : id));
   };
 
+  const getLinkClasses = (href) => {
+    const isActive =
+      pathname.startsWith(href) ||
+      (href === "/addQuestion" && pathname.startsWith("/insertQuestion")) ||
+      (href === "/addSet" && pathname.startsWith("/setEntry"));
+
+    return `
+      flex items-center gap-2 text-sm px-2 py-1 rounded-none transition-all duration-200
+      ${isActive
+        ? "bg-blue-100 text-blue-700 font-medium"
+        : "text-gray-700 hover:bg-blue-50 hover:text-blue-800"}
+    `;
+  };
+
+  if (!mounted) return null;
+
   return (
-    <div className={`min-h-screen font-roboto bg-white-900 z-50 flex flex-col sticky top-0 ${isCollapsed ? "w-16" : "w-44 lg:w-56"} transition-all duration-300 ease-in-out`}>
+    <div
+      className={`h-screen bg-white border-r border-gray-200 shadow-sm flex flex-col sticky top-0
+      transition-all duration-300 ${isCollapsed ? "w-16" : "w-52"}`}
+    >
 
       {/* Header */}
-      <div className="hidden lg:flex items-center justify-between h-14 bg-white p-3">
+      <div className="hidden lg:flex items-center justify-between h-14 px-3 bg-white border-b border-gray-200">
         {!isCollapsed && (
           <Link href="/homepage">
             <Image
               src="/images/FashionTex-Logo.png"
-              alt="FashionTex Logo"
-              width={190}
-              height={34}
+              alt="Logo"
+              width={150}
+              height={40}
               priority
             />
           </Link>
         )}
-        <button onClick={() => setIsCollapsed(!isCollapsed)} className="text-gray-300 focus:outline-none">
-          {isCollapsed
-            ? <Image src="/images/Thread.png" alt="FashionTex Logo" width={190} height={35} priority />
-            : <GoSidebarCollapse className="text-gray-300 hidden hover:text-orange-500 transition ease-in-out" size={24} />}
+
+        <button
+          onClick={() => setIsCollapsed(!isCollapsed)}
+          className="text-gray-500 hover:text-gray-700"
+        >
+          {isCollapsed ? (
+            <Image src="/images/Thread.png" alt="Toggle" width={120} height={40} />
+          ) : (
+            <GoSidebarCollapse className="w-6 h-6" />
+          )}
         </button>
       </div>
-      <hr className="border-t border-gray-200 w-full" />
+
       {/* Navigation */}
-      <nav className={`flex-1 mt-4 space-y-2 ${isCollapsed ? "flex flex-col items-center" : ""}`}>
+      <div className="flex-1 overflow-y-auto pt-3">
+        <nav className={`${isCollapsed ? "flex flex-col items-center" : ""}`}>
 
-        {/* Dashboard */}
-        <Link
-          href="/homepage"
-          prefetch={true}
-          // className={`flex items-center gap-3 px-4 py-2 rounded-md text-gray-700 hover:bg-gray-200 transition ${isCollapsed ? "justify-center" : ""}`}
-          className={`flex items-center gap-3 px-4 py-2 rounded-none  hover:bg-blue-50 transition-all duration-300 ${isCollapsed ? "justify-center" : ""}`}
-        >
-          <AiOutlineDashboard className="w-5 h-5" />
-          {!isCollapsed && <span className="text-[1rem] font-medium text-gray-700">Dashboard</span>}
-        </Link>
+          {/* Dashboard */}
+          <Link
+            href="/homepage"
+            className={`
+              flex items-center gap-3 px-4 py-2 rounded-none transition-all
+              hover:bg-blue-50 text-gray-700
+              ${isCollapsed ? "justify-center" : ""}
+            `}
+          >
+            <AiOutlineDashboard className="w-5 h-5" />
+            {!isCollapsed && <span className="text-[1rem] font-medium">Dashboard</span>}
+          </Link>
 
-        {/* Management Dropdown */}
-        {loginData?.UserRole !== "Client" && (
-          <div className="mb-3">
-            <button
-              onClick={() => toggleDropdown(2)}
-              className={`flex items-center justify-between w-full px-4 py-2 rounded-none  hover:bg-blue-50 transition-all duration-300 ${isCollapsed ? "justify-center" : ""}`}
-            >
-              <div className="flex items-center gap-3">
-                <MdManageAccounts className="w-5 h-5 text-gray-700" />
-                {!isCollapsed && <span className="text-[1rem] font-medium text-gray-700">Management</span>}
-              </div>
+          {/* MANAGEMENT */}
+          {loginData?.UserRole !== "Client" && (
+            <div className="mt-3">
+              <button
+                onClick={() => toggleDropdown(2)}
+                className={`
+                  flex items-center justify-between w-full px-4 py-2 rounded-none 
+                  hover:bg-blue-50 text-gray-700 transition-all
+                  ${isCollapsed ? "justify-center" : ""}
+                `}
+              >
+                <div className="flex items-center gap-3">
+                  <MdManageAccounts className="w-5 h-5" />
+                  {!isCollapsed && <span className="font-medium">Management</span>}
+                </div>
+
+                {!isCollapsed && (
+                  <FaChevronDown
+                    className={`text-xs transition-all duration-300 
+                      ${activeDropdown === 2 ? "rotate-180" : "rotate-0"}`}
+                  />
+                )}
+              </button>
+
+              {/* Dropdown Animated */}
               {!isCollapsed && (
-                <FaChevronDown className={`text-sm text-gray-500 duration-600 transition-transform ${activeDropdown === 2 ? "rotate-180" : ""}`} />
+                <motion.div
+                  initial={{ height: 0, opacity: 0 }}
+                  animate={{
+                    height: activeDropdown === 2 ? "auto" : 0,
+                    opacity: activeDropdown === 2 ? 1 : 0
+                  }}
+                  transition={{ duration: 0.3 }}
+                  className="overflow-hidden"
+                >
+                  <div className="mt-1 ml-7.5 border-l-2 border-gray-200  space-y-1.5">
+                    {[
+                      { href: "/addSubject", label: "Position List", icon: <MdWork /> },
+                      { href: "/addQuestion", label: "Question Bank", icon: <BsPatchQuestion /> },
+                      { href: "/addSet", label: "Set List", icon: <RiStackLine /> },
+                      { href: "/addExam", label: "Exam List", icon: <MdOutlineQuiz /> },
+                      { href: "/addCandidate", label: "Candidate List", icon: <FaUserPlus /> },
+                    ].map(item => (
+                      <Link
+                        key={item.href}
+                        href={item.href}
+                        className={getLinkClasses(item.href)}
+                      >
+                        <span className="text-blue-500 ">{item.icon}</span>
+                        {item.label}
+                      </Link>
+                    ))}
+                  </div>
+                </motion.div>
               )}
-            </button>
+            </div>
+          )}
 
-            {!isCollapsed && activeDropdown === 2 && (
-              <div className="ml-8 mt-2  space-y-1.5 border-l-2  border-gray-200 ">
-                {[
-                  { href: "/addSubject", label: "Position List", icon: <MdWork /> },
-                  { href: "/addQuestion", label: "Question Bank", icon: <BsPatchQuestion /> },
-                  // { href: "/insertQuestion", label: "Add Question", icon: <BsPatchQuestion /> },
-                  { href: "/addSet", label: "Set List", icon: <RiStackLine /> },
-                  { href: "/addExam", label: "Exam List", icon: <MdOutlineQuiz /> },
-                  { href: "/addCandidate", label: "Candidate List", icon: <FaUserPlus /> },
-                ].map((item) => (
-                  <Link
-                    key={item.href}
-                    href={item.href}
-                    prefetch={true}
-                    className={getLinkClasses(item.href, "flex items-center rounded-none gap-2 text-sm")}
-                  >
-                    <span className="text-blue-400 w-4 h-4">{item.icon}</span>
-                    {item.label}
-                  </Link>
-                ))}
-              </div>
-            )}
-          </div>
-        )}
+          {/* RESULT */}
+          {loginData?.UserRole !== "Client" && (
+            <div className="mt-3">
+              <button
+                onClick={() => toggleDropdown(3)}
+                className={`
+                  flex items-center justify-between w-full px-4 py-2 rounded-none 
+                  hover:bg-blue-50 text-gray-700 transition-all
+                  ${isCollapsed ? "justify-center" : ""}
+                `}
+              >
+                <div className="flex items-center gap-3">
+                  <MdOutlineAssignmentTurnedIn className="w-5 h-5" />
+                  {!isCollapsed && <span className="font-medium">Result</span>}
+                </div>
 
-        {/* Result Dropdown */}
-        {loginData?.UserRole !== "Client" && (
-          <div className="mb-3">
-            <button
-              onClick={() => toggleDropdown(3)}
-              // className={`flex items-center justify-between w-full px-4 py-3 rounded-lg bg-gradient-to-r from-green-50 to-white shadow hover:shadow-md transition-all duration-300 ${isCollapsed ? "justify-center" : ""}`}
-              className={`flex items-center justify-between w-full px-4 py-2 rounded-none  hover:bg-blue-50 transition-all duration-300 ${isCollapsed ? "justify-center" : ""}`}
-            >
-              <div className="flex items-center gap-3">
-                <MdOutlineAssignmentTurnedIn className="w-5 h-5 text-gray-700" />
-                {!isCollapsed && <span className="text-[1rem] font-medium text-gray-700">Result</span>}
-              </div>
+                {!isCollapsed && (
+                  <FaChevronDown
+                    className={`text-xs transition-all duration-300 
+                      ${activeDropdown === 3 ? "rotate-180" : ""}`}
+                  />
+                )}
+              </button>
+
               {!isCollapsed && (
-                <FaChevronDown className={`text-sm text-gray-500 duration-600 transition-transform ${activeDropdown === 3 ? "rotate-180" : ""}`} />
+                <motion.div
+                  initial={{ height: 0, opacity: 0 }}
+                  animate={{
+                    height: activeDropdown === 3 ? "auto" : 0,
+                    opacity: activeDropdown === 3 ? 1 : 0
+                  }}
+                  transition={{ duration: 0.3 }}
+                  className="overflow-hidden"
+                >
+                  <div className="ml-8 mt-1 border-l-2 border-gray-200 ">
+                    <Link
+                      href="/participantsList"
+                      className={getLinkClasses("/participantsList")}
+                    >
+                      <span className="text-green-600"><MdSubject /></span>
+                      Participate List
+                    </Link>
+                  </div>
+                </motion.div>
               )}
-            </button>
+            </div>
+          )}
 
-            {!isCollapsed && activeDropdown === 3 && (
-              <div className="ml-8 mt-2 space-y-3 border-l-2 border-green-100 ">
-                {[{ href: "/participantsList", label: "Participate List", icon: <MdSubject /> }].map(item => (
-                  <Link
-                    key={item.href}
-                    href={item.href}
-                    prefetch={true}
-                    className={getLinkClasses(item.href, "flex items-center gap-2 text-sm")}
-                  >
-                    <span className="w-4 h-4 text-green-400">{item.icon}</span>
-                    {item.label}
-                  </Link>
-                ))}
-              </div>
-            )}
-          </div>
-        )}
-      </nav>
+        </nav>
+      </div>
 
-      {/* Footer */}
-      <div className="mt-auto mb-6">
+      {/* Logout */}
+      <div className="border-t hover:bg-red-100 transition-all hover:text-red-800 border-gray-200 py-1 px-2">
         <button
-          onClick={handleLogout}
-          className={`flex items-center gap-3 px-4 py-2 rounded-md w-full text-gray-700 hover:bg-red-100 hover:text-red-600 transition ${isCollapsed ? "justify-center" : ""}`}
+          onClick={logout}
+          className={`flex items-center w-full gap-3 px-4 py-2 rounded-md
+            text-gray-700 
+            ${isCollapsed ? "justify-center" : ""}`}
         >
           <AiOutlineLogout className="w-5 h-5" />
-          {!isCollapsed && <span>Log Out</span>}
+          {!isCollapsed && "Log Out"}
         </button>
       </div>
     </div>
