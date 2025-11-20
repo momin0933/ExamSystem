@@ -13,12 +13,11 @@ const Sidebar = dynamic(() => import("./Sidebar"));
 
 export default function Navbar() {
   const { loginData, logout } = useContext(AuthContext);
-  console.log("Navber Login Data", loginData)
+  // console.log("Navbar Login Data", loginData)
   const { isCollapsed, setIsCollapsed } = useContext(DataContext);
   const toggleSidebar = () => setIsCollapsed(!isCollapsed);
   const [isDropdownOpen, setDropdownOpen] = useState(false);
   const [isNavOpen, setIsNavOpen] = useState(false);
-
   return (
     <nav className="sticky top-0 z-50 bg-gray-600 shadow-md border-b border-gray-200">
       <div className="flex justify-between items-center px-4 py-2 lg:px-2 transition-all duration-300">
