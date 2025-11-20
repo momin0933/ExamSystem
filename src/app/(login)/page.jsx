@@ -1,6 +1,6 @@
 'use client';
 import Image from "next/image";
-import { useContext, useState } from "react";
+import { useContext, useEffect, useState } from "react";
 import { AuthContext } from "../provider/AuthProvider";
 import config from "@/config";
 import { FiUser, FiLock } from "react-icons/fi";
@@ -8,7 +8,7 @@ import { FiUser, FiLock } from "react-icons/fi";
 const Login = () => {
   const [credentials, setCredentials] = useState({ UserId: "", password: "" });
   const { login, loading, error } = useContext(AuthContext);
-
+  const [isClient, setIsClient] = useState(false);
   const handleChange = (e) => {
     const { name, value } = e.target;
     setCredentials({ ...credentials, [name]: value });
@@ -18,7 +18,10 @@ const Login = () => {
     e.preventDefault();
     login(credentials, config.tenantId);
   };
-
+  useEffect(() => {
+    setIsClient(true);
+  }, []);
+  if (!isClient) return null;
   return (
     <div className="min-h-screen bg-gradient-to-r from-blue-100 to-purple-100 flex items-center justify-center p-4">
       <div className="flex flex-col lg:flex-row w-full max-w-5xl bg-white shadow-2xl rounded-sm overflow-hidden">
@@ -107,11 +110,10 @@ const Login = () => {
             {/* Submit Button */}
             <button
               type="submit"
-              className={`w-full py-3 rounded-sm text-white font-semibold shadow-sm transition-all duration-300 transform ${
-                loading
+              className={`w-full py-3 rounded-sm text-white font-semibold shadow-sm transition-all duration-300 transform ${loading
                   ? "bg-blue-300 cursor-not-allowed"
                   : "bg-blue-500 hover:bg-blue-700 "
-              }`}
+                }`}
               disabled={loading}
             >
               {loading ? "Logging in..." : "Login"}

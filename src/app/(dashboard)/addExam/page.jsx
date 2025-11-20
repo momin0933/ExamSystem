@@ -20,6 +20,7 @@ import config from '@/config';
 import pdfMake from "pdfmake/build/pdfmake";
 
 export default function AddExam() {
+
   const { loginData } = useContext(AuthContext);
   // Search and Filter States
   const [searchQuery, setSearchQuery] = useState('');
@@ -36,7 +37,10 @@ export default function AddExam() {
   const [filteredExams, setFilteredExams] = useState([]);
   const [viewData, setViewData] = useState(null);
   const [examTimeError, setExamTimeError] = useState("");
-
+  const [isClient, setIsClient] = useState(false);
+  useEffect(() => {
+    setIsClient(true);
+  }, []);
   // Form States
   const [formData, setFormData] = useState({
     id: 0,
@@ -623,7 +627,7 @@ export default function AddExam() {
   }, []);
 
 
-
+ if (!isClient) return null;
   // ========== RENDER COMPONENT ==========
 
   return (
@@ -805,7 +809,7 @@ export default function AddExam() {
                   })}
                   placeholder="Select or search question set..."
                   className="w-full focus:outline-none focus:ring-0 focus:ring-blue-400 focus:border-blue-400"
-                  
+
                   isClearable
                   isSearchable
                   required
