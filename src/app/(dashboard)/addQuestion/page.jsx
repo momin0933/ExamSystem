@@ -12,8 +12,9 @@ import DeleteConfirmModal from '../../components/DeleteConfirmModal';
 import AOS from 'aos';
 import 'aos/dist/aos.css';
 // import Select from 'react-select';
-import { useRouter } from 'next/navigation'; 
+import { useRouter } from 'next/navigation';
 import Select, { components } from "react-select";
+import { HiHome } from 'react-icons/hi';
 
 export default function AddQuestion() {
     const { loginData } = useContext(AuthContext);
@@ -31,7 +32,10 @@ export default function AddQuestion() {
     const [isViewModalOpen, setIsViewModalOpen] = useState(false);
     const [viewData, setViewData] = useState(null);
     const [selectedSubject, setSelectedSubject] = useState("");
-
+    const [isClient, setIsClient] = useState(false);
+    useEffect(() => {
+        setIsClient(true);
+    }, []);
     // Remove these states as they are not needed anymore
     // const initialFormData = {
     //     id: 0,
@@ -265,7 +269,7 @@ export default function AddQuestion() {
             document.body.style.overflow = 'unset';
         };
     }, []);
-
+    if (!isClient) return null;
     return (
         <div className="overflow-x-auto p-2">
             <style jsx>{`
@@ -283,12 +287,12 @@ export default function AddQuestion() {
                     .fixed-table tbody { display: block; width: 100%; }
                     .fixed-table tr {
                         display: block; margin-bottom: 10px;
-                        border: 1px solid #ddd; border-radius: 5px;
+                       
                     }
                     .fixed-table td {
                         display: flex; justify-content: space-between;
                         align-items: center; padding: 8px; text-align: left;
-                        border-bottom: 1px solid #ddd;
+                       
                     }
                     .fixed-table td::before {
                         content: attr(data-label); font-weight: bold;
@@ -297,8 +301,30 @@ export default function AddQuestion() {
                     .fixed-table td:last-child { border-bottom: none; }
                 }
             `}</style>
-            <div className="mb-1">
-                <h1 className="text-2xl font-bold text-gray-800">Question Bank</h1>
+            <div className="mb-2 flex flex-col md:flex-row justify-between items-start md:items-center gap-3 md:gap-6">
+                {/* Title */}
+                <div>
+                    <h1 className="text-2xl md:text-2xl font-bold text-gray-900">Question Bank</h1>
+                    {/* Optional subtitle */}
+                    {/* <p className="text-gray-500 mt-1 text-sm md:text-base">Welcome to your Exam Management System</p> */}
+                </div>
+
+                {/* Breadcrumb */}
+                <div className="flex items-center gap-2 text-sm text-gray-600 flex-wrap">
+                    <Link
+                        href="/homepage"
+                    >
+                        <HiHome className="w-5 h-5 mb-1 text-[#4775a0]" />
+                    </Link>
+                    <span
+
+                        className="font-medium text-gray-700 hover:text-gray-900 transition-colors"
+                    >
+                        Management
+                    </span>
+                    <span className="text-gray-400">/</span>
+                    <span className="font-semibold text-gray-700">Question Bank</span>
+                </div>
             </div>
             <div className="rounded-sm font-roboto overflow-hidden">
                 <div className="bg-gradient-to-r from-[#2c3e50] to-[#3498db] sticky top-0 z-20 shadow-md">
@@ -311,7 +337,7 @@ export default function AddQuestion() {
                                     </svg>
                                 </div>
                                 <input
-                                    className="block w-full pl-10 pr-3 py-[6px] border border-gray-300 rounded-sm leading-5 bg-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 sm:text-sm transition-all duration-200 shadow-sm"
+                                    className="block w-full pl-10 pr-3 py-[6px]  rounded-sm leading-5 bg-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 sm:text-sm transition-all duration-200 shadow-sm"
                                     type="text"
                                     placeholder="Search"
                                     value={searchQuery}
@@ -328,49 +354,49 @@ export default function AddQuestion() {
 
                             <div className="w-full sm:w-auto min-w-[180px] max-w-[280px]">
                                 {subjectData.length > 0 && (
-                                <Select
-                                    name="filterSubject"
-                                    value={
-                                        selectedSubject === ""
-                                            ? { value: "", label: "All Position" }
-                                            : subjectData.find((s) => s.value === selectedSubject) || null
-                                    }
-                                    onChange={(selected) => {
-                                        const subId = selected?.value || "";
-                                        setSelectedSubject(subId);
-                                        fetchQuestionsBySubject(subId);
-                                    }}
-                                    options={[{ value: "", label: "All Position" }, ...subjectData]}
-                                    placeholder="Select or search position..."
-                                    className="w-full  text-gray-800"
-                                    classNamePrefix="custom-select"
-                                    isClearable
-                                    isSearchable
-                                    menuPortalTarget={document.body}
-                                    components={{
-                                        ClearIndicator: (props) => {
-                                            // Hide clear indicator if the selected value is "All Position"
-                                            if (props.getValue()[0]?.value === "") return null;
-                                            return <components.ClearIndicator {...props} />;
-                                        },
-                                    }}
-                                    styles={{
-                                        control: (base) => ({
-                                            ...base,
-                                            minHeight: "34px",
-                                            height: "28px",
-                                            borderColor: "#D1D5DB",
-                                            boxShadow: "0 1px 2px rgba(0,0,0,0.05)",
-                                            "&:hover": {
-                                                borderColor: "#3B82F6",
+                                    <Select
+                                        name="filterSubject"
+                                        value={
+                                            selectedSubject === ""
+                                                ? { value: "", label: "All Position" }
+                                                : subjectData.find((s) => s.value === selectedSubject) || null
+                                        }
+                                        onChange={(selected) => {
+                                            const subId = selected?.value || "";
+                                            setSelectedSubject(subId);
+                                            fetchQuestionsBySubject(subId);
+                                        }}
+                                        options={[{ value: "", label: "All Position" }, ...subjectData]}
+                                        placeholder="Select or search position..."
+                                        className="w-full  text-gray-800"
+                                        classNamePrefix="custom-select"
+                                        isClearable
+                                        isSearchable
+                                        menuPortalTarget={document.body}
+                                        components={{
+                                            ClearIndicator: (props) => {
+                                                // Hide clear indicator if the selected value is "All Position"
+                                                if (props.getValue()[0]?.value === "") return null;
+                                                return <components.ClearIndicator {...props} />;
                                             },
-                                        }),
-                                        menuPortal: (base) => ({
-                                            ...base,
-                                            zIndex: 9999,
-                                        }),
-                                    }}
-                                />
+                                        }}
+                                        styles={{
+                                            control: (base) => ({
+                                                ...base,
+                                                minHeight: "34px",
+                                                height: "28px",
+                                                borderColor: "#D1D5DB",
+                                                boxShadow: "0 1px 2px rgba(0,0,0,0.05)",
+                                                "&:hover": {
+                                                    borderColor: "#3B82F6",
+                                                },
+                                            }),
+                                            menuPortal: (base) => ({
+                                                ...base,
+                                                zIndex: 9999,
+                                            }),
+                                        }}
+                                    />
 
                                 )}
                             </div>
@@ -390,7 +416,7 @@ export default function AddQuestion() {
                     <div className="border border-gray-300 rounded-b-md overflow-hidden max-h-[65vh] overflow-y-auto">
                         <table className="min-w-full text-sm text-left text-gray-600">
                             <thead className="bg-gray-100 text-xs uppercase text-gray-800 sticky top-0">
-                                <tr className="border-b">
+                                <tr className="border-b border-gray-300">
                                     <th className="px-4 py-2 text-center">SL</th>
                                     <th className="px-4 py-2">Position</th>
                                     <th className="px-4 py-2">Question</th>
@@ -418,20 +444,20 @@ export default function AddQuestion() {
                                                         onClick={() => openViewModal(question)}
                                                         className="flex items-center gap-1 px-3 py-1 text-sm font-medium border border-blue-500 text-blue-500 rounded-sm group-hover:!text-white group-hover:border-white transition-colors duration-200"
                                                     >
-                                                        <FiEye  />
+                                                        <FiEye />
                                                     </button>
                                                     <button
                                                         onClick={() => openEditModal(question)}
                                                         title="Edit"
                                                         className="flex items-center gap-1 px-3 py-1 text-sm font-medium border border-[#00925a] text-[#00925a] rounded-sm  group-hover:!text-white group-hover:border-white transition-colors duration-200"
                                                     >
-                                                        <FiEdit  />
+                                                        <FiEdit />
                                                     </button>
                                                     <button
                                                         onClick={() => openDeleteModal(question)}
                                                         className="flex items-center gap-1 px-3 py-1 text-sm font-medium border border-red-500 text-red-500 rounded-sm  group-hover:bg-red-500 group-hover:!text-white transition-colors duration-200"
                                                     >
-                                                        <FiTrash2  />
+                                                        <FiTrash2 />
                                                     </button>
                                                 </div>
                                             </td>
@@ -452,7 +478,7 @@ export default function AddQuestion() {
             />
 
             {isViewModalOpen && viewData && (
-               <div className="fixed inset-0 bg-black/20 z-50 flex items-center justify-center">
+                <div className="fixed inset-0 bg-black/20 z-50 flex items-center justify-center">
                     <div data-aos="zoom-in" className="bg-white rounded-sm shadow-xl p-6 w-full max-w-lg relative overflow-y-auto max-h-[90vh]">
                         {/* Close Button */}
                         <button

@@ -3,7 +3,7 @@ import config from '@/config';
 import Link from 'next/link';
 import { IoMdAddCircle } from 'react-icons/io';
 import { FaFileExcel } from 'react-icons/fa';
-import { FiEdit, FiTrash2, FiEye,FiX } from "react-icons/fi";
+import { FiEdit, FiTrash2, FiEye, FiX } from "react-icons/fi";
 import { useState, useEffect, useContext } from 'react';
 import DeleteConfirmModal from '../../components/DeleteConfirmModal';
 import { AuthContext } from '../../provider/AuthProvider';
@@ -11,6 +11,7 @@ import { toast } from 'react-hot-toast';
 import { useRouter, useSearchParams } from 'next/navigation';
 import * as XLSX from 'xlsx';
 import pdfMake from "pdfmake/build/pdfmake";
+import { HiHome } from 'react-icons/hi';
 export default function AddSet() {
     const { loginData } = useContext(AuthContext);
     const router = useRouter();
@@ -40,7 +41,7 @@ export default function AddSet() {
         });
     };
 
-// For Bangla Font
+    // For Bangla Font
     const loadBanglaFont = async () => {
         const loadFont = async (url) => {
             const res = await fetch(url);
@@ -66,8 +67,8 @@ export default function AddSet() {
             "NotoSansBengali-Bold.ttf": bold
         };
     };
- 
-//For Download Pdf
+
+    //For Download Pdf
     const handleDownload = async () => {
         if (!viewData?.Questions || viewData.Questions.length === 0) return;
 
@@ -77,12 +78,12 @@ export default function AddSet() {
                 // text: viewData.SetName || "Question Set",
                 text: `Question Set: ${viewData.SetName || "Question Set"}`,
                 style: "header",
-                alignment: "center"  
+                alignment: "center"
             },
             {
                 text: `Total Questions: ${viewData.TotalQuestions || 0} | Total Marks: ${viewData.TotalMark || 0}`,
                 style: "subheader",
-                alignment: "center"  
+                alignment: "center"
             }
         ];
 
@@ -99,10 +100,10 @@ export default function AddSet() {
             content.push({ text: `${subject} (${questions.length})`, style: "subject" });
 
             for (const [idx, q] of questions.entries()) {
-              
+
                 content.push({
                     table: {
-                        widths: ['*', 50], 
+                        widths: ['*', 50],
                         body: [
                             [
                                 { text: `${idx + 1}. ${q.question}`, style: "question" },
@@ -149,7 +150,7 @@ export default function AddSet() {
                 subheader: { fontSize: 13, margin: [0, 0, 0, 10] },
                 subject: { fontSize: 13, bold: true, margin: [0, 5, 0, 5] },
                 question: { fontSize: 12 },
-                mark: { fontSize: 12},
+                mark: { fontSize: 12 },
                 option: { fontSize: 11 }
             }
         };
@@ -339,9 +340,31 @@ export default function AddSet() {
     }, []);
     return (
         <div className="overflow-x-auto p-2">
-            <div className="mb-1">
-                <h1 className="text-2xl font-bold text-gray-800">Question Set</h1>
-            </div>
+             <div className="mb-2 flex flex-col md:flex-row justify-between items-start md:items-center gap-3 md:gap-6">
+                           {/* Title */}
+                           <div>
+                               <h1 className="text-2xl md:text-2xl font-bold text-gray-900">Question Set</h1>
+                               {/* Optional subtitle */}
+                               {/* <p className="text-gray-500 mt-1 text-sm md:text-base">Welcome to your Exam Management System</p> */}
+                           </div>
+           
+                           {/* Breadcrumb */}
+                           <div className="flex items-center gap-2 text-sm text-gray-600 flex-wrap">
+                               <Link
+                                   href="/homepage"
+                               >
+                                  <HiHome className="w-5 h-5 mb-1 text-[#4775a0]" />
+                               </Link>
+                               <span
+                                
+                                   className="font-medium text-gray-700 hover:text-gray-900 transition-colors"
+                               >
+                                   Management
+                               </span>
+                               <span className="text-gray-400">/</span>
+                               <span className="font-semibold text-gray-700">Question Set</span>
+                           </div>
+                       </div>
             <div className="rounded-sm font-roboto overflow-hidden shadow-md">
                 <div className="bg-gradient-to-r from-[#2c3e50] to-[#3498db] sticky top-0 z-20">
                     {/* Search & Actions */}

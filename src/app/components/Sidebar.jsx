@@ -101,7 +101,7 @@ export default function Sidebar() {
 
   return (
     <div
-      className={`h-screen bg-white border-r border-gray-200 shadow-sm flex flex-col sticky top-0 transition-all duration-300 ${isCollapsed ? "w-16" : "w-52"
+      className={`h-screen bg-white border-r border-gray-200 shadow-sm flex flex-col sticky top-0 transition-all duration-300 overflow-x-hidden ${isCollapsed ? "w-16" : "w-[220px]"
         }`}
     >
       {/* HEADER */}
@@ -136,7 +136,7 @@ export default function Sidebar() {
       </div>
 
       {/* NAVIGATION */}
-      <div className="flex-1 overflow-y-auto pt-3">
+      <div className="flex-1 overflow-y-auto overflow-x-hidden pt-3">
         <nav className={`${isCollapsed ? "flex flex-col items-center" : ""}`}>
           {menuItems.map((item, index) => {
             // SIMPLE LINK
@@ -200,7 +200,7 @@ export default function Sidebar() {
                       transition={{ duration: 0.3 }}
                       className="overflow-hidden"
                     >
-                      <div className="mt-1 ml-7.5 border-l-2 border-gray-200 space-y-1.5">
+                      <div className="mt-1 ml-7.5 border-l-2 border-gray-300 space-y-1.5">
                         {item.children.map((child) => (
                           <Link
                             key={child.href}
@@ -226,16 +226,15 @@ export default function Sidebar() {
       </div>
 
       {/* LOGOUT */}
-      <div className="border-t border-gray-200 hover:bg-red-100 transition-all hover:text-red-800 py-1 px-2">
-        <button
-          onClick={logout}
-          className={`flex items-center w-full gap-3 px-4 py-2 rounded-md text-gray-700 ${isCollapsed ? "justify-center" : ""
-            }`}
-        >
-          <AiOutlineLogout className="w-5 h-5" />
-          {!isCollapsed && "Log Out"}
-        </button>
-      </div>
+      <div className="sticky bottom-0 bg-white border-t border-gray-300">
+          <button
+           onClick={logout}
+            className={`flex items-center gap-3 px-4 py-3.5 w-full text-sm font-medium text-gray-700 hover:text-red-800 hover:bg-red-500/10 transition ${isCollapsed ? "justify-center" : ""}`}
+          >
+            <AiOutlineLogout className="w-5 h-5" />
+            {!isCollapsed && "Log Out"}
+          </button>
+        </div>
     </div>
   );
 }
