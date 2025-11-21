@@ -26,7 +26,10 @@ export default function AddExam() {
     const [filteredSet, setFilteredSet] = useState([]);
     const [fromDate, setFromDate] = useState("");
     const [toDate, setToDate] = useState("");
-
+    const [isClient, setIsClient] = useState(false);
+    useEffect(() => {
+        setIsClient(true);
+    }, []);
     // Initialize AOS animations
     useEffect(() => {
         AOS.init({ duration: 800, once: true });
@@ -509,7 +512,7 @@ export default function AddExam() {
             document.body.style.overflow = 'unset';
         };
     }, []);
-
+    if (!isClient) return null;
     return (
         <div className="overflow-x-auto p-2">
             <style jsx>{`
@@ -541,35 +544,37 @@ export default function AddExam() {
       `}</style>
 
             <div className="rounded-md font-roboto overflow-hidden">
-                <div className="mb-1">
-                    <h1 className="text-2xl font-bold text-gray-800">Participant Management</h1>
+
+
+                <div className="bg-white border-b border-gray-300 justify-between p-3 rounded-t-sm shadow-sm flex flex-wrap items-center gap-4">
+                    <div >
+                        <h1 className="text-2xl font-bold text-gray-600">Participant Management</h1>
+                    </div>
+                    <div className='flex items-center gap-4 '>
+                        {/* From Date */}
+                        <div className="flex items-center gap-2">
+                            <label className="text-sm font-bold text-gray-600">From Date:</label>
+                            <input
+                                type="date"
+                                value={fromDate}
+                                onChange={(e) => setFromDate(e.target.value)}
+                                className="px-2 py-1 rounded-sm border border-gray-300 focus:ring-1 focus:ring-blue-500"
+                            />
+                        </div>
+                        {/* To Date */}
+                        <div className="flex items-center gap-2">
+                            <label className="text-sm font-bold text-gray-600">To Date:</label>
+                            <input
+                                type="date"
+                                value={toDate}
+                                onChange={(e) => setToDate(e.target.value)}
+                                className="px-2 py-1 rounded-sm border border-gray-300 focus:ring-1 focus:ring-blue-500"
+                            />
+                        </div>
+                    </div>
                 </div>
 
-                <div className="bg-white p-3 rounded-sm shadow-sm flex flex-wrap items-center gap-4 mb-2">
-                    {/* From Date */}
-                    <div className="flex items-center gap-2">
-                        <label className="text-sm font-bold text-gray-700">From Date:</label>
-                        <input
-                            type="date"
-                            value={fromDate}
-                            onChange={(e) => setFromDate(e.target.value)}
-                            className="px-2 py-1 rounded-sm border border-gray-300 focus:ring-1 focus:ring-blue-500"
-                        />
-                    </div>
-
-                    {/* To Date */}
-                    <div className="flex items-center gap-2">
-                        <label className="text-sm font-bold text-gray-700">To Date:</label>
-                        <input
-                            type="date"
-                            value={toDate}
-                            onChange={(e) => setToDate(e.target.value)}
-                            className="px-2 py-1 rounded-sm border border-gray-300 focus:ring-1 focus:ring-blue-500"
-                        />
-                    </div>
-                </div>
-
-                <div className="bg-gradient-to-r from-[#2c3e50] to-[#3498db] sticky top-0 z-20 shadow-md">
+                <div className="bg-white sticky top-0 z-20 shadow-md">
                     {/* Header with search and actions */}
                     <div className="px-3 py-2 flex flex-wrap justify-between items-center gap-2">
                         <div className='flex items-center gap-3'>
@@ -601,25 +606,25 @@ export default function AddExam() {
                             {/* <Link onClick={handleOpenModal} href="#" passHref className="text-lg text-gray-50 cursor-pointer">
                             <IoMdAddCircle className="text-xl" />
                         </Link> */}
-                            <FaFileExcel onClick={handleDownloadExcel} className="text-lg cursor-pointer text-gray-50" />
+                            <FaFileExcel onClick={handleDownloadExcel} className="text-lg cursor-pointer text-gray-500" />
                         </div>
                     </div>
 
                     {/* Participate  table */}
-                    <div className="border border-gray-300 rounded-b-md overflow-hidden max-h-[55vh] overflow-y-auto">
+                    <div className=" rounded-b-md overflow-hidden max-h-[55vh] overflow-y-auto">
                         <table className="min-w-full text-sm text-left text-gray-600 table-auto">
-                            <thead className="bg-gray-100 text-xs uppercase text-gray-600 sticky top-0 z-10">
-                                <tr className="border-b">
-                                    <th className="px-4 py-2 ">SL</th>
-                                    <th className="px-4 py-2 ">Exam</th>
-                                    <th className="px-4 py-2 ">Name</th>
-                                    <th className="px-4 py-2 ">Organization</th>
-                                    <th className="px-4 py-2 ">Salary</th>
-                                    <th className="px-4 py-2 ">Mobile No</th>
-                                    <th className="px-4 py-2 ">Experience</th>
-                                    <th className="px-4 py-2 w-[130px] text-center">Notice Period</th>
-                                    <th className="px-4 py-2 w-[90px] text-center">Mark</th>
-                                    <th className="px-4 py-2  text-center">Exam Paper</th>
+                            <thead className="bg-gradient-to-r from-[#2c3e50] to-[#246fa1] text-xs uppercase font-light text-gray-50 sticky top-0 z-10">
+                                <tr className="border-b border-gray-500">
+                                    <th className="px-4 font-thin py-2 ">SL</th>
+                                    <th className="px-4 font-thin py-2 ">Exam</th>
+                                    <th className="px-4 font-thin py-2 ">Name</th>
+                                    <th className="px-4 font-thin py-2 ">Organization</th>
+                                    <th className="px-4 font-thin py-2 ">Salary</th>
+                                    <th className="px-4 font-thin py-2 ">Mobile No</th>
+                                    <th className="px-4 font-thin py-2 ">Experience</th>
+                                    <th className="px-4 font-thin py-2 w-[130px] text-center">Notice Period</th>
+                                    <th className="px-4 font-thin py-2 w-[90px] text-center">Mark</th>
+                                    <th className="px-4 font-thin py-2  text-center">Exam Paper</th>
                                 </tr>
                             </thead>
 
@@ -690,14 +695,13 @@ export default function AddExam() {
                         >
                             ✕
                         </button>
-
                         {participateQuestionPaper.length > 0 ? (
                             <>
 
                                 <div className="mb-8 p-4 bg-blue-50 rounded-sm text-center mt-5">
                                     <div className="relative ">
                                         <h2 className="text-2xl font-semibold text-center flex flex-col items-center justify-center">
-                                            <span className="text-blue-700">{participateQuestionPaper[0]?.userInfo.name}</span>
+                                            <span className="text-[#4775a0]">{participateQuestionPaper[0]?.userInfo.name}</span>
                                             <span className="text-black">Exam Name: {participateQuestionPaper[0]?.examName}</span>
                                         </h2>
 

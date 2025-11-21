@@ -12,6 +12,7 @@ import DeleteConfirmModal from '../../components/DeleteConfirmModal';
 import AOS from 'aos';
 import 'aos/dist/aos.css';
 import Select from 'react-select';
+import { HiHome } from 'react-icons/hi';
 
 
 export default function AddCandidate() {
@@ -34,7 +35,7 @@ export default function AddCandidate() {
     const [setData, setSetData] = useState([]);
     const [isEditMode, setIsEditMode] = useState(false);
     const [sendingEmail, setSendingEmail] = useState(false);
-
+    const [isClient, setIsClient] = useState(false);
     const [formData, setFormData] = useState({
         id: "",
         name: "",
@@ -45,7 +46,9 @@ export default function AddCandidate() {
         isActive: true,
         exmCandidateLists: []
     });
-
+    useEffect(() => {
+        setIsClient(true);
+    }, []);
     useEffect(() => {
         AOS.init({ duration: 800, once: true });
     }, []);
@@ -758,7 +761,7 @@ export default function AddCandidate() {
     // };
 
     const handleSendEmail = async (candidate) => {
-        setSendingEmail(true); 
+        setSendingEmail(true);
         try {
             const response = await fetch("/api/sendMail", {
                 method: "POST",
@@ -794,6 +797,7 @@ export default function AddCandidate() {
             document.body.style.overflow = 'unset';
         };
     }, []);
+    if (!isClient) return null;
     return (
         <div className="overflow-x-auto p-2">
             <style jsx>{`
@@ -825,8 +829,30 @@ export default function AddCandidate() {
                     .fixed-table td:last-child { border-bottom: none; }
                 }
             `}</style>
-            <div className="mb-1">
-                <h1 className="text-2xl font-bold text-gray-800">Candidate List</h1>
+            <div className="mb-2 flex flex-col md:flex-row justify-between items-start md:items-center gap-3 md:gap-6">
+                {/* Title */}
+                <div>
+                    <h1 className="text-2xl md:text-2xl font-bold text-gray-900">Candidate List</h1>
+                    {/* Optional subtitle */}
+                    {/* <p className="text-gray-500 mt-1 text-sm md:text-base">Welcome to your Exam Management System</p> */}
+                </div>
+
+                {/* Breadcrumb */}
+                <div className="flex items-center gap-2 text-sm text-gray-600 flex-wrap">
+                    <Link
+                        href="/homepage"
+                    >
+                       <HiHome className="w-5 h-5 mb-1 text-[#4775a0]" />
+                    </Link>
+                    <span
+                     
+                        className="font-medium text-gray-700 hover:text-gray-900 transition-colors"
+                    >
+                        Management
+                    </span>
+                    <span className="text-gray-400">/</span>
+                    <span className="font-semibold text-gray-700">Candidate List</span>
+                </div>
             </div>
             <div className="rounded-md font-roboto overflow-hidden">
                 <div className="bg-gradient-to-r from-[#2c3e50] to-[#3498db] sticky top-0 z-20 shadow-md">

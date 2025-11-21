@@ -152,7 +152,7 @@ export default function Homepage() {
           {/* <p className="text-gray-600 mt-1">Welcome to your Exam Management System</p> */}
         </div>
         <div className="flex items-center gap-2 text-gray-600 text-sm">
-          <HiHome className="w-5 h-5 text-blue-500" />
+           <HiHome className="w-5 h-5 mb-1 text-[#4775a0]" />
           <Link href="/homepage" className="font-medium text-gray-700 hover:text-gray-900 transition-colors">
             Home
           </Link>

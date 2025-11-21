@@ -18,8 +18,10 @@ import { AuthContext } from '../../provider/AuthProvider';
 import DeleteConfirmModal from '../../components/DeleteConfirmModal';
 import config from '@/config';
 import pdfMake from "pdfmake/build/pdfmake";
+import { HiHome } from 'react-icons/hi';
 
 export default function AddExam() {
+
   const { loginData } = useContext(AuthContext);
   // Search and Filter States
   const [searchQuery, setSearchQuery] = useState('');
@@ -36,7 +38,10 @@ export default function AddExam() {
   const [filteredExams, setFilteredExams] = useState([]);
   const [viewData, setViewData] = useState(null);
   const [examTimeError, setExamTimeError] = useState("");
-
+  const [isClient, setIsClient] = useState(false);
+  useEffect(() => {
+    setIsClient(true);
+  }, []);
   // Form States
   const [formData, setFormData] = useState({
     id: 0,
@@ -623,7 +628,7 @@ export default function AddExam() {
   }, []);
 
 
-
+ if (!isClient) return null;
   // ========== RENDER COMPONENT ==========
 
   return (
@@ -655,9 +660,31 @@ export default function AddExam() {
           .fixed-table td:last-child { border-bottom: none; }
         }
       `}</style>
-      <div className="mb-1">
-        <h1 className="text-2xl font-bold text-gray-800">Exam List</h1>
-      </div>
+           <div className="mb-2 flex flex-col md:flex-row justify-between items-start md:items-center gap-3 md:gap-6">
+                {/* Title */}
+                <div>
+                    <h1 className="text-2xl md:text-2xl font-bold text-gray-900">Exam List</h1>
+                    {/* Optional subtitle */}
+                    {/* <p className="text-gray-500 mt-1 text-sm md:text-base">Welcome to your Exam Management System</p> */}
+                </div>
+
+                {/* Breadcrumb */}
+                <div className="flex items-center gap-2 text-sm text-gray-600 flex-wrap">
+                    <Link
+                        href="/homepage"
+                    >
+                       <HiHome className="w-5 h-5 mb-1 text-[#4775a0]" />
+                    </Link>
+                    <span
+                     
+                        className="font-medium text-gray-700 hover:text-gray-900 transition-colors"
+                    >
+                        Management
+                    </span>
+                    <span className="text-gray-400">/</span>
+                    <span className="font-semibold text-gray-700">Exam List</span>
+                </div>
+            </div>
       <div className="rounded-sm font-roboto overflow-hidden">
         <div className="bg-gradient-to-r from-[#2c3e50] to-[#3498db] sticky top-0 z-20 shadow-md">
           {/* Search Input */}
@@ -805,7 +832,7 @@ export default function AddExam() {
                   })}
                   placeholder="Select or search question set..."
                   className="w-full focus:outline-none focus:ring-0 focus:ring-blue-400 focus:border-blue-400"
-                  
+
                   isClearable
                   isSearchable
                   required
