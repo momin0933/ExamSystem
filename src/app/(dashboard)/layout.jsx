@@ -1,11 +1,11 @@
 import { Geist, Geist_Mono } from "next/font/google";
 import "../globals.css";
-import { AuthProvider } from "../provider/AuthProvider";
 import DataProvider from "../provider/DataProvider";
 import Footer from "../components/Footer";
 import Navbar from "../components/Navbar";
 import Sidebar from "../components/Sidebar";
 import { Toaster } from "react-hot-toast";
+import { AuthProvider } from "../provider/AuthProvider";
 const geistSans = Geist({
   variable: "--font-geist-sans",
   subsets: ["latin"],

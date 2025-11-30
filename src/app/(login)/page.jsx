@@ -23,7 +23,7 @@ const Login = () => {
   }, []);
   if (!isClient) return null;
   return (
-    <div className="min-h-screen bg-gradient-to-r from-blue-100 to-purple-100 flex items-center justify-center p-4">
+    <div className="min-h-screen bg-gradient-to-r from-blue-200 to-purple-200 flex items-center justify-center p-4">
       <div className="flex flex-col lg:flex-row w-full max-w-5xl bg-white shadow-2xl rounded-sm overflow-hidden">
 
         {/* Left Section - Modern Image with Overlay */}
@@ -55,7 +55,7 @@ const Login = () => {
 
         {/* Right Section - Form */}
         <div className="w-full lg:w-1/2 p-8 lg:p-12 flex flex-col justify-center bg-white">
-          <h2 className="text-3xl text-gray-800 font-bold text-center mb-6">
+          <h2 className="text-3xl text-gray-700 font-bold text-center mb-6">
             Welcome Back
           </h2>
           <p className="text-center text-gray-500 mb-8">
@@ -99,20 +99,20 @@ const Login = () => {
                 <input type="checkbox" className="checkbox checkbox-sm" />
                 Remember Me
               </label>
-              <a href="#" className="text-blue-500 hover:underline">
+              <a href="#" className="text-[#4775a0] hover:underline">
                 Forgot password?
               </a>
             </div>
 
             {/* Error Message */}
-            {error && <div className="text-red-500 text-sm">{error}</div>}
+            {error && <div className=" text-red-500 text-sm">{error}</div>}
 
             {/* Submit Button */}
             <button
               type="submit"
-              className={`w-full py-3 rounded-sm text-white font-semibold shadow-sm transition-all duration-300 transform ${loading
+              className={`w-full py-3 rounded-sm text-white  shadow-sm transition-all duration-300 transform ${loading
                   ? "bg-blue-300 cursor-not-allowed"
-                  : "bg-blue-500 hover:bg-blue-700 "
+                  : "bg-[#4775a0] hover:bg-[#396186] "
                 }`}
               disabled={loading}
             >

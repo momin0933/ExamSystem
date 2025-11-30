@@ -62,6 +62,7 @@ debugger;
       // router.push("/homepage");
 
       // Conditional navigation based on UserRole
+      console.log('Role',userData.UserRole)
       if (userData.UserRole?.trim() === "Participate") {
         router.push("/participate"); // Navigate to Participate page
       } else {
@@ -80,6 +81,18 @@ debugger;
     document.cookie = "authToken=; Path=/; Expires=Thu, 01 Jan 1970 00:00:00 GMT";
     router.push("/");
   };
+    //logout in other tabs
+  useEffect(() => {
+    const handleStorageChange = (event) => {
+      if (event.key === "loginData" && event.newValue === null) {
+        logout();
+      }
+    };
+    window.addEventListener("storage", handleStorageChange);
+    return () => {
+      window.removeEventListener("storage", handleStorageChange);
+    };
+  }, []);
   const data = {
     loginData,
     login,
