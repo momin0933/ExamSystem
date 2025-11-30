@@ -566,7 +566,7 @@ export default function SetEntry() {
     return (
         <div className="overflow-x-auto p-2">
 
-            <div className="flex items-center justify-between mb-2">
+            <div className="flex items-center justify-between px-1 py-1 mb-2">
                 <h2 className="text-2xl font-bold text-gray-800">{isEdit ? "Edit Set" : "Add New Set"}</h2>
                 {!showPreview && (
                     <button
@@ -578,8 +578,8 @@ export default function SetEntry() {
                     </button>
                 )}
             </div>
-            <div className="border border-gray-300 rounded-b-md overflow-hidden max-h-[68vh] overflow-y-auto">
-                <form onSubmit={handleSubmit} className="space-y-4 text-sm bg-white p-3 rounded-sm shadow">
+            <div className="border border-gray-300 rounded-b-md">
+                <form onSubmit={handleSubmit} className="space-y-2 text-sm bg-white p-3 rounded-sm shadow">
                     <div >
                         <div className="flex items-center gap-4 mb-2">
                             {/* Set Name */}
@@ -641,10 +641,10 @@ export default function SetEntry() {
                                             isClearable
                                             isSearchable
                                             required
-                                            menuPortalTarget={document.body} 
-                                            menuPosition="fixed"             
+                                            menuPortalTarget={document.body}
+                                            menuPosition="fixed"
                                             styles={{
-                                                menuPortal: (base) => ({ ...base, zIndex: 9999 }) 
+                                                menuPortal: (base) => ({ ...base, zIndex: 9999 })
                                             }}
                                         />
                                     )}
@@ -720,7 +720,7 @@ export default function SetEntry() {
                     {/* ---------------- CONDITIONAL BLOCKS ---------------- */}
                     {(addMode === "manual" || isEdit) && (
                         <>
-                            <div className="border border-gray-200 rounded-lg p-3 bg-gray-50 max-h-64 overflow-y-auto mt-2">
+                            <div className="border border-gray-200 rounded  bg-gray-50 max-h-64 overflow-y-auto mt-2">
                                 {questionData.length === 0 ? (
                                     <p className="text-gray-400 text-sm italic text-center py-3">
                                         {selectedSubject
@@ -729,12 +729,12 @@ export default function SetEntry() {
                                     </p>
                                 ) : (
                                     <table className="w-full text-sm border-collapse">
-                                        <thead className="bg-gray-100 sticky top-0">
+                                        <thead className="bg-cyan-700 sticky top-0">
                                             <tr>
-                                                <th className="w-10 p-2 border-b text-left">Select</th>
-                                                <th className="p-2 border-b text-left">Question</th>
-                                                <th className="w-24 p-2 border-b text-left">Type</th>
-                                                <th className="w-20 p-2 border-b text-left">Mark</th>
+                                                <th className="w-10 uppercase text-white font-light p-2 border-b text-left">Select</th>
+                                                <th className="p-2  uppercase text-white font-light border-b text-left">Question</th>
+                                                <th className="w-24 uppercase text-white font-light p-2 border-b text-left">Type</th>
+                                                <th className="w-20 uppercase text-white font-light p-2 border-b text-left">Mark</th>
                                             </tr>
                                         </thead>
                                         <tbody>
@@ -753,7 +753,7 @@ export default function SetEntry() {
                                                     </td>
                                                     <td className="p-2 text-gray-700">{q.Name}</td>
                                                     <td className="p-2 text-gray-600">{q.QnType}</td>
-                                                    <td className="p-2 text-gray-600">{q.Mark}</td>
+                                                    <td className="p-2 text-gray-600 text-center">{q.Mark}</td>
                                                 </tr>
                                             ))}
                                         </tbody>
@@ -801,40 +801,36 @@ export default function SetEntry() {
 
                     {/* Modal */}
                     {showPreview && selectedQuestions.length > 0 && (
-                        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
-                            <div
-                                className="bg-white rounded-sm shadow-lg w-11/12 max-w-4xl p-4 relative"
-                                data-aos="fade-up"
-                            >
-                                {/* Close Button */}
-                                <button
-                                    onClick={() => setShowPreview(false)}
-                                    className="absolute top-3 right-3 text-gray-600 hover:text-gray-900 text-lg font-bold"
-                                >
-                                   <FiX className="w-4 h-4" />
-                                </button>
+                        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 backdrop-blur-sm">
+                            <div className="bg-white/90 backdrop-blur-xl shadow-2xl rounded w-11/12 max-w-5xl overflow-hidden ">
 
-                                {/* Modal Header */}
-                                <h2
-                                    className="text-xl font-bold mb-4 text-gray-800"
-                                    data-aos="fade-up"
-                                    data-aos-delay="100"
-                                >
-                                    Show Selected Questions
-                                </h2>
+                                {/* Header */}
+                                <div className="sticky top-0 bg-gradient-to-r from-cyan-800 to-cyan-700 text-white px-6 py-2.5 flex items-center justify-between shadow-md">
+                                    <h2 className="text-lg font-semibold tracking-wide flex items-center gap-2">
+                                         Selected Questions Summary
+                                    </h2>
+
+                                    <button
+                                        onClick={() => setShowPreview(false)}
+                                        className="text-white hover:text-gray-200 transition"
+                                    >
+                                        <FiX className="w-6 h-6" />
+                                    </button>
+                                </div>
 
                                 {/* Table */}
-                                <div className="overflow-x-auto">
-                                    <table className="w-full text-sm border border-gray-300 rounded overflow-hidden">
-                                        <thead className="bg-blue-50 text-gray-700">
+                                <div className="max-h-[480px] overflow-y-auto  bg-white/70">
+                                    <table className="w-full text-sm border border-gray-600 rounded overflow-hidden shadow-sm">
+                                        <thead className="bg-gray-100 text-gray-700 sticky top-0 z-10">
                                             <tr>
-                                                <th className="border px-2 py-1">SL</th>
-                                                <th className="border px-2 py-1">Subject</th>
-                                                <th className="border px-2 py-1">Type</th>
-                                                <th className="border px-2 py-1">Total Qn</th>
-                                                <th className="border px-2 py-1">Mark</th>
+                                                <th className="border border-gray-400 uppercase font-light px-3 py-2">SL</th>
+                                                <th className="border border-gray-400 uppercase font-light px-3 py-2">Subject</th>
+                                                <th className="border border-gray-400 uppercase font-light px-3 py-2">Type</th>
+                                                <th className="border border-gray-400 uppercase font-light px-3 py-2">Total Qn</th>
+                                                <th className="border border-gray-400 uppercase font-light px-3 py-2">Mark</th>
                                             </tr>
                                         </thead>
+
                                         <tbody>
                                             {(() => {
                                                 const grouped = selectedQuestions.reduce((acc, q) => {
@@ -854,60 +850,74 @@ export default function SetEntry() {
                                                     <>
                                                         {subjects.map(([subject, types], idx) => {
                                                             const totalForSubject = Object.values(types).reduce(
-                                                                (acc, t) => ({ count: acc.count + t.count, totalMark: acc.totalMark + t.totalMark }),
+                                                                (acc, t) => ({
+                                                                    count: acc.count + t.count,
+                                                                    totalMark: acc.totalMark + t.totalMark,
+                                                                }),
                                                                 { count: 0, totalMark: 0 }
                                                             );
+
                                                             grandTotalQuestions += totalForSubject.count;
                                                             grandTotalMarks += totalForSubject.totalMark;
 
                                                             return (
                                                                 <React.Fragment key={idx}>
+                                                                    {/* Data rows */}
                                                                     {Object.entries(types).map(([type, data], tIdx) => (
                                                                         <tr
                                                                             key={`${subject}-${type}`}
-                                                                            className="bg-white hover:bg-gray-50"
-                                                                            data-aos="fade-up"
-                                                                            data-aos-delay={tIdx * 50}
+                                                                            className="bg-white hover:bg-gray-50 transition"
                                                                         >
                                                                             {tIdx === 0 && (
                                                                                 <>
-                                                                                    <td className="border px-2 py-1 text-center font-medium" rowSpan={Object.keys(types).length}>
+                                                                                    <td
+                                                                                        rowSpan={Object.keys(types).length}
+                                                                                        className="border border-gray-400 px-3 py-2 text-center font-semibold bg-gray-50"
+                                                                                    >
                                                                                         {idx + 1}
                                                                                     </td>
-                                                                                    <td className="border px-2 py-1 font-semibold text-gray-800" rowSpan={Object.keys(types).length}>
+                                                                                    <td
+                                                                                        rowSpan={Object.keys(types).length}
+                                                                                        className="border border-gray-400 px-3 py-2 font-semibold text-gray-800 bg-gray-50"
+                                                                                    >
                                                                                         {subject}
                                                                                     </td>
                                                                                 </>
                                                                             )}
-                                                                            <td className="border px-2 py-1 text-center">{type}</td>
-                                                                            <td className="border px-2 py-1 text-center">{data.count}</td>
 
-                                                                            <td className="border px-2 py-1 text-center">{data.totalMark}</td>
+                                                                            <td className="border border-gray-400 px-3 py-2 text-center">{type}</td>
+                                                                            <td className="border border-gray-400 px-3 py-2 text-center">{data.count}</td>
+                                                                            <td className="border border-gray-400 px-3 py-2 text-center">
+                                                                                {data.totalMark}
+                                                                            </td>
                                                                         </tr>
                                                                     ))}
-                                                                    <tr
-                                                                        className="bg-blue-50 font-semibold text-gray-800"
-                                                                        data-aos="fade-up"
-                                                                        data-aos-delay={Object.keys(types).length * 50}
-                                                                    >
-                                                                        <td colSpan={2} className="border px-2 py-1 text-right">Subtotal:</td>
-                                                                        <td className="border px-2 py-1 text-center">Total</td>
-                                                                        <td className="border px-2 py-1 text-center">{totalForSubject.count}</td>
 
-                                                                        <td className="border px-2 py-1 text-center">{totalForSubject.totalMark}</td>
+                                                                    {/* Subtotal Row */}
+                                                                    <tr className="bg-blue-50 font-semibold text-gray-700">
+                                                                        <td colSpan={2} className="border border-gray-400 px-3 py-2 text-right">
+                                                                            Subtotal:
+                                                                        </td>
+                                                                        <td className="border border-gray-400 px-3 py-2 text-center">Total</td>
+                                                                        <td className="border border-gray-400 px-3 py-2 text-center">
+                                                                            {totalForSubject.count}
+                                                                        </td>
+                                                                        <td className="border border-gray-400 px-3 py-2 text-center">
+                                                                            {totalForSubject.totalMark}
+                                                                        </td>
                                                                     </tr>
                                                                 </React.Fragment>
                                                             );
                                                         })}
-                                                        <tr
-                                                            className="bg-green-100 font-bold text-gray-900"
-                                                            data-aos="fade-up"
-                                                            data-aos-delay={subjects.length * 100}
-                                                        >
-                                                            <td colSpan={2} className="border px-2 py-1 text-right">Grand Total:</td>
-                                                            <td className="border px-2 py-1 text-center">All Types</td>
-                                                            <td className="border px-2 py-1 text-center">{grandTotalQuestions}</td>
-                                                            <td className="border px-2 py-1 text-center">{grandTotalMarks}</td>
+
+                                                        {/* Grand Total */}
+                                                        <tr className="bg-green-100 font-bold text-gray-900">
+                                                            <td colSpan={2} className="border border-gray-400 px-3 py-2 text-right">
+                                                                Grand Total:
+                                                            </td>
+                                                            <td className="border border-gray-400 px-3 py-2 text-center">All Types</td>
+                                                            <td className="border border-gray-400 px-3 py-2 text-center">{grandTotalQuestions}</td>
+                                                            <td className="border border-gray-400 px-3 py-2 text-center">{grandTotalMarks}</td>
                                                         </tr>
                                                     </>
                                                 );
@@ -916,35 +926,32 @@ export default function SetEntry() {
                                     </table>
                                 </div>
 
-                                {/* Close button at bottom */}
-                                <div className="flex justify-end mt-4">
+                                {/* Footer */}
+                                <div className="sticky bottom-0 bg-gray-50 px-6 py-4 text-right border-t border-gray-300">
                                     <button
                                         onClick={() => setShowPreview(false)}
-                                        className="px-4 py-2 bg-gray-200 text-gray-800 rounded hover:bg-gray-300"
-                                        data-aos="fade-up"
-                                        data-aos-delay="200"
+                                        className="px-5 py-2 bg-cyan-700 text-white rounded hover:bg-cyan-900 transition shadow"
                                     >
                                         Close
                                     </button>
                                 </div>
                             </div>
                         </div>
-
                     )}
 
 
                     {/* Footer Buttons */}
-                    <div className="flex justify-end gap-2 pt-6 border-t border-gray-200">
+                    <div className="flex justify-end gap-2 pt-3">
                         <button
                             type="button"
                             onClick={() => router.push("/addSet")}
-                            className="px-4 py-2 bg-gray-500 text-white rounded-md shadow hover:bg-gray-600 transition"
+                            className="px-4 py-2 bg-gray-500 text-white rounded shadow hover:bg-gray-600 transition"
                         >
                             Back
                         </button>
                         <button
                             type="submit"
-                            className="px-4 py-2 bg-blue-600 text-white rounded-md shadow hover:bg-blue-700 transition"
+                            className="px-4 py-2 bg-cyan-700 text-white rounded shadow hover:bg-cyan-800 transition"
                         >
                             {isEdit ? "Update" : "Save"}
                         </button>

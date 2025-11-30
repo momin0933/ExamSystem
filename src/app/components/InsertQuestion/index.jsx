@@ -98,7 +98,7 @@ export default function InsertQuestion() {
     };
 
     const fetchQuestionData = async (questionId) => {
-        debugger;
+        debugger
         try {
             setLoading(true);
 
@@ -934,7 +934,7 @@ export default function InsertQuestion() {
                                                         <button
                                                             type="button"
                                                             onClick={() => document.querySelector('#questionImageInput').click()}
-                                                            className="px-3 py-1 rounded bg-blue-600 text-white text-sm hover:bg-blue-700"
+                                                            className="px-3 py-1 rounded bg-blue-700 text-white text-sm hover:bg-blue-700"
                                                         >
                                                             {questionImage ? "Change" : "Upload"}
                                                         </button>
@@ -980,7 +980,7 @@ export default function InsertQuestion() {
                                                     <div className="flex justify-center">
                                                         <button
                                                             type="button"
-                                                            className="px-2 bg-red-500 text-white rounded flex items-center justify-center"
+                                                            className="p-2 bg-red-600 hover:bg-red-700 transition ease-in-out duration-300 text-white rounded flex items-center justify-center"
                                                             onClick={() => removeOption(index)}
                                                             disabled={formData.options.length <= 1}
                                                         >
@@ -993,7 +993,7 @@ export default function InsertQuestion() {
                                             <button
                                                 type="button"
                                                 onClick={addOption}
-                                                className="mt-2 px-3 py-1 bg-green-500 text-white rounded"
+                                                className="mt-2 px-3 py-1.5 bg-[#4775a0] text-white rounded"
                                             >
                                                 Add Option
                                             </button>
@@ -1059,7 +1059,7 @@ export default function InsertQuestion() {
 
                                 <button
                                     type="submit"
-                                    className="px-4 py-2 bg-blue-600 text-white rounded-sm shadow hover:bg-blue-700 transition"
+                                    className="px-4 py-2 bg-[#4775a0] text-white rounded-sm shadow hover:bg-[#396186] transition"
                                     disabled={loading}
                                 >
                                     {loading ? (isEdit ? "Updating..." : "Saving...") : (isEdit ? "Update" : "Save")}
